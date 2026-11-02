@@ -51,7 +51,9 @@ metadata/md5-cache/<category>/<name>-<version>
 
 ## Чтение Git-объектов
 
-Provider запускает Git CLI через `os/exec` с отдельными аргументами, без shell, и отключает Git replace refs. В `git ls-tree` передаётся сформированный Provider путь как literal pathspec, после `--`. Вывод `ls-tree` разделён NUL; Provider ищет точное совпадение пути, извлекает mode, тип записи и object ID. Рекурсивный список дерева не используется.
+Каждый вызов Git через `runGit` передаёт `--no-replace-objects` и `--no-lazy-fetch`. Это отключает подмену объектов через replace refs и запрещает Git загружать отсутствующие объекты из promisor remote. Поэтому отсутствующий blob в partial clone приводит к `ErrRead`; Provider не запускает lazy fetch и не обращается к remote. Описание флага: [global options в документации Git](https://git-scm.com/docs/git).
+
+Provider запускает Git CLI через `os/exec` с отдельными аргументами, без shell. В `git ls-tree` передаётся сформированный Provider путь как literal pathspec, после `--`. Вывод `ls-tree` разделён NUL; Provider ищет точное совпадение пути, извлекает mode, тип записи и object ID. Рекурсивный список дерева не используется.
 
 Только записи с mode `100644` или `100755` и типом `blob` поддерживаются. Symlink, каталог, submodule и другие записи возвращают `ErrUnsupportedEntry`. Исполняемый бит не запускает содержимое. Для обычного файла Provider выполняет `git cat-file blob <object-id>` без filters или textconv и передаёт байты в `Normalize` без изменений.
 
@@ -90,7 +92,7 @@ Provider запускает Git CLI через `os/exec` с отдельными
 
 ## Git CLI и проверки
 
-Для работы Provider необходим установленный `git`, доступный через `PATH`, и локальный репозиторий, содержащий выбранный commit. Provider не клонирует и не синхронизирует repository, не делает сетевых запросов, не выполняет checkout, ebuild или генерацию metadata и не изменяет исходный репозиторий.
+Для работы Provider необходим установленный `git` с поддержкой global option `--no-lazy-fetch`, доступный через `PATH`, и локальный репозиторий, содержащий выбранный commit и требуемые blobs. Provider не клонирует и не синхронизирует repository, не делает сетевых запросов или lazy fetch, не выполняет checkout, ebuild или генерацию metadata и не изменяет исходный репозиторий.
 
 Тесты создают временные локальные репозитории в `t.TempDir`, задают test-only author/committer и отключают подпись только для Git-команд теста. SHA-1 проверяется обязательно; SHA-256 проверяется, если текущий Git поддерживает `git init --object-format=sha256`.
 

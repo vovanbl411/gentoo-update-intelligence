@@ -362,6 +362,67 @@ func TestBlobReadFailureIsNotNotFound(t *testing.T) {
 	}
 }
 
+func TestPartialCloneMissingBlobDoesNotLazyFetch(t *testing.T) {
+	root := t.TempDir()
+	origin := newTestRepo(t, "sha1")
+	writeCache(t, origin.path, "dev-libs", "pkg", "1", "EAPI=8\n", 0o644)
+	origin.commit(t)
+	if _, err := testGit(origin.path, "config", "uploadpack.allowFilter", "true"); err != nil {
+		t.Fatal(err)
+	}
+	partialPath := filepath.Join(root, "partial")
+	if _, err := testGit(root, "clone", "--quiet", "--no-local", "--filter=blob:none", "--no-checkout", origin.path, partialPath); err != nil {
+		t.Fatalf("create local partial clone: %v", err)
+	}
+	partial := &testRepo{path: partialPath}
+	promisor, err := testGit(partial.path, "config", "--get", "remote.origin.promisor")
+	if err != nil || strings.TrimSpace(string(promisor)) != "true" {
+		t.Fatalf("remote.origin.promisor = %q, %v; want true", promisor, err)
+	}
+	filter, err := testGit(partial.path, "config", "--get", "remote.origin.partialclonefilter")
+	if err != nil || strings.TrimSpace(string(filter)) != "blob:none" {
+		t.Fatalf("remote.origin.partialclonefilter = %q, %v; want blob:none", filter, err)
+	}
+	commit, err := testGit(partial.path, "rev-parse", "HEAD")
+	if err != nil {
+		t.Fatal(err)
+	}
+	partial.sha = strings.TrimSpace(string(commit))
+	blobID, err := testGit(origin.path, "rev-parse", "HEAD:metadata/md5-cache/dev-libs/pkg-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	blobID = []byte(strings.TrimSpace(string(blobID)))
+	if _, err := testGit(partial.path, "--no-lazy-fetch", "cat-file", "-e", string(blobID)); err == nil {
+		t.Fatal("partial clone unexpectedly contains cache blob before Lookup")
+	}
+
+	remoteMarker := filepath.Join(root, "upload-pack-called")
+	markerForScript := strings.ReplaceAll(remoteMarker, "'", "'\\''")
+	uploadPack := filepath.Join(root, "count-upload-pack")
+	script := "#!/bin/sh\nprintf called > '" + markerForScript + "'\nexit 73\n"
+	if err := os.WriteFile(uploadPack, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(uploadPack, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := testGit(partial.path, "config", "remote.origin.uploadpack", uploadPack); err != nil {
+		t.Fatal(err)
+	}
+	provider := partial.open(t)
+	result, err := provider.Lookup(Query{Repository: "gentoo", Category: "dev-libs", Name: "pkg", Version: "1"})
+	if !errors.Is(err, ErrRead) || result != (LookupResult{}) {
+		t.Fatalf("Lookup = %#v, %v; want zero result and ErrRead", result, err)
+	}
+	if _, err := os.Stat(remoteMarker); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("promisor remote upload-pack was invoked: stat marker error = %v", err)
+	}
+	if _, err := testGit(partial.path, "--no-lazy-fetch", "cat-file", "-e", string(blobID)); err == nil {
+		t.Fatal("missing cache blob was loaded during Lookup")
+	}
+}
+
 func TestProviderDoesNotModifyRepositoryAndIsRepeatable(t *testing.T) {
 	repo := newTestRepo(t, "sha1")
 	writeCache(t, repo.path, "dev-libs", "pkg", "1", "EAPI=8\nSLOT=0\n", 0o644)

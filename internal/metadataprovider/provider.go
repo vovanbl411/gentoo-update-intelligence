@@ -184,7 +184,7 @@ func parseTreeEntry(output []byte, wantedPath string) (treeEntry, bool, error) {
 }
 
 func runGit(localPath string, args ...string) ([]byte, error) {
-	commandArgs := append([]string{"--no-replace-objects", "-C", localPath}, args...)
+	commandArgs := append([]string{"--no-replace-objects", "--no-lazy-fetch", "-C", localPath}, args...)
 	command := exec.Command("git", commandArgs...)
 	output, err := command.Output()
 	if err == nil {
