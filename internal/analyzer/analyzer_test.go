@@ -129,22 +129,33 @@ func TestSlotChangedRequiresUnambiguousUpgradeAndDifferentKnownSlots(t *testing.
 		want  bool
 	}{
 		{"different explicit slots", entry(parser.OperationUpgrade, &newSlot, &oldSlot), true},
+		{"downgrade with different explicit slots", entry(parser.OperationDowngrade, &newSlot, &oldSlot), true},
 		{"same slots", entry(parser.OperationUpgrade, &sameSlot, &oldSlot), false},
 		{"subslot-only change", withSubslots(entry(parser.OperationUpgrade, &subslotOnly, &oldSlot), &newSubslot, &oldSubslot), false},
+		{"downgrade subslot-only change", withSubslots(entry(parser.OperationDowngrade, &subslotOnly, &oldSlot), &newSubslot, &oldSubslot), false},
 		{"unknown target slot", entry(parser.OperationUpgrade, nil, &oldSlot), false},
+		{"downgrade unknown target slot", entry(parser.OperationDowngrade, nil, &oldSlot), false},
 		{"unknown installed slot", entry(parser.OperationUpgrade, &newSlot, nil), false},
+		{"downgrade unknown installed slot", entry(parser.OperationDowngrade, &newSlot, nil), false},
 		{"no installed versions", entry(parser.OperationUpgrade, &newSlot), false},
 		{"multiple installed versions", entry(parser.OperationUpgrade, &newSlot, &oldSlot, &sameSlot), false},
+		{"downgrade multiple installed versions", entry(parser.OperationDowngrade, &newSlot, &oldSlot, &sameSlot), false},
 		{"install into new slot", entry(parser.OperationInstall, &newSlot, &oldSlot), false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got := Analyze(parser.Result{Entries: []parser.Entry{test.entry}}, Context{})
-			if (len(got.Findings) == 1) != test.want {
+			var slotFinding *Finding
+			for index := range got.Findings {
+				if got.Findings[index].RuleID == RuleSlotChanged {
+					slotFinding = &got.Findings[index]
+				}
+			}
+			if (slotFinding != nil) != test.want {
 				t.Fatalf("findings = %+v, want SLOT_CHANGED=%v", got.Findings, test.want)
 			}
 			if test.want {
-				finding := got.Findings[0]
+				finding := *slotFinding
 				if finding.RuleID != RuleSlotChanged || !contains(finding.Message, "0") || !contains(finding.Message, "1") {
 					t.Errorf("finding = %+v", finding)
 				}
@@ -154,6 +165,61 @@ func TestSlotChangedRequiresUnambiguousUpgradeAndDifferentKnownSlots(t *testing.
 				}
 			}
 		})
+	}
+}
+
+func TestDowngradePlannedFindingAndEvidence(t *testing.T) {
+	plan := parser.Parse(`[ebuild UD] cat/pkg-1.9-r2::repo [2.0-r4::repo]`)
+	got := Analyze(plan, Context{})
+	if len(got.Findings) != 1 {
+		t.Fatalf("findings = %+v, want one downgrade finding", got.Findings)
+	}
+	finding := got.Findings[0]
+	if finding.RuleID != RuleDowngradePlanned || finding.Category != CategoryReview || finding.EntryIndex != 0 || !contains(finding.Message, "2.0-r4 → 1.9-r2") || !contains(finding.Message, "ожидаем") {
+		t.Fatalf("downgrade finding = %+v", finding)
+	}
+	evidence, ok := finding.Evidence.(DowngradePlannedEvidence)
+	if !ok || evidence.EntryIndex != 0 || evidence.Operation != parser.OperationDowngrade || evidence.TargetVersion != "1.9-r2" || !reflect.DeepEqual(evidence.InstalledVersions, []string{"2.0-r4"}) {
+		t.Fatalf("downgrade evidence = %#v", finding.Evidence)
+	}
+	for _, test := range []struct {
+		name     string
+		row      string
+		versions []string
+	}{
+		{"missing installed context", `[ebuild UD] cat/pkg-1.9::repo`, nil},
+		{"ambiguous installed context", `[ebuild UD] cat/pkg-1.9::repo [2.0::repo] [2.1::repo]`, []string{"2.0", "2.1"}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			result := Analyze(parser.Parse(test.row), Context{})
+			if len(result.Findings) != 1 || result.Findings[0].RuleID != RuleDowngradePlanned || contains(result.Findings[0].Message, " → ") {
+				t.Fatalf("ambiguous/missing context invented a version pair: %+v", result)
+			}
+			ref, ok := result.Findings[0].Evidence.(DowngradePlannedEvidence)
+			if !ok || !reflect.DeepEqual(ref.InstalledVersions, test.versions) {
+				t.Fatalf("evidence did not preserve displayed context: %#v", result.Findings[0].Evidence)
+			}
+		})
+	}
+}
+
+func TestDowngradeFindingsOrderAndOperationExclusions(t *testing.T) {
+	plan := parser.Parse("[ebuild UD] cat/pkg-1.9:1::repo [2.0:0::repo] USE=\"flag*\"\n[ebuild U] cat/up-2::repo [1::repo]\n[ebuild NS] cat/new-1:1::repo [0:0::repo]")
+	context := Context{LocallyPatchedPackages: []parser.Package{{Category: "cat", Name: "pkg"}}}
+	got := Analyze(plan, context)
+	want := []RuleID{RuleDowngradePlanned, RuleLocalPatchedPackage, RuleUseChanged, RuleSlotChanged}
+	if len(got.Findings) != len(want) {
+		t.Fatalf("findings = %+v", got.Findings)
+	}
+	for index, rule := range want {
+		if got.Findings[index].RuleID != rule || got.Findings[index].EntryIndex != 0 {
+			t.Errorf("finding[%d] = %+v, want %s for downgrade entry", index, got.Findings[index], rule)
+		}
+	}
+	for _, finding := range got.Findings {
+		if finding.EntryIndex != 0 && finding.RuleID == RuleDowngradePlanned {
+			t.Errorf("upgrade/NS received downgrade finding: %+v", finding)
+		}
 	}
 }
 

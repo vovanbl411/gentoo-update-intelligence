@@ -23,8 +23,9 @@ const (
 type Operation string
 
 const (
-	OperationUpgrade Operation = "upgrade"
-	OperationInstall Operation = "install"
+	OperationUpgrade   Operation = "upgrade"
+	OperationDowngrade Operation = "downgrade"
+	OperationInstall   Operation = "install"
 )
 
 // Result is the deterministic, source-linked result of parsing one input.
@@ -108,6 +109,7 @@ type Size struct {
 type Summary struct {
 	Packages   int
 	Upgrades   int
+	Downgrades int
 	NewSlots   int
 	Download   Size
 	SourceLine int
@@ -121,11 +123,12 @@ type Diagnostic struct {
 }
 
 var (
-	rowPrefixRE = regexp.MustCompile(`^\[(ebuild|binary)\s+([^]]*)\]\s*(.*)$`)
-	versionRE   = regexp.MustCompile(`^(.+)-([0-9][A-Za-z0-9._+~-]*)$`)
-	summaryRE   = regexp.MustCompile(`^Total:\s*([0-9]+) packages \(([0-9]+) upgrades, ([0-9]+) in new slot\), Size of downloads:\s*([0-9]+)\s+(B|KiB|MiB|GiB)$`)
-	sizeRE      = regexp.MustCompile(`^([0-9]+)\s+(B|KiB|MiB|GiB)$`)
-	ansiRE      = regexp.MustCompile(`\x1b\[[0-?]*[ -/]*[@-~]`)
+	rowPrefixRE   = regexp.MustCompile(`^\[(ebuild|binary)\s+([^]]*)\]\s*(.*)$`)
+	versionRE     = regexp.MustCompile(`^(.+)-([0-9][A-Za-z0-9._+~-]*)$`)
+	summaryRE     = regexp.MustCompile(`^Total:\s*([0-9]+) package(?:s)?\s*\((.*)\),\s*Size of downloads:\s*([0-9]+)\s+(B|KiB|MiB|GiB)$`)
+	summaryItemRE = regexp.MustCompile(`^([0-9]+)\s+(upgrade|upgrades|downgrade|downgrades|in new slot|in new slots)$`)
+	sizeRE        = regexp.MustCompile(`^([0-9]+)\s+(B|KiB|MiB|GiB)$`)
+	ansiRE        = regexp.MustCompile(`\x1b\[[0-?]*[ -/]*[@-~]`)
 )
 
 // Parse reads the supported subset of a plain-text Portage plan. It never
@@ -182,12 +185,11 @@ func Parse(input string) Result {
 				continue
 			}
 			if match := summaryRE.FindStringSubmatch(trimmed); match != nil {
-				result.Summary = &Summary{
-					Packages:   integer(match[1]),
-					Upgrades:   integer(match[2]),
-					NewSlots:   integer(match[3]),
-					Download:   Size{Value: int64(integer(match[4])), Unit: match[5]},
-					SourceLine: lineNumber,
+				summary, ok := parseSummary(match, lineNumber)
+				if ok {
+					result.Summary = &summary
+				} else {
+					result.Diagnostics = append(result.Diagnostics, diagnostic("MALFORMED_SUMMARY", "сводка содержит неподдерживаемый или неоднозначный счётчик", lineNumber))
 				}
 			} else {
 				result.Diagnostics = append(result.Diagnostics, diagnostic("MALFORMED_SUMMARY", "не удалось разобрать строку сводки", lineNumber))
@@ -238,10 +240,19 @@ func parseEbuildRow(markerField, body string, line int) (Entry, string, string) 
 	if len(markerParts) == 0 {
 		return Entry{}, "MALFORMED_ENTRY", "в записи отсутствует поле операции Portage"
 	}
+	unstableMarker := false
+	for _, marker := range markerParts[1:] {
+		if marker != "~" || unstableMarker {
+			return Entry{}, "UNSUPPORTED_OPERATION", "сочетание маркеров Portage не поддерживается"
+		}
+		unstableMarker = true
+	}
 	var operation Operation
 	switch markerParts[0] {
 	case "U":
 		operation = OperationUpgrade
+	case "UD":
+		operation = OperationDowngrade
 	case "NS":
 		operation = OperationInstall
 	default:
@@ -258,7 +269,7 @@ func parseEbuildRow(markerField, body string, line int) (Entry, string, string) 
 	}
 	entry := Entry{
 		Package: pkg, Operation: operation, NewSlot: operation == OperationInstall,
-		UnstableMarker: contains(markerParts[1:], "~"), Target: target,
+		UnstableMarker: unstableMarker, Target: target,
 		SourceLines: []int{line},
 	}
 
@@ -297,6 +308,40 @@ func parseEbuildRow(markerField, body string, line int) (Entry, string, string) 
 		return Entry{}, "MALFORMED_ENTRY", "неожиданный токен в записи ebuild"
 	}
 	return entry, "", ""
+}
+
+func parseSummary(match []string, line int) (Summary, bool) {
+	summary := Summary{
+		Packages:   integer(match[1]),
+		Download:   Size{Value: int64(integer(match[3])), Unit: match[4]},
+		SourceLine: line,
+	}
+	if strings.TrimSpace(match[2]) == "" {
+		return summary, true
+	}
+	seen := map[string]bool{}
+	for _, item := range strings.Split(match[2], ",") {
+		parts := summaryItemRE.FindStringSubmatch(strings.TrimSpace(item))
+		if parts == nil {
+			return Summary{}, false
+		}
+		count := integer(parts[1])
+		kind := parts[2]
+		key := ""
+		switch kind {
+		case "upgrade", "upgrades":
+			key, summary.Upgrades = "upgrade", count
+		case "downgrade", "downgrades":
+			key, summary.Downgrades = "downgrade", count
+		case "in new slot", "in new slots":
+			key, summary.NewSlots = "new slots", count
+		}
+		if seen[key] {
+			return Summary{}, false
+		}
+		seen[key] = true
+	}
+	return summary, true
 }
 
 func parseTarget(atom string) (Target, Package, error) {
@@ -453,13 +498,4 @@ func diagnostic(code, message string, line int) Diagnostic {
 func integer(value string) int {
 	parsed, _ := strconv.Atoi(value)
 	return parsed
-}
-
-func contains(values []string, target string) bool {
-	for _, value := range values {
-		if value == target {
-			return true
-		}
-	}
-	return false
 }

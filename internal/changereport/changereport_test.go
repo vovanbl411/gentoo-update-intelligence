@@ -87,6 +87,37 @@ func TestBuildPositiveRealMetadataFixtures(t *testing.T) {
 	}
 }
 
+func TestBuildSyntheticDowngradePreservesBeforeAfterDirection(t *testing.T) {
+	plan := parser.Parse("[ebuild UD  ] dev-libs/libxml2-2.13.9::gentoo [2.14.6::gentoo]")
+	if len(plan.Entries) != 1 || plan.Entries[0].Operation != parser.OperationDowngrade {
+		t.Fatalf("synthetic downgrade plan = %+v", plan)
+	}
+	older, newer := fixtureSnapshots(t)
+	before, after := newer, older
+	wantComparison := metadatadiff.Compare(before, after)
+	report, err := Build(plan, 0, &before, &after)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Gentoo.Status != wantComparison.Status || !reflect.DeepEqual(report.Gentoo.Comparison, &wantComparison) {
+		t.Fatalf("downgrade comparison changed direction or result:\n got %#v\nwant %#v", report.Gentoo.Comparison, wantComparison)
+	}
+	if report.Gentoo.Comparison.Before.Source.Version != "2.14.6" || report.Gentoo.Comparison.After.Source.Version != "2.13.9" {
+		t.Fatalf("snapshots were reordered: before=%s after=%s", report.Gentoo.Comparison.Before.Source.Version, report.Gentoo.Comparison.After.Source.Version)
+	}
+	if got := addedIUSE(report.Gentoo.Comparison.Changes.IUSE.Added); !reflect.DeepEqual(got, []string{"examples", "lzma"}) {
+		t.Fatalf("downgrade target IUSE additions = %v", got)
+	}
+	if len(report.Gentoo.Comparison.Changes.IUSE.Removed) != 0 {
+		t.Fatalf("IUSE removed from downgrade target instead of installed side: %#v", report.Gentoo.Comparison.Changes.IUSE.Removed)
+	}
+	for _, change := range report.Gentoo.Comparison.Changes.IUSE.Added {
+		if change.Evidence.Before.Side != metadatadiff.SideBefore || change.Evidence.After.Side != metadatadiff.SideAfter {
+			t.Fatalf("IUSE evidence has wrong sides for target addition %q: %#v", change.Name, change.Evidence)
+		}
+	}
+}
+
 func TestBuildRejectsSnapshotsForRealQEMUEntry(t *testing.T) {
 	input, err := os.ReadFile("../../testdata/parser/ebuild-updates.txt")
 	if err != nil {
@@ -509,6 +540,14 @@ func removedIUSE(flags []metadatadiff.IUSEFlagChange) []string {
 		names[i] = flag.Name
 	}
 	return names
+}
+
+func addedIUSE(flags []metadatadiff.IUSEFlagChange) []string {
+	result := make([]string, len(flags))
+	for index, flag := range flags {
+		result[index] = flag.Name
+	}
+	return result
 }
 
 func stringPointer(value string) *string { return &value }

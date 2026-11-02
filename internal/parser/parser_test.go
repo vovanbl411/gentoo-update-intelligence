@@ -155,6 +155,68 @@ func TestParseFlagTokenNormalization(t *testing.T) {
 	}
 }
 
+func TestParseSyntheticDowngradePreservesDisplayedFacts(t *testing.T) {
+	input := `[ebuild UD  ] dev-libs/example-1.9-r2:target/2::gentoo [2.0-r4:installed/3::gentoo] USE="foo* (-bar)" PYTHON_TARGETS="python3_14" 7 KiB`
+	result := Parse(input)
+	if result.Status != StatusParsed || len(result.Entries) != 1 || len(result.Diagnostics) != 0 {
+		t.Fatalf("synthetic downgrade did not parse: %+v", result)
+	}
+	entry := result.Entries[0]
+	if entry.Operation != OperationDowngrade || entry.Target.Version != "1.9-r2" || entry.Installed.Versions[0].Version != "2.0-r4" {
+		t.Fatalf("operation or full versions were not preserved: %+v", entry)
+	}
+	if entry.Target.Repository == nil || *entry.Target.Repository != "gentoo" || entry.Installed.Versions[0].Repository == nil || *entry.Installed.Versions[0].Repository != "gentoo" {
+		t.Fatalf("repositories were not preserved: %+v", entry)
+	}
+	if entry.Target.Slot == nil || *entry.Target.Slot != "target" || entry.Target.Subslot == nil || *entry.Target.Subslot != "2" || entry.Installed.Versions[0].Slot == nil || *entry.Installed.Versions[0].Slot != "installed" || entry.Installed.Versions[0].Subslot == nil || *entry.Installed.Versions[0].Subslot != "3" {
+		t.Fatalf("explicit SLOT/SUBSLOT were not preserved: target=%+v installed=%+v", entry.Target, entry.Installed.Versions[0])
+	}
+	if !reflect.DeepEqual(groupTokens(entry.FlagGroups), []string{"USE:foo* (-bar)", "PYTHON_TARGETS:python3_14"}) || entry.FlagGroups[0].Values[0].RawToken != "foo*" || !reflect.DeepEqual(entry.SourceLines, []int{1}) || entry.Download == nil || *entry.Download != (Size{7, "KiB"}) {
+		t.Fatalf("groups, markers, source or size were not preserved: %+v", entry)
+	}
+	if Parse("[ebuild U  ] dev-libs/example-9.0::gentoo [1.0::gentoo]").Entries[0].Operation != OperationUpgrade {
+		t.Fatal("upgrade marker was classified by version magnitude")
+	}
+	for _, marker := range []string{"UDX", "U D", "D"} {
+		if got := Parse("[ebuild " + marker + "] dev-libs/example-1::gentoo [2::gentoo]"); got.Status != StatusUnsupported || !hasDiagnostic(got.Diagnostics, "UNSUPPORTED_OPERATION") {
+			t.Errorf("unsupported marker %q was accepted: %+v", marker, got)
+		}
+	}
+}
+
+func TestParseSyntheticDowngradeSummaries(t *testing.T) {
+	row := "[ebuild UD] cat/pkg-1::repo [2::repo] 1 KiB\n"
+	upgradeRow := strings.Replace(row, "[ebuild UD]", "[ebuild U]", 1)
+	newSlotRow := strings.Replace(row, "[ebuild UD]", "[ebuild NS]", 1)
+	tests := []struct {
+		name       string
+		rows       string
+		summary    string
+		upgrades   int
+		downgrades int
+		newSlots   int
+	}{
+		{"all operation counters omitted", row, "Total: 1 package (), Size of downloads: 2 MiB", 0, 0, 0},
+		{"downgrade only singular", row, "Total: 1 package (1 downgrade), Size of downloads: 2 MiB", 0, 1, 0},
+		{"mixed plural counters", row + row + upgradeRow, "Total: 3 packages (1 upgrade, 2 downgrades), Size of downloads: 2 MiB", 1, 2, 0},
+		{"mixed singular operations and slot", upgradeRow + row + newSlotRow, "Total: 3 packages (1 upgrade, 1 downgrade, 1 in new slot), Size of downloads: 2 MiB", 1, 1, 1},
+		{"plural slots", row + newSlotRow, "Total: 2 packages (1 downgrade, 1 in new slots), Size of downloads: 2 MiB", 0, 1, 1},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			input := test.rows + test.summary
+			got := Parse(input)
+			if got.Status != StatusParsed || got.Summary == nil || got.Summary.Upgrades != test.upgrades || got.Summary.Downgrades != test.downgrades || got.Summary.NewSlots != test.newSlots || got.Summary.Packages != len(got.Entries) || got.Summary.Download != (Size{2, "MiB"}) {
+				t.Fatalf("synthetic summary = %+v", got)
+			}
+		})
+	}
+	unknown := Parse(row + "Total: 1 package (1 reinstalls), Size of downloads: 2 MiB")
+	if unknown.Status != StatusPartial || !hasDiagnostic(unknown.Diagnostics, "MALFORMED_SUMMARY") || unknown.Summary != nil {
+		t.Fatalf("unknown summary operation was ignored: %+v", unknown)
+	}
+}
+
 func TestParseNegativeInputs(t *testing.T) {
 	base := fixture(t)
 	first := strings.Split(base, "\n")[5]

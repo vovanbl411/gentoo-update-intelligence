@@ -35,7 +35,7 @@ func Build(
 
 | Код | Значение полей |
 |---|---|
-| `OPERATION_UNSUPPORTED` | Поле `operation`; `Expected` — `upgrade`, `Actual` — операция записи. |
+| `OPERATION_UNSUPPORTED` | Поле `operation`; `Expected` — `upgrade or downgrade`, `Actual` — операция записи. |
 | `INSTALLED_CONTEXT_MISSING` | Поле `installed_context`; в плане нет установленной версии. |
 | `INSTALLED_CONTEXT_AMBIGUOUS` | Поле `installed_context`; `Expected` — ровно одна версия, `Actual` — фактическое число. |
 | `SNAPSHOT_MISSING` | Сторона и поле `snapshot`; соответствующий снимок не передан. |
@@ -53,9 +53,9 @@ func Build(
 Порядок проверок в `Build`:
 
 1. Проверить индекс записи. Некорректный индекс возвращает `ErrInvalidEntryIndex` и нулевой `Report`.
-2. Проверить, что операция — `upgrade` и в `Installed.Versions` ровно одна версия. `NS` / `install` не поддерживается: показанная старая версия не считается заменяемой. Для обеих проверок текущего этапа диагностики можно вернуть вместе.
+2. Проверить, что операция — `upgrade` или `downgrade` и в `Installed.Versions` ровно одна версия. `NS` / `install` не поддерживается: показанная старая версия не считается заменяемой. Для обеих проверок текущего этапа диагностики можно вернуть вместе.
 3. Проверить наличие снимков и непустые явно известные repository обеих сторон.
-4. Проверить для before, затем after, что снимок соответствует `Entry.Package`, точной версии плана и repository этой стороны. Версии сравниваются буквально, включая `-rN`; автоматической сортировки, перестановки или подбора версий нет.
+4. Для `upgrade` и `downgrade` `before` — единственная показанная установленная версия, а `after` — целевая версия. Проверить для before, затем after, что снимок соответствует `Entry.Package`, точной версии плана и repository этой стороны. Версии сравниваются буквально, включая `-rN`; направление `Compare` следует переданным сторонам. Автоматической сортировки, перестановки или подбора версий нет.
 5. Проверить явно известные SLOT/SUBSLOT плана только при `Snapshot.Slot.State == valid`. SLOT сопоставляется с `Snapshot.Slot.Name`, SUBSLOT — с `Snapshot.Slot.Subslot`.
 6. Если предыдущие проверки прошли, вызвать `metadatadiff.Compare(before, after)` и сохранить весь результат.
 
@@ -72,6 +72,8 @@ func Build(
 ## Примеры и тесты
 
 Положительный тест использует синтетическую запись upgrade `dev-libs/libxml2` `2.13.9` → `2.14.6` из `gentoo` и реальные metadata fixtures: [snapshot 2.13.9](../testdata/metadata/libxml2-2.13.9.md5-cache), [snapshot 2.14.6](../testdata/metadata/libxml2-2.14.6.md5-cache) и их [provenance](../testdata/metadata/provenance.md). Снимки нормализуются через `metadatadiff.Normalize`. Текущий metadata diff сравнивает EAPI 8, нормализованные SLOT/SUBSLOT и IUSE. Ожидаемый `Gentoo.Status` — `available`; `Comparison` равен результату `Compare`, SUBSLOT меняется `2` → `16`, IUSE удаляет `examples` и `lzma`. Тест проверяет evidence по строкам `14` для SLOT/SUBSLOT и `8` для IUSE. Два остальных раздела имеют причину `NOT_IMPLEMENTED`. Синтетическая запись не является реальным выводом emerge.
+
+Синтетический downgrade тест использует те же metadata snapshots в обратном относительно версий направлении: установленная `2.14.6` становится `before`, целевая `2.13.9` — `after`. Результат равен `Compare(before, after)` без перестановки снимков; IUSE additions и removals относятся к целевому состоянию. Реальных downgrade fixtures пока нет.
 
 Отрицательный тест связывает реальную запись `app-emulation/qemu` с индексом `2` из [Parser fixture](../testdata/parser/ebuild-updates.txt) со снимками libxml2. Он проверяет отказ по package и отсутствие `Comparison`, а не изменения QEMU.
 

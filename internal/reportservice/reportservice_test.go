@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/vovanbl411/gentoo-update-intelligence/internal/analyzer"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/changereport"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/metadatadiff"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/metadataprovider"
@@ -144,6 +145,37 @@ func TestBuildLookupOutcomes(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestBuildDowngradeUsesBothSidesAndRetainsLookupOutcomes(t *testing.T) {
+	plan := testPlan()
+	plan.Entries[0].Operation = parser.OperationDowngrade
+	plan.Entries[0].Target.Version = "0.5"
+	providerErr := fmt.Errorf("synthetic before read: %w", metadataprovider.ErrRead)
+	provider := &fakeLookup{answers: []lookupAnswer{
+		{err: providerErr},
+		{result: metadataprovider.LookupResult{Status: metadataprovider.StatusNotFound}},
+	}}
+	got, err := Build(plan, 0, provider)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []metadataprovider.Query{
+		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "1.0"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "0.5"},
+	}
+	if len(provider.calls) != 2 || provider.calls[0].query != want[0] || provider.calls[1].query != want[1] {
+		t.Fatalf("downgrade calls = %#v", provider.calls)
+	}
+	if !errors.Is(got.BeforeLookup.Err, metadataprovider.ErrRead) || got.BeforeLookup.Query == nil || *got.BeforeLookup.Query != want[0] {
+		t.Fatalf("before error outcome lost: %#v", got.BeforeLookup)
+	}
+	if got.AfterLookup.Err != nil || got.AfterLookup.Result == nil || got.AfterLookup.Result.Status != metadataprovider.StatusNotFound || got.AfterLookup.Query == nil || *got.AfterLookup.Query != want[1] {
+		t.Fatalf("after status outcome lost: %#v", got.AfterLookup)
+	}
+	if got.Report.Gentoo.Comparison != nil || !containsCode(got.Report.Gentoo.Diagnostics, changereport.CodeSnapshotMissing) {
+		t.Fatalf("missing downgrade snapshots were not retained in report: %#v", got.Report.Gentoo)
 	}
 }
 
@@ -348,6 +380,69 @@ func TestBuildWithRealMetadataProviderAndSyntheticGitRepository(t *testing.T) {
 	}
 }
 
+func TestSyntheticDowngradeEndToEndWithLocalProvider(t *testing.T) {
+	plan := parser.Parse("[ebuild UD  ] dev-libs/widget-1.0::gentoo [2.0::gentoo] USE=\"flag*\"")
+	if plan.Status != parser.StatusParsed || len(plan.Entries) != 1 || plan.Entries[0].Operation != parser.OperationDowngrade {
+		t.Fatalf("synthetic downgrade plan = %+v", plan)
+	}
+	root := t.TempDir()
+	if err := runTestGit(root, "init", "-q"); err != nil {
+		t.Fatal(err)
+	}
+	writeCache := func(version, content string) {
+		t.Helper()
+		path := filepath.Join(root, "metadata", "md5-cache", "dev-libs", "widget-"+version)
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	writeCache("2.0", "EAPI=8\nSLOT=2/2\nIUSE=+old common -toggle\n")
+	writeCache("1.0", "EAPI=8\nSLOT=1/1\nIUSE=+new common +toggle\n")
+	if err := runTestGit(root, "add", "metadata"); err != nil {
+		t.Fatal(err)
+	}
+	if err := runTestGit(root, "-c", "user.name=Synthetic Test", "-c", "user.email=synthetic@example.invalid", "-c", "commit.gpgsign=false", "commit", "-m", "synthetic downgrade metadata"); err != nil {
+		t.Fatal(err)
+	}
+	commitBytes, err := exec.Command("git", "-C", root, "rev-parse", "HEAD").Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	commit := strings.TrimSpace(string(commitBytes))
+	provider, err := metadataprovider.Open(metadataprovider.Config{Repository: "gentoo", SourceURL: "synthetic://local", LocalPath: root, Commit: commit})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := Build(plan, 0, provider)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantQueries := []metadataprovider.Query{
+		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "2.0"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "1.0"},
+	}
+	if got.BeforeLookup.Query == nil || *got.BeforeLookup.Query != wantQueries[0] || got.AfterLookup.Query == nil || *got.AfterLookup.Query != wantQueries[1] {
+		t.Fatalf("downgrade lookup queries = %#v / %#v", got.BeforeLookup.Query, got.AfterLookup.Query)
+	}
+	comparison := got.Report.Gentoo.Comparison
+	if comparison == nil || got.Report.Gentoo.Status != metadatadiff.StatusAvailable || comparison.Before.Source.Version != "2.0" || comparison.After.Source.Version != "1.0" || comparison.Before.Source.Commit != commit || comparison.After.Source.Commit != commit {
+		t.Fatalf("downgrade report direction/provenance = %#v", got.Report.Gentoo)
+	}
+	if comparison.Changes.Slot == nil || comparison.Changes.Slot.Before != "2" || comparison.Changes.Slot.After != "1" || !reflect.DeepEqual(addedNames(comparison.Changes.IUSE.Added), []string{"new"}) || !reflect.DeepEqual(removedNames(comparison.Changes.IUSE.Removed), []string{"old"}) {
+		t.Fatalf("downgrade target changes = %#v", comparison.Changes)
+	}
+	if len(comparison.Changes.IUSE.DefaultChanges) != 1 || comparison.Changes.IUSE.DefaultChanges[0].Name != "toggle" || comparison.Changes.IUSE.DefaultChanges[0].Before != metadatadiff.DefaultDisabled || comparison.Changes.IUSE.DefaultChanges[0].After != metadatadiff.DefaultEnabled {
+		t.Fatalf("downgrade target default changes = %#v", comparison.Changes.IUSE.DefaultChanges)
+	}
+	analyzed := analyzer.Analyze(plan, analyzer.Context{})
+	if len(analyzed.Findings) != 2 || analyzed.Findings[0].RuleID != analyzer.RuleDowngradePlanned || analyzed.Findings[0].Category != analyzer.CategoryReview || !strings.Contains(analyzed.Findings[0].Message, "2.0 → 1.0") || analyzed.Findings[1].RuleID != analyzer.RuleUseChanged {
+		t.Fatalf("separate Analyzer result = %+v", analyzed)
+	}
+}
+
 func testPlan() parser.Result {
 	installedRepo, targetRepo := "gentoo", "gentoo"
 	return parser.Result{
@@ -404,6 +499,22 @@ func containsCode(diagnostics []changereport.BindingDiagnostic, code changerepor
 		}
 	}
 	return false
+}
+
+func addedNames(changes []metadatadiff.IUSEFlagChange) []string {
+	names := make([]string, len(changes))
+	for index, change := range changes {
+		names[index] = change.Name
+	}
+	return names
+}
+
+func removedNames(changes []metadatadiff.IUSEFlagChange) []string {
+	names := make([]string, len(changes))
+	for index, change := range changes {
+		names[index] = change.Name
+	}
+	return names
 }
 
 func clonePlan(plan parser.Result) parser.Result {

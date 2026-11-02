@@ -139,11 +139,11 @@ func Build(
 
 func checkOperationAndInstalled(entry parser.Entry) []BindingDiagnostic {
 	diagnostics := make([]BindingDiagnostic, 0, 2)
-	if entry.Operation != parser.OperationUpgrade {
+	if entry.Operation != parser.OperationUpgrade && entry.Operation != parser.OperationDowngrade {
 		diagnostics = append(diagnostics, BindingDiagnostic{
 			Code:     CodeOperationUnsupported,
 			Field:    field(BindingFieldOperation),
-			Expected: value(string(parser.OperationUpgrade)),
+			Expected: value("upgrade or downgrade"),
 			Actual:   value(string(entry.Operation)),
 		})
 	}

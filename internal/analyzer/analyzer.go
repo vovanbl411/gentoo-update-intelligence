@@ -11,6 +11,7 @@ import (
 type RuleID string
 
 const (
+	RuleDowngradePlanned    RuleID = "DOWNGRADE_PLANNED"
 	RuleLocalPatchedPackage RuleID = "LOCAL_PATCHED_PACKAGE"
 	RuleUseChanged          RuleID = "USE_CHANGED"
 	RuleSlotChanged         RuleID = "SLOT_CHANGED"
@@ -74,6 +75,17 @@ type SlotChangedEvidence struct {
 
 func (SlotChangedEvidence) evidenceKind() {}
 
+// DowngradePlannedEvidence points to the displayed operation and versions on
+// one Parser plan row. InstalledVersions preserves ambiguity without choosing.
+type DowngradePlannedEvidence struct {
+	EntryIndex        int
+	Operation         parser.Operation
+	InstalledVersions []string
+	TargetVersion     string
+}
+
+func (DowngradePlannedEvidence) evidenceKind() {}
+
 // Analyze applies Analyzer v0.1 rules without changing the Parser result.
 func Analyze(plan parser.Result, context Context) Result {
 	result := Result{
@@ -84,6 +96,30 @@ func Analyze(plan parser.Result, context Context) Result {
 
 	for entryIndex := range plan.Entries {
 		entry := plan.Entries[entryIndex]
+		if entry.Operation == parser.OperationDowngrade {
+			var installedVersions []string
+			if len(entry.Installed.Versions) > 0 {
+				installedVersions = make([]string, len(entry.Installed.Versions))
+				for index, installed := range entry.Installed.Versions {
+					installedVersions[index] = installed.Version
+				}
+			}
+			message := "Portage планирует понижение версии. Проверьте, соответствует ли это ожидаемому изменению."
+			if len(installedVersions) == 1 && installedVersions[0] != "" && entry.Target.Version != "" {
+				message = "Portage планирует понижение версии: " + installedVersions[0] + " → " + entry.Target.Version + ". Проверьте, соответствует ли это ожидаемому изменению."
+			}
+			result.Findings = append(result.Findings, Finding{
+				RuleID:     RuleDowngradePlanned,
+				Category:   CategoryReview,
+				Message:    message,
+				EntryIndex: entryIndex,
+				Evidence: DowngradePlannedEvidence{
+					EntryIndex: entryIndex, Operation: entry.Operation,
+					InstalledVersions: installedVersions, TargetVersion: entry.Target.Version,
+				},
+			})
+		}
+
 		if contextIndex, ok := firstPackageMatch(entry.Package, context.LocallyPatchedPackages); ok {
 			result.Findings = append(result.Findings, Finding{
 				RuleID:     RuleLocalPatchedPackage,
@@ -154,7 +190,7 @@ func hasMarker(markers []string, wanted string) bool {
 }
 
 func changedSlot(entry parser.Entry) (SlotChangedEvidence, string, string, bool) {
-	if entry.Operation != parser.OperationUpgrade || len(entry.Installed.Versions) != 1 || entry.Target.Slot == nil {
+	if (entry.Operation != parser.OperationUpgrade && entry.Operation != parser.OperationDowngrade) || len(entry.Installed.Versions) != 1 || entry.Target.Slot == nil {
 		return SlotChangedEvidence{}, "", "", false
 	}
 	installed := entry.Installed.Versions[0]
