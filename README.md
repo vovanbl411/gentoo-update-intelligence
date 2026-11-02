@@ -23,4 +23,5 @@ Gentoo Update Intelligence — проект сервиса, который ан�
 ## Документы
 
 - [Архитектура v0.1](docs/architecture.md)
+- [Контракт предметной модели](docs/domain-model.md)
 - [План разработки](docs/plan.md)
