@@ -32,11 +32,13 @@ Gentoo Update Intelligence — проект сервиса, который ан�
 
 Реализован внутренний `reportservice`: он запрашивает metadata для одной записи Parser через переданный Provider и собирает ChangeReport. Ошибки и статусы Lookup сохраняются отдельно для установленной и целевой версий; запросы не выполняются, если ChangeReport отклоняет связь записи. Downgrade проходит через тот же ChangeReport и Lookup по установленной и целевой версиям.
 
+`internal/planservice` объединяет Parser, Analyzer и reportservice для целого текстового плана. Он сохраняет результаты компонентов и последовательно собирает отчёт для каждой записи; общий статус и новые правила анализа не добавляет. Контракт и тесты подготовлены и ожидают review.
+
 Локальный Metadata Provider читает точный cache-файл из закреплённого commit локального Git-репозитория и нормализует его через `metadatadiff.Normalize`. Для работы нужен установленный Git CLI. Он не проверяет `SourceURL` по сети; интеграционный тест связывает Provider с reportservice на временном синтетическом репозитории.
 
 ## Состояние проекта
 
-Реализованы Parser v0.1, Analyzer v0.1, первый срез metadata diff, ограниченный ChangeReport, локальный Metadata Provider и внутренняя связка reportservice. Поддержка downgrade, blockers и удалений покрыта синтетическими тестами; реальные текстовые fixtures этих сценариев пока не предоставлены. Расширение blockers ожидает review. HTTP API, хранение и пользовательский интерфейс пока не реализованы; архитектура остального сервиса остаётся baseline для дальнейшей разработки.
+Реализованы Parser v0.1, Analyzer v0.1, первый срез metadata diff, ограниченный ChangeReport, локальный Metadata Provider и внутренняя связка reportservice. Поддержка downgrade, blockers и удалений покрыта синтетическими тестами; реальные текстовые fixtures этих сценариев пока не предоставлены. Blockers приняты после review `a38074f`; planservice подготовлен и ожидает review. HTTP API, хранение и пользовательский интерфейс пока не реализованы; архитектура остального сервиса остаётся baseline для дальнейшей разработки.
 
 ## Документы
 
@@ -48,4 +50,5 @@ Gentoo Update Intelligence — проект сервиса, который ан�
 - [Контракт локального Metadata Provider](docs/metadata-provider.md)
 - [Контракт ограниченного ChangeReport](docs/change-report.md)
 - [Контракт внутреннего reportservice](docs/report-service.md)
+- [Контракт внутреннего planservice](docs/plan-service.md)
 - [План разработки](docs/plan.md)
