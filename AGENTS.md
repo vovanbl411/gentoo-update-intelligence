@@ -30,7 +30,7 @@
 ## Проверки
 
 - Проверяй изменённое поведение подходящими проверками проекта.
-- Для Parser, Analyzer, metadata diff, ChangeReport и Metadata Provider запускай `gofmt` для изменённых Go-файлов, `go test -count=1 ./...` и `go vet ./...`.
+- Для Parser, Analyzer, metadata diff, ChangeReport, Metadata Provider и reportservice запускай `gofmt` для изменённых Go-файлов, `go test -count=1 ./...` и `go vet ./...`.
 - Выполняй `git diff --check` для изменённых tracked-файлов. Новые untracked-файлы также проверяй на whitespace.
 - Не заявляй о проверках, которые не запускались, и не придумывай команды сборки и тестирования. Добавь такие команды, когда появится реализация.
 - После успешных проверок не расширяй задачу без новых оснований.
