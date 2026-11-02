@@ -45,7 +45,7 @@ func TestLocalPatchedPackageMatchingAndEvidence(t *testing.T) {
 		t.Fatalf("findings = %+v, want one for each exact matching entry", got.Findings)
 	}
 	for index, finding := range got.Findings {
-		if finding.RuleID != RuleLocalPatchedPackage || finding.EntryIndex != index {
+		if finding.RuleID != RuleLocalPatchedPackage || (finding.EntryIndex == nil || *finding.EntryIndex != index) {
 			t.Errorf("finding[%d] = %+v", index, finding)
 		}
 		evidence, ok := finding.Evidence.(LocalPatchedPackageEvidence)
@@ -175,7 +175,7 @@ func TestDowngradePlannedFindingAndEvidence(t *testing.T) {
 		t.Fatalf("findings = %+v, want one downgrade finding", got.Findings)
 	}
 	finding := got.Findings[0]
-	if finding.RuleID != RuleDowngradePlanned || finding.Category != CategoryReview || finding.EntryIndex != 0 || !contains(finding.Message, "2.0-r4 → 1.9-r2") || !contains(finding.Message, "ожидаем") {
+	if finding.RuleID != RuleDowngradePlanned || finding.Category != CategoryReview || (finding.EntryIndex == nil || *finding.EntryIndex != 0) || !contains(finding.Message, "2.0-r4 → 1.9-r2") || !contains(finding.Message, "ожидаем") {
 		t.Fatalf("downgrade finding = %+v", finding)
 	}
 	evidence, ok := finding.Evidence.(DowngradePlannedEvidence)
@@ -212,12 +212,12 @@ func TestDowngradeFindingsOrderAndOperationExclusions(t *testing.T) {
 		t.Fatalf("findings = %+v", got.Findings)
 	}
 	for index, rule := range want {
-		if got.Findings[index].RuleID != rule || got.Findings[index].EntryIndex != 0 {
+		if got.Findings[index].RuleID != rule || (got.Findings[index].EntryIndex == nil || *got.Findings[index].EntryIndex != 0) {
 			t.Errorf("finding[%d] = %+v, want %s for downgrade entry", index, got.Findings[index], rule)
 		}
 	}
 	for _, finding := range got.Findings {
-		if finding.EntryIndex != 0 && finding.RuleID == RuleDowngradePlanned {
+		if (finding.EntryIndex == nil || *finding.EntryIndex != 0) && finding.RuleID == RuleDowngradePlanned {
 			t.Errorf("upgrade/NS received downgrade finding: %+v", finding)
 		}
 	}
@@ -251,7 +251,7 @@ func TestAnalyzeOrderingPartialAndUnsupported(t *testing.T) {
 		t.Fatalf("findings = %+v, want %d", got.Findings, len(wantRules))
 	}
 	for index, finding := range got.Findings {
-		if finding.RuleID != wantRules[index] || finding.EntryIndex != wantEntries[index] {
+		if finding.RuleID != wantRules[index] || (finding.EntryIndex == nil || *finding.EntryIndex != wantEntries[index]) {
 			t.Errorf("finding[%d] = %+v, want rule %s entry %d", index, finding, wantRules[index], wantEntries[index])
 		}
 	}

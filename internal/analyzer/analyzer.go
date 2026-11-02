@@ -11,6 +11,7 @@ import (
 type RuleID string
 
 const (
+	RuleUnresolvedBlocker   RuleID = "UNRESOLVED_BLOCKER"
 	RuleDowngradePlanned    RuleID = "DOWNGRADE_PLANNED"
 	RuleLocalPatchedPackage RuleID = "LOCAL_PATCHED_PACKAGE"
 	RuleUseChanged          RuleID = "USE_CHANGED"
@@ -20,7 +21,10 @@ const (
 // Category is the attention category assigned to a finding.
 type Category string
 
-const CategoryReview Category = "REVIEW"
+const (
+	CategoryReview  Category = "REVIEW"
+	CategoryBlocker Category = "BLOCKER"
+)
 
 // Context contains exact package names that the user says have local patches.
 type Context struct {
@@ -34,12 +38,12 @@ type Result struct {
 	Findings    []Finding
 }
 
-// Finding is one rule result tied to an entry in parser.Result.Entries.
+// Finding refers to a package entry or, through evidence, a blocker.
 type Finding struct {
 	RuleID     RuleID
 	Category   Category
 	Message    string
-	EntryIndex int
+	EntryIndex *int
 	Evidence   Evidence
 }
 
@@ -86,6 +90,11 @@ type DowngradePlannedEvidence struct {
 
 func (DowngradePlannedEvidence) evidenceKind() {}
 
+// UnresolvedBlockerEvidence points to a blocker, independently of Entries.
+type UnresolvedBlockerEvidence struct{ BlockerIndex int }
+
+func (UnresolvedBlockerEvidence) evidenceKind() {}
+
 // Analyze applies Analyzer v0.1 rules without changing the Parser result.
 func Analyze(plan parser.Result, context Context) Result {
 	result := Result{
@@ -112,7 +121,7 @@ func Analyze(plan parser.Result, context Context) Result {
 				RuleID:     RuleDowngradePlanned,
 				Category:   CategoryReview,
 				Message:    message,
-				EntryIndex: entryIndex,
+				EntryIndex: &entryIndex,
 				Evidence: DowngradePlannedEvidence{
 					EntryIndex: entryIndex, Operation: entry.Operation,
 					InstalledVersions: installedVersions, TargetVersion: entry.Target.Version,
@@ -125,7 +134,7 @@ func Analyze(plan parser.Result, context Context) Result {
 				RuleID:     RuleLocalPatchedPackage,
 				Category:   CategoryReview,
 				Message:    "Проверьте применимость локальных патчей для " + packageName(entry.Package) + ".",
-				EntryIndex: entryIndex,
+				EntryIndex: &entryIndex,
 				Evidence:   LocalPatchedPackageEvidence{ContextIndex: contextIndex},
 			})
 		}
@@ -135,7 +144,7 @@ func Analyze(plan parser.Result, context Context) Result {
 				RuleID:     RuleUseChanged,
 				Category:   CategoryReview,
 				Message:    "План показывает изменения USE: " + joinTokens(rawTokens) + ".",
-				EntryIndex: entryIndex,
+				EntryIndex: &entryIndex,
 				Evidence:   evidence,
 			})
 		}
@@ -145,12 +154,22 @@ func Analyze(plan parser.Result, context Context) Result {
 				RuleID:     RuleSlotChanged,
 				Category:   CategoryReview,
 				Message:    "SLOT пакета " + packageName(entry.Package) + " изменяется с " + installedSlot + " на " + targetSlot + ".",
-				EntryIndex: entryIndex,
+				EntryIndex: &entryIndex,
 				Evidence:   evidence,
 			})
 		}
 	}
 
+	for blockerIndex, blocker := range plan.Blockers {
+		if blocker.Resolution != parser.BlockerUnresolved {
+			continue
+		}
+		result.Findings = append(result.Findings, Finding{
+			RuleID: RuleUnresolvedBlocker, Category: CategoryBlocker,
+			Message:  "Portage показывает неразрешённую блокировку: " + blocker.Atom + ". В представленном плане это ограничение не разрешено.",
+			Evidence: UnresolvedBlockerEvidence{BlockerIndex: blockerIndex},
+		})
+	}
 	return result
 }
 

@@ -30,10 +30,13 @@ const (
 
 // Result is the deterministic, source-linked result of parsing one input.
 type Result struct {
-	Status      Status
-	Entries     []Entry
-	Summary     *Summary
-	Diagnostics []Diagnostic
+	Status          Status
+	Entries         []Entry
+	Blockers        []Blocker
+	Removals        []Removal
+	ConflictSummary *ConflictSummary
+	Summary         *Summary
+	Diagnostics     []Diagnostic
 }
 
 // Package identifies a package independently of its version.
@@ -110,6 +113,7 @@ type Summary struct {
 	Packages   int
 	Upgrades   int
 	Downgrades int
+	Uninstalls int
 	NewSlots   int
 	Download   Size
 	SourceLine int
@@ -126,7 +130,7 @@ var (
 	rowPrefixRE   = regexp.MustCompile(`^\[(ebuild|binary)\s+([^]]*)\]\s*(.*)$`)
 	versionRE     = regexp.MustCompile(`^(.+)-([0-9][A-Za-z0-9._+~-]*)$`)
 	summaryRE     = regexp.MustCompile(`^Total:\s*([0-9]+) package(?:s)?\s*\((.*)\),\s*Size of downloads:\s*([0-9]+)\s+(B|KiB|MiB|GiB)$`)
-	summaryItemRE = regexp.MustCompile(`^([0-9]+)\s+(upgrade|upgrades|downgrade|downgrades|in new slot|in new slots)$`)
+	summaryItemRE = regexp.MustCompile(`^([0-9]+)\s+(upgrade|upgrades|downgrade|downgrades|in new slot|in new slots|uninstall|uninstalls)$`)
 	sizeRE        = regexp.MustCompile(`^([0-9]+)\s+(B|KiB|MiB|GiB)$`)
 	ansiRE        = regexp.MustCompile(`\x1b\[[0-?]*[ -/]*[@-~]`)
 )
@@ -156,6 +160,34 @@ func Parse(input string) Result {
 		}
 		if strings.Contains(trimmed, "--tree") || strings.Contains(trimmed, "--columns") {
 			result.Diagnostics = append(result.Diagnostics, diagnostic("UNSUPPORTED_FORMAT", "формат --tree или --columns не поддерживается", lineNumber))
+			continue
+		}
+
+		if strings.HasPrefix(trimmed, "[blocks") {
+			blocker, ok := parseBlocker(line, lineNumber)
+			if !ok {
+				result.Diagnostics = append(result.Diagnostics, diagnostic("MALFORMED_BLOCKER", "повреждён или не поддержан формат blocker", lineNumber))
+			} else {
+				result.Blockers = append(result.Blockers, blocker)
+			}
+			continue
+		}
+		if strings.HasPrefix(trimmed, "[uninstall") {
+			removal, ok := parseRemoval(line, lineNumber)
+			if !ok {
+				result.Diagnostics = append(result.Diagnostics, diagnostic("MALFORMED_REMOVAL", "повреждён или не поддержан формат удаления", lineNumber))
+			} else {
+				result.Removals = append(result.Removals, removal)
+			}
+			continue
+		}
+		if strings.HasPrefix(trimmed, "Conflict:") {
+			summary, ok := parseConflictSummary(trimmed, lineNumber)
+			if !ok || result.ConflictSummary != nil {
+				result.Diagnostics = append(result.Diagnostics, diagnostic("MALFORMED_CONFLICT_SUMMARY", "строка Conflict повреждена или повторяется", lineNumber))
+			} else {
+				result.ConflictSummary = &summary
+			}
 			continue
 		}
 
@@ -207,10 +239,21 @@ func Parse(input string) Result {
 	if scanner.Err() != nil {
 		result.Diagnostics = append(result.Diagnostics, Diagnostic{Code: "MALFORMED_ENTRY", Message: "строка входа превышает допустимый размер"})
 	}
-	if result.Summary != nil && result.Summary.Packages != len(result.Entries) {
+	if result.Summary != nil && (result.Summary.Packages != len(result.Entries) || result.Summary.Uninstalls != len(result.Removals)) {
 		// The total record count is mandatory; displayed rounded KiB totals are
 		// preserved as facts and are not compared against a sum of row sizes.
 		result.Diagnostics = append(result.Diagnostics, diagnostic("SUMMARY_MISMATCH", "количество записей не совпадает со сводкой", result.Summary.SourceLine))
+	}
+	if summary := result.ConflictSummary; summary != nil {
+		unresolved := 0
+		for _, blocker := range result.Blockers {
+			if blocker.Resolution == BlockerUnresolved {
+				unresolved++
+			}
+		}
+		if summary.Blockers != len(result.Blockers) || summary.Unresolved != unresolved {
+			result.Diagnostics = append(result.Diagnostics, diagnostic("CONFLICT_SUMMARY_MISMATCH", "число blockers не совпадает со строкой Conflict", summary.SourceLine))
+		}
 	}
 	// A summary consistency check happens after scanning, so restore source
 	// order before returning diagnostics to callers.
@@ -225,7 +268,7 @@ func Parse(input string) Result {
 		return left[0] < right[0]
 	})
 
-	if len(result.Entries) == 0 {
+	if len(result.Entries) == 0 && len(result.Blockers) == 0 && len(result.Removals) == 0 {
 		result.Status = StatusUnsupported
 	} else if len(result.Diagnostics) != 0 {
 		result.Status = StatusPartial
@@ -335,6 +378,8 @@ func parseSummary(match []string, line int) (Summary, bool) {
 			key, summary.Downgrades = "downgrade", count
 		case "in new slot", "in new slots":
 			key, summary.NewSlots = "new slots", count
+		case "uninstall", "uninstalls":
+			key, summary.Uninstalls = "uninstall", count
 		}
 		if seen[key] {
 			return Summary{}, false
