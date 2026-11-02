@@ -115,11 +115,43 @@ func TestParseRealFixture(t *testing.T) {
 	if got := groupTokens(result.Entries[4].FlagGroups); !reflect.DeepEqual(got, []string{"USE:initramfs verify-sig -debug (-generic-uki) -modules-compress -test"}) {
 		t.Errorf("kernel groups: %v", got)
 	}
-	if result.Entries[0].FlagGroups[0].Values[0].State != FlagMaskedEnabled || result.Entries[0].FlagGroups[0].Values[0].RawToken != "(systemd)" || result.Entries[0].FlagGroups[0].Values[1].State != FlagMaskedDisabled {
+	if result.Entries[0].FlagGroups[0].Values[0].Name != "systemd" || result.Entries[0].FlagGroups[0].Values[0].State != FlagEnabled || !reflect.DeepEqual(result.Entries[0].FlagGroups[0].Values[0].Markers, []string{"(", ")"}) || result.Entries[0].FlagGroups[0].Values[0].RawToken != "(systemd)" || result.Entries[0].FlagGroups[0].Values[1].Name != "elogind" || result.Entries[0].FlagGroups[0].Values[1].State != FlagDisabled || !reflect.DeepEqual(result.Entries[0].FlagGroups[0].Values[1].Markers, []string{"(", ")", "-"}) || result.Entries[0].FlagGroups[0].Values[1].RawToken != "(-elogind)" {
 		t.Errorf("flag state/raw markers were not preserved: %+v", result.Entries[0].FlagGroups[0].Values)
 	}
 	if result.Summary == nil || result.Summary.Packages != 6 || result.Summary.Upgrades != 5 || result.Summary.NewSlots != 1 || result.Summary.Download != (Size{481212, "KiB"}) || result.Summary.SourceLine != 13 {
 		t.Errorf("summary: %+v", result.Summary)
+	}
+}
+
+func TestParseFlagTokenNormalization(t *testing.T) {
+	tests := []struct {
+		token   string
+		name    string
+		state   FlagState
+		markers []string
+	}{
+		{"foo", "foo", FlagEnabled, nil},
+		{"-foo", "foo", FlagDisabled, []string{"-"}},
+		{"(foo)", "foo", FlagEnabled, []string{"(", ")"}},
+		{"(-foo)", "foo", FlagDisabled, []string{"(", ")", "-"}},
+		{"foo*", "foo", FlagEnabled, []string{"*"}},
+		{"-foo*", "foo", FlagDisabled, []string{"-", "*"}},
+		{"foo%", "foo", FlagEnabled, []string{"%"}},
+		{"-foo%", "foo", FlagDisabled, []string{"-", "%"}},
+		{"foo%*", "foo", FlagEnabled, []string{"%", "*"}},
+		{"(-foo%)", "foo", FlagDisabled, []string{"(", ")", "-", "%"}},
+	}
+	for _, test := range tests {
+		t.Run(test.token, func(t *testing.T) {
+			result := Parse(`[ebuild U] cat/pkg-1::repo USE="` + test.token + `" 1 KiB`)
+			if result.Status != StatusParsed || len(result.Entries) != 1 || len(result.Entries[0].FlagGroups) != 1 || len(result.Entries[0].FlagGroups[0].Values) != 1 {
+				t.Fatalf("synthetic row did not parse: %+v", result)
+			}
+			value := result.Entries[0].FlagGroups[0].Values[0]
+			if value.Name != test.name || value.State != test.state || value.RawToken != test.token || !reflect.DeepEqual(value.Markers, test.markers) {
+				t.Errorf("value = %+v; want Name=%q State=%q RawToken=%q Markers=%v", value, test.name, test.state, test.token, test.markers)
+			}
+		})
 	}
 }
 

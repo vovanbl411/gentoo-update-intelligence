@@ -82,14 +82,12 @@ type FlagGroup struct {
 	Values []FlagValue
 }
 
-// FlagState describes the state shown by a flag token, including parentheses.
+// FlagState describes the enabled or disabled state shown by a flag token.
 type FlagState string
 
 const (
-	FlagEnabled        FlagState = "enabled"
-	FlagDisabled       FlagState = "disabled"
-	FlagMaskedEnabled  FlagState = "masked-enabled"
-	FlagMaskedDisabled FlagState = "masked-disabled"
+	FlagEnabled  FlagState = "enabled"
+	FlagDisabled FlagState = "disabled"
 )
 
 // FlagValue preserves both the displayed token and its interpreted state.
@@ -412,13 +410,11 @@ func parseFlagGroup(token string) (FlagGroup, bool) {
 }
 
 func parseFlagValue(raw string) FlagValue {
-	// Keep the complete token while exposing the visible markers and state as
-	// separate fields for consumers that need to inspect them.
 	value := FlagValue{RawToken: raw}
 	value.State = FlagEnabled
 	trimmed := raw
-	masked := strings.HasPrefix(trimmed, "(") && strings.HasSuffix(trimmed, ")")
-	if masked {
+	parenthesized := strings.HasPrefix(trimmed, "(") && strings.HasSuffix(trimmed, ")")
+	if parenthesized {
 		value.Markers = append(value.Markers, "(", ")")
 		trimmed = trimmed[1 : len(trimmed)-1]
 	}
@@ -431,13 +427,14 @@ func parseFlagValue(raw string) FlagValue {
 		value.Markers = append(value.Markers, "~")
 		trimmed = trimmed[1:]
 	}
-	if masked {
-		if value.State == FlagDisabled {
-			value.State = FlagMaskedDisabled
-		} else {
-			value.State = FlagMaskedEnabled
-		}
+	suffixStart := len(trimmed)
+	for suffixStart > 0 && (trimmed[suffixStart-1] == '*' || trimmed[suffixStart-1] == '%') {
+		suffixStart--
 	}
+	for _, marker := range trimmed[suffixStart:] {
+		value.Markers = append(value.Markers, string(marker))
+	}
+	trimmed = trimmed[:suffixStart]
 	value.Name = trimmed
 	return value
 }
