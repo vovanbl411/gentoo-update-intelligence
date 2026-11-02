@@ -8,6 +8,7 @@
 - [docs/parser.md](docs/parser.md) фиксирует контракт Parser v0.1 и границы поддержки.
 - [docs/analyzer.md](docs/analyzer.md) фиксирует контракт Analyzer v0.1 и границы его правил.
 - [docs/metadata-diff.md](docs/metadata-diff.md) фиксирует контракт первого среза Gentoo metadata diff.
+- [docs/metadata-provider.md](docs/metadata-provider.md) фиксирует контракт локального Metadata Provider.
 - [docs/change-report.md](docs/change-report.md) фиксирует контракт и поведение ограниченного ChangeReport.
 - [docs/plan.md](docs/plan.md) задаёт этапы и критерии их завершения.
 - Реализованное состояние проверяй по коду и результатам проверок. Не описывай запланированные возможности как реализованные.

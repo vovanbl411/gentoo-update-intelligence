@@ -41,5 +41,6 @@ Gentoo Update Intelligence — проект сервиса, который ан�
 - [Контракт Parser v0.1](docs/parser.md)
 - [Контракт Analyzer v0.1](docs/analyzer.md)
 - [Контракт первого среза Gentoo metadata diff](docs/metadata-diff.md)
+- [Контракт локального Metadata Provider](docs/metadata-provider.md)
 - [Контракт ограниченного ChangeReport](docs/change-report.md)
 - [План разработки](docs/plan.md)
