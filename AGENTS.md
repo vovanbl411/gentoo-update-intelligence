@@ -8,7 +8,7 @@
 - [docs/parser.md](docs/parser.md) фиксирует контракт Parser v0.1 и границы поддержки.
 - [docs/analyzer.md](docs/analyzer.md) фиксирует контракт Analyzer v0.1 и границы его правил.
 - [docs/metadata-diff.md](docs/metadata-diff.md) фиксирует контракт первого среза Gentoo metadata diff.
-- [docs/change-report.md](docs/change-report.md) фиксирует подготовленный к review контракт ограниченного ChangeReport.
+- [docs/change-report.md](docs/change-report.md) фиксирует контракт и поведение ограниченного ChangeReport.
 - [docs/plan.md](docs/plan.md) задаёт этапы и критерии их завершения.
 - Реализованное состояние проверяй по коду и результатам проверок. Не описывай запланированные возможности как реализованные.
 - Не копируй архитектуру и план в этот файл.
@@ -28,7 +28,7 @@
 ## Проверки
 
 - Проверяй изменённое поведение подходящими проверками проекта.
-- Для Parser, Analyzer и metadata diff запускай `gofmt` для изменённых Go-файлов, `go test ./...` и `go vet ./...`.
+- Для Parser, Analyzer, metadata diff и ChangeReport запускай `gofmt` для изменённых Go-файлов, `go test ./...` и `go vet ./...`.
 - Выполняй `git diff --check` для изменённых tracked-файлов. Новые untracked-файлы также проверяй на whitespace.
 - Не заявляй о проверках, которые не запускались, и не придумывай команды сборки и тестирования. Добавь такие команды, когда появится реализация.
 - После успешных проверок не расширяй задачу без новых оснований.
