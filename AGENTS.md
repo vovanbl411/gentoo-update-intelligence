@@ -12,6 +12,7 @@
 - [docs/change-report.md](docs/change-report.md) фиксирует контракт и поведение ограниченного ChangeReport.
 - [docs/report-service.md](docs/report-service.md) фиксирует контракт внутреннего reportservice.
 - [docs/plan-service.md](docs/plan-service.md) фиксирует контракт внутреннего planservice.
+- [docs/cli.md](docs/cli.md) фиксирует контракт ручного CLI.
 - [docs/plan.md](docs/plan.md) задаёт этапы и критерии их завершения.
 - Реализованное состояние проверяй по коду и результатам проверок. Не описывай запланированные возможности как реализованные.
 - Не копируй архитектуру и план в этот файл.
@@ -32,6 +33,7 @@
 
 - Проверяй изменённое поведение подходящими проверками проекта.
 - Для Parser, Analyzer, metadata diff, ChangeReport, Metadata Provider, reportservice и planservice запускай `gofmt` для изменённых Go-файлов, `go test -count=1 ./...` и `go vet ./...`.
+- Для CLI запускай `gofmt` для изменённых Go-файлов, `go test -count=1 ./...`, `go vet ./...` и `go build -o /tmp/gentoo-update-intelligence ./cmd/gentoo-update-intelligence`.
 - Выполняй `git diff --check` для изменённых tracked-файлов. Новые untracked-файлы также проверяй на whitespace.
 - Не заявляй о проверках, которые не запускались, и не придумывай команды сборки и тестирования. Добавь такие команды, когда появится реализация.
 - После успешных проверок не расширяй задачу без новых оснований.
