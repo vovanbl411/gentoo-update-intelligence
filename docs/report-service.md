@@ -1,6 +1,6 @@
 # Контракт внутреннего reportservice
 
-`internal/reportservice` — внутренний слой координации между одной записью Parser, переданным Metadata Provider и существующим `changereport.Build`. Это не сетевой сервис. Пакет получает snapshots через Provider и собирает отчёт; собственного I/O в нём нет.
+`backend/internal/reportservice` — внутренний слой координации между одной записью Parser, переданным Metadata Provider и существующим `changereport.Build`. Это не сетевой сервис. Пакет получает snapshots через Provider и собирает отчёт; собственного I/O в нём нет.
 
 ## API
 

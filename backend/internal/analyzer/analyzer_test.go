@@ -10,7 +10,7 @@ import (
 )
 
 func TestAnalyzeRealParserFixtureWithoutContext(t *testing.T) {
-	input, err := os.ReadFile("../../testdata/parser/ebuild-updates.txt")
+	input, err := os.ReadFile("../../../testdata/parser/ebuild-updates.txt")
 	if err != nil {
 		t.Fatal(err)
 	}

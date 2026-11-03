@@ -1,6 +1,8 @@
 # Контракт CLI
 
-`cmd/gentoo-update-intelligence` запускает ручной анализ текстового плана через принятый `planservice`. CLI читает вход, открывает локальный Metadata Provider с явно указанными repository и commit, передаёт результат анализа в JSON и не выполняет обновление системы.
+`backend/cmd/gentoo-update-intelligence` запускает ручной анализ текстового плана через принятый `planservice`. CLI читает вход, открывает локальный Metadata Provider с явно указанными repository и commit, передаёт результат анализа в JSON и не выполняет обновление системы.
+
+Команды запускайте из каталога `backend/`.
 
 ## Требования
 

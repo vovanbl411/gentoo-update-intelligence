@@ -119,4 +119,4 @@ Evidence содержит запись с обоими показанными SL
 
 ## Реализация и проверки
 
-Реализация находится в `internal/analyzer`; тесты вызывают `Analyze` на реальном Parser fixture и типизированных синтетических фактах Parser. Реальных downgrade fixtures пока нет. Проверки проекта: `gofmt` для изменённых Go-файлов, `go test -count=1 ./...`, `go vet ./...` и `git diff --check`.
+Реализация находится в `backend/internal/analyzer`; тесты вызывают `Analyze` на реальном Parser fixture и типизированных синтетических фактах Parser. Реальных downgrade fixtures пока нет. Проверки проекта выполняются из `backend/`: `gofmt` для изменённых Go-файлов, `go test -count=1 ./...`, `go vet ./...` и `git diff --check`.

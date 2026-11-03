@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
-const apiFixture = JSON.parse(readFileSync(new URL('../src/fixtures/api-found.json', import.meta.url), 'utf8'));
+const apiFixture = JSON.parse(readFileSync(new URL('./unit/fixtures/api-found.json', import.meta.url), 'utf8'));
 const id = '12345678-1234-1234-1234-123456789abc';
 const result = { Plan: { Status:'partial', Entries:[], Blockers:[], Diagnostics:[{Code:'TEST',Message:'<img src=x onerror=alert(1)>',SourceLines:[2]}] }, Analysis:{Status:'partial',Findings:[]},Reports:[] };
 test('POST, GET, прямой вход и refresh', async ({page}) => {

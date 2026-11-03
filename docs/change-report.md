@@ -1,6 +1,6 @@
 # Ограниченный ChangeReport
 
-Пакет `internal/changereport` связывает выбранную запись Parser с подготовленными metadata-снимками, проверяет соответствие снимков записи, вызывает `metadatadiff.Compare` и формирует три раздела. Он не пересчитывает diff, не принимает и не меняет findings Analyzer, не реализует approval и не выполняет I/O.
+Пакет `backend/internal/changereport` связывает выбранную запись Parser с подготовленными metadata-снимками, проверяет соответствие снимков записи, вызывает `metadatadiff.Compare` и формирует три раздела. Он не пересчитывает diff, не принимает и не меняет findings Analyzer, не реализует approval и не выполняет I/O.
 
 ## Go API
 

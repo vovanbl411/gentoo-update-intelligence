@@ -18,7 +18,7 @@ Gentoo Update Intelligence — проект сервиса, который ан�
 
 ## Parser
 
-Реализован Parser v0.1 на Go для поддерживаемого плоского вывода Portage. Он извлекает записи `[ebuild …]` с операциями `U`, `UD` и `NS`, именованные группы флагов, размеры и сводку. Отдельно сохраняются blockers `b/B`, явные удаления и строка `Conflict:`. Поддержка downgrade проверяется синтетическими тестами; реальных downgrade fixtures пока нет. Parser возвращает статус и диагностики для пустого, неполного или неподдерживаемого ввода. Проверки запускаются командой `go test ./...`.
+Реализован Parser v0.1 на Go для поддерживаемого плоского вывода Portage. Он извлекает записи `[ebuild …]` с операциями `U`, `UD` и `NS`, именованные группы флагов, размеры и сводку. Отдельно сохраняются blockers `b/B`, явные удаления и строка `Conflict:`. Поддержка downgrade проверяется синтетическими тестами; реальных downgrade fixtures пока нет. Parser возвращает статус и диагностики для пустого, неполного или неподдерживаемого ввода. Проверки запускаются из `backend/` командой `go test ./...`.
 
 ## Analyzer
 
@@ -32,15 +32,15 @@ Gentoo Update Intelligence — проект сервиса, который ан�
 
 Реализован внутренний `reportservice`: он запрашивает metadata для одной записи Parser через переданный Provider и собирает ChangeReport. Ошибки и статусы Lookup сохраняются отдельно для установленной и целевой версий; запросы не выполняются, если ChangeReport отклоняет связь записи. Downgrade проходит через тот же ChangeReport и Lookup по установленной и целевой версиям.
 
-`internal/planservice` объединяет Parser, Analyzer и reportservice для целого текстового плана. Он сохраняет результаты компонентов и последовательно собирает отчёт для каждой записи; общий статус и новые правила анализа не добавляет. Planservice принят после review `013523e`.
+`backend/internal/planservice` объединяет Parser, Analyzer и reportservice для целого текстового плана. Он сохраняет результаты компонентов и последовательно собирает отчёт для каждой записи; общий статус и новые правила анализа не добавляет. Planservice принят после review `013523e`.
 
-Минимальный `cmd/gentoo-update-intelligence` читает план из файла или stdin, открывает Metadata Provider на указанном пользователем commit и выводит результат planservice в JSON. CLI принят после review `a7d794e`; он не выполняет обновление системы.
+Минимальный `backend/cmd/gentoo-update-intelligence` читает план из файла или stdin, открывает Metadata Provider на указанном пользователем commit и выводит результат planservice в JSON. CLI принят после review `a7d794e`; он не выполняет обновление системы.
 
 Локальный Metadata Provider читает точный cache-файл из закреплённого commit локального Git-репозитория и нормализует его через `metadatadiff.Normalize`. Для работы нужен установленный Git CLI. Он не проверяет `SourceURL` по сети; интеграционный тест связывает Provider с reportservice на временном синтетическом репозитории.
 
 HTTP backend предоставляет `POST /analyses` и `GET /analyses/{id}`. Он использует существующие `planservice` и Metadata Provider, сохраняет полный результат в PostgreSQL и возвращает его по UUID. Параметры подключения к PostgreSQL и закреплённому metadata repository передаются через окружение backend; контракт API описан в [документе HTTP API](docs/http-api.md).
 
-`internal/ebuildresolver` выбирает точный ebuild по first-parent истории. `internal/metadatagenerator` проверяет выбранный commit, blob и содержимое ebuild, запускает `egencache` в изолированной временной конфигурации и возвращает cache точной версии, SHA-256 и provenance. Он рассчитан на подготовленный временный checkout Gentoo; загрузка репозиториев, master repositories для оверлеев и публичный интерфейс генерации остаются отдельными этапами. Реальный прогон `libei` проверил обе версии, Git-снимок и существующий CLI; его артефакты описаны в [контракте подготовки metadata](docs/metadata-preparation.md).
+`backend/internal/ebuildresolver` выбирает точный ebuild по first-parent истории. `backend/internal/metadatagenerator` проверяет выбранный commit, blob и содержимое ebuild, запускает `egencache` в изолированной временной конфигурации и возвращает cache точной версии, SHA-256 и provenance. Он рассчитан на подготовленный временный checkout Gentoo; загрузка репозиториев, master repositories для оверлеев и публичный интерфейс генерации остаются отдельными этапами. Реальный прогон `libei` проверил обе версии, Git-снимок и существующий CLI; его артефакты описаны в [контракте подготовки metadata](docs/metadata-preparation.md).
 
 ## Состояние проекта
 

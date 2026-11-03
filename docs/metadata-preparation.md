@@ -1,6 +1,6 @@
 # Выбор source revision и подготовка metadata
 
-**Статус:** контракт принят после review `a9a7a42`. `internal/ebuildresolver` и `internal/metadatagenerator` реализованы и подготовлены к review.
+**Статус:** контракт принят после review `a9a7a42`. `backend/internal/ebuildresolver` и `backend/internal/metadatagenerator` реализованы и подготовлены к review.
 
 Контракт задаёт три отдельные границы: выбор source revision, генерацию metadata и чтение готовых cache-снимков существующим Metadata Provider. Он не задаёт постоянное хранилище, автоматический fetch, очередь задач, кэш повторного использования или изменения CLI/API.
 
@@ -110,6 +110,6 @@ Provider не выбирает ebuild revision, не запускает `egencac
 - недоступный Git object и неверный тип записи — отдельная техническая ошибка, не `not_found`;
 - повторный запуск даёт тот же результат и не меняет исходный repository.
 
-Синтетические тесты resolver проверяют эти сценарии в `internal/ebuildresolver`. Тесты `internal/metadatagenerator` используют локальную заглушку `egencache` и проверяют точный выходной файл, код ошибки, отсутствие точной версии, неверный SHA, изменённое содержимое ebuild и уже готовый cache. Отдельный реальный прогон на Gentoo подтверждает цепочку resolver → `egencache` → Git-снимок → CLI; подробности и артефакты приведены выше.
+Синтетические тесты resolver проверяют эти сценарии в `backend/internal/ebuildresolver`. Тесты `backend/internal/metadatagenerator` используют локальную заглушку `egencache` и проверяют точный выходной файл, код ошибки, отсутствие точной версии, неверный SHA, изменённое содержимое ebuild и уже готовый cache. Отдельный реальный прогон на Gentoo подтверждает цепочку resolver → `egencache` → Git-снимок → CLI; подробности и артефакты приведены выше.
 
 Генерация metadata и интеграция её результатов с Provider проверяются отдельно от resolver. Эти проверки не расширяют контракт Provider на выбор source revision или создание cache.

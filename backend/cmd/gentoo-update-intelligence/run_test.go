@@ -226,7 +226,7 @@ func TestCLIReportsLookupErrorAsStringAndExitsSuccessfully(t *testing.T) {
 
 func TestCLIUsesExistingParserFixtureWithoutChangingIt(t *testing.T) {
 	repo := newRepository(t, nil)
-	fixture, err := os.ReadFile("../../testdata/parser/ebuild-updates.txt")
+	fixture, err := os.ReadFile("../../../testdata/parser/ebuild-updates.txt")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -17,11 +17,11 @@ func testSource() Source {
 func normalized(content string) Snapshot { return Normalize(testSource(), content) }
 
 func TestRealFixture(t *testing.T) {
-	beforeContent, err := os.ReadFile("../../testdata/metadata/libxml2-2.13.9.md5-cache")
+	beforeContent, err := os.ReadFile("../../../testdata/metadata/libxml2-2.13.9.md5-cache")
 	if err != nil {
 		t.Fatal(err)
 	}
-	afterContent, err := os.ReadFile("../../testdata/metadata/libxml2-2.14.6.md5-cache")
+	afterContent, err := os.ReadFile("../../../testdata/metadata/libxml2-2.14.6.md5-cache")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,6 +1,6 @@
 import fixture from './fixtures/api-found.json';
 import { describe, expect, it } from 'vitest';
-import { envelope, evidence, input } from './model';
+import { envelope, evidence, input } from '../../src/model';
 const id = '12345678-1234-1234-1234-123456789abc';
 describe('форма', () => {
   it('сохраняет исходный план и порядок пакетов', () => expect(input(' plan\n', ' a/b \n\n c/d ')).toEqual({plan:' plan\n',locally_patched_packages:[{category:'a',name:'b'},{category:'c',name:'d'}]}));

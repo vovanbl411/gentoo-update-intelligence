@@ -37,8 +37,8 @@
 ## Проверки
 
 - Проверяй изменённое поведение подходящими проверками проекта.
-- Для Parser, Analyzer, metadata diff, ChangeReport, Metadata Provider, reportservice и planservice запускай `gofmt` для изменённых Go-файлов, `go test -count=1 ./...` и `go vet ./...`.
-- Для CLI запускай `gofmt` для изменённых Go-файлов, `go test -count=1 ./...`, `go vet ./...` и `go build -o /tmp/gentoo-update-intelligence ./cmd/gentoo-update-intelligence`.
+- Для Parser, Analyzer, metadata diff, ChangeReport, Metadata Provider, reportservice и planservice запускай команды из `backend/`: `gofmt` для изменённых Go-файлов, `go test -count=1 ./...` и `go vet ./...`.
+- Для CLI запускай команды из `backend/`: `gofmt` для изменённых Go-файлов, `go test -count=1 ./...`, `go vet ./...` и `go build -o /tmp/gentoo-update-intelligence ./cmd/gentoo-update-intelligence`.
 - Выполняй `git diff --check` для изменённых tracked-файлов. Новые untracked-файлы также проверяй на whitespace.
 - Не заявляй о проверках, которые не запускались, и не придумывай команды сборки и тестирования. Добавь такие команды, когда появится реализация.
 - После успешных проверок не расширяй задачу без новых оснований.

@@ -1,6 +1,6 @@
 # Локальный Metadata Provider
 
-`internal/metadataprovider` читает точный cache-файл из Git-объектов одного закреплённого commit и передаёт содержимое существующей `metadatadiff.Normalize`. Provider обслуживает один логический repository и один commit. Он не интегрирован с `ChangeReport` или `Analyzer`.
+`backend/internal/metadataprovider` читает точный cache-файл из Git-объектов одного закреплённого commit и передаёт содержимое существующей `metadatadiff.Normalize`. Provider обслуживает один логический repository и один commit. Он не интегрирован с `ChangeReport` или `Analyzer`.
 
 ## API
 
@@ -98,7 +98,7 @@ Provider запускает Git CLI через `os/exec` с отдельными
 
 Покрываются обычные файлы mode `100644` и `100755`, точное содержимое, SHA-256 и provenance, `not_found`, `repository_unavailable`, приоритет валидации, Gentoo имена и версии, ошибки конфигурации и commit, закреплённый commit при изменённом `HEAD`, игнорирование рабочих изменений и untracked-файлов, symlink/каталог/submodule, диагностики повреждённых metadata, ошибка blob-чтения и отсутствие изменений репозитория при повторном чтении.
 
-Validation gates:
+Validation gates (из каталога `backend/`):
 
 ```text
 gofmt -w internal/metadataprovider/*.go
