@@ -1,8 +1,18 @@
+// Go API retains exported field names; null slices and pointer fields are expected.
 export type Obj = Record<string, any>;
+export interface ApiEnvelope { id: string; result: ApiResult }
+export interface ApiResult extends Obj { Plan: ApiPlan; Analysis: ApiAnalysis; Reports: ApiReport[] | null }
+export interface ApiPlan extends Obj { Status: string; Entries: ApiEntry[] | null; Blockers: Obj[] | null; Diagnostics: Obj[] | null }
+export interface ApiEntry extends Obj { Package: Obj; Target: Obj; Installed: Obj; FlagGroups?: Obj[] | null }
+export interface ApiAnalysis extends Obj { Status: string; Findings: ApiFinding[] | null }
+export interface ApiFinding extends Obj { Message: string; EntryIndex?: number | null; Evidence?: unknown }
+export interface ApiReport extends Obj { Report: Obj; BeforeLookup?: ApiLookup; AfterLookup?: ApiLookup }
+export interface ApiLookup extends Obj { Query?: Obj | null; Result?: Obj | null; Err?: string | null; SkipReason?: string }
+
 export const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const array = (value: unknown): any[] => Array.isArray(value) ? value : [];
 const object = (value: unknown): value is Obj => value !== null && typeof value === 'object' && !Array.isArray(value);
-export function envelope(value: unknown): value is { id: string; result: Obj } {
+export function envelope(value: unknown): value is ApiEnvelope {
   if (!object(value) || typeof value.id !== 'string' || !uuid.test(value.id) || !object(value.result)) return false;
   const { Plan, Analysis, Reports } = value.result;
   const objects = (v: unknown) => v === null || (Array.isArray(v) && v.every(object));

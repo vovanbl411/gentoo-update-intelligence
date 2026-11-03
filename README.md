@@ -44,7 +44,7 @@ HTTP backend предоставляет `POST /analyses` и `GET /analyses/{id}`
 
 ## Состояние проекта
 
-Реализованы Parser v0.1, Analyzer v0.1, первый срез metadata diff, ограниченный ChangeReport, локальный Metadata Provider, reportservice, planservice, выбор исторической ревизии ebuild, генератор metadata, HTTP API и постоянное PostgreSQL-хранение анализа. Поддержка downgrade, blockers и удалений покрыта синтетическими тестами; реальные текстовые fixtures этих сценариев пока не предоставлены. Blockers приняты после review `a38074f`, planservice — после review `013523e`, CLI — после review `a7d794e`, resolver — после review `6716bdc`, metadatagenerator — после review `666beaa`. Frontend находится на review; инструкция локального запуска — в [frontend/README.md](frontend/README.md). Redis, Docker Compose и HTTP-генерация metadata остаются отдельными этапами.
+Реализованы Parser v0.1, Analyzer v0.1, первый срез metadata diff, ограниченный ChangeReport, локальный Metadata Provider, reportservice, planservice, выбор исторической ревизии ebuild, генератор metadata, HTTP API и постоянное PostgreSQL-хранение анализа. Поддержка downgrade, blockers и удалений покрыта синтетическими тестами; реальные текстовые fixtures этих сценариев пока не предоставлены. Blockers приняты после review `a38074f`, planservice — после review `013523e`, CLI — после review `a7d794e`, resolver — после review `6716bdc`, metadatagenerator — после review `666beaa`. Frontend реализован и находится на review; инструкция локального запуска — в [frontend/README.md](frontend/README.md). Redis, Docker Compose и HTTP-генерация metadata остаются отдельными этапами.
 
 ## Документы
 

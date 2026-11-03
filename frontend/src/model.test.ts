@@ -1,3 +1,4 @@
+import fixture from './fixtures/api-found.json';
 import { describe, expect, it } from 'vitest';
 import { envelope, evidence, input } from './model';
 const id = '12345678-1234-1234-1234-123456789abc';
@@ -19,3 +20,10 @@ it('отклоняет повреждённые вложенные элемен�
 });
 
 it('сохраняет finding при неполном evidence', () => { expect(evidence({Entries:[]},{EntryIndex:0,Evidence:{Tokens:[null]}}).join()).toContain('недоступно'); expect(evidence({Entries:[{Installed:{Versions:[{Version:'1'}]}}]},{EntryIndex:0,Evidence:{InstalledVersionIndex:0}}).join()).toContain('1'); expect(evidence({}, {Evidence:{ContextIndex:null}}).join()).toContain('недоступно'); expect(evidence({Entries:[{SourceLines:[1]}]}, {EntryIndex:0,Evidence:{Unknown:'value'}}).join()).toContain('value'); });
+
+it('принимает fixture сериализации Go и отклоняет повреждённые обязательные поля', () => {
+ expect(envelope(fixture)).toBe(true);
+ const broken = structuredClone(fixture); (broken.result.Plan.Entries[0] as any).Installed = null; expect(envelope(broken)).toBe(false);
+ const optional = structuredClone(fixture); delete (optional.result.Plan.Entries[0] as any).FlagGroups; expect(envelope(optional)).toBe(true);
+ expect(envelope({...fixture,result:{...fixture.result,Reports:undefined}})).toBe(false);
+});

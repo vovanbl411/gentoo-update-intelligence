@@ -1,4 +1,6 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+const apiFixture = JSON.parse(readFileSync(new URL('../src/fixtures/api-found.json', import.meta.url), 'utf8'));
 const id = '12345678-1234-1234-1234-123456789abc';
 const result = { Plan: { Status:'partial', Entries:[], Blockers:[], Diagnostics:[{Code:'TEST',Message:'<img src=x onerror=alert(1)>',SourceLines:[2]}] }, Analysis:{Status:'partial',Findings:[]},Reports:[] };
 test('POST, GET, прямой вход и refresh', async ({page}) => {
@@ -33,3 +35,27 @@ for (const status of ['parsed','partial','unsupported']) test(`статус ${st
 test('сетевой сбой GET позволяет повтор', async ({page}) => { let count=0; await page.route('**/api/analyses/**', route=>++count===1?route.abort('failed'):route.fulfill({json:{id,result}})); await page.goto(`/analyses/${id}`); await expect(page.getByRole('status')).toContainText('недоступен'); await page.getByRole('button',{name:'Повторить загрузку'}).click(); await expect(page.getByText('Статус Parser: partial')).toBeVisible(); });
 test('форма и повтор загрузки доступны с клавиатуры', async ({page}) => { await page.goto('/'); await page.keyboard.press('Tab'); await expect(page.getByLabel('План emerge')).toBeFocused(); await page.keyboard.press('Tab'); await expect(page.getByLabel(/Локально/)).toBeFocused(); await page.keyboard.press('Tab'); await expect(page.getByRole('button',{name:'Анализировать'})).toBeFocused(); await page.route('**/api/analyses/**',route=>route.fulfill({status:503})); await page.goto(`/analyses/${id}`); await expect(page.getByRole('button',{name:'Повторить загрузку'})).toBeVisible(); await page.keyboard.press('Tab'); await expect(page.getByRole('button',{name:'Повторить загрузку'})).toBeFocused(); });
 test('устаревший GET не подменяет другой результат', async ({page}) => { const second='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'; let release!:()=>void; const gate=new Promise<void>(r=>{release=r}); let firstSeen!:()=>void; const started=new Promise<void>(r=>{firstSeen=r}); await page.route('**/api/analyses/**', async route=>{ if(route.request().url().endsWith(id)){firstSeen(); await gate; await route.fulfill({json:{id,result}}).catch(()=>{}); } else await route.fulfill({json:{id:second,result:{...result,Plan:{...result.Plan,Status:'parsed'}}}}); }); await page.goto(`/analyses/${id}`); await started; await page.evaluate((path)=>{history.pushState(null,'',path); window.dispatchEvent(new PopStateEvent('popstate'));}, `/analyses/${second}`); await expect(page.getByText('Статус Parser: parsed')).toBeVisible(); release(); await expect(page.getByText('Статус Parser: parsed')).toBeVisible(); await expect(page.getByText('Статус Parser: partial')).toHaveCount(0); });
+
+for (const scenario of [
+ {name:'не найдено before',side:'before',lookup:{Query:null,Result:{Status:'not_found',Snapshot:null},Err:null,SkipReason:''},expected:'not_found'},
+ {name:'repository unavailable after',side:'after',lookup:{Query:null,Result:{Status:'repository_unavailable',Snapshot:null},Err:null,SkipReason:''},expected:'repository_unavailable'},
+ {name:'ошибка before',side:'before',lookup:{Query:null,Result:null,Err:'metadata read failed',SkipReason:''},expected:'metadata read failed'},
+ {name:'пропущен after',side:'after',lookup:{Query:null,Result:null,Err:null,SkipReason:'BINDING_REJECTED'},expected:'BINDING_REJECTED'},
+ {name:'нет причины before',side:'before',lookup:{Query:null,Result:null,Err:null,SkipReason:''},expected:'данные недоступны'},
+]) test(`metadata: ${scenario.name}`, async ({page}) => {
+ const fixture = structuredClone(apiFixture);
+ const view=fixture.result.Reports[0] as any;
+ view.Report.Gentoo={Status:'unavailable',Comparison:null,Diagnostics:[{Code:'SNAPSHOT_MISSING',Side:scenario.side,Field:'snapshot',Expected:null,Actual:null}]};
+ view[scenario.side==='before'?'BeforeLookup':'AfterLookup']=scenario.lookup;
+ await page.route('**/api/analyses/**',route=>route.fulfill({json:fixture})); await page.goto(`/analyses/${fixture.id}`);
+ const card=page.locator('section').filter({has:page.getByRole('heading',{name:'dev-libs/libei',exact:true})});
+ await expect(card.getByText(`${scenario.side}: ${scenario.expected}`,{exact:false})).toBeVisible();
+ await card.getByText('Диагностики связи',{exact:true}).click(); await expect(card.locator('pre').filter({hasText:'SNAPSHOT_MISSING'})).toContainText(scenario.side);
+ await expect(card.getByText('В сравнённых полях различий нет.')).toHaveCount(0);
+});
+test('metadata: частичное сравнение показывает ограничения и сторону', async ({page}) => {
+ const fixture=structuredClone(apiFixture); const gentoo=fixture.result.Reports[0].Report.Gentoo as any;
+ gentoo.Status='partial'; gentoo.Comparison.Status='partial'; gentoo.Comparison.ComparedFields=['EAPI']; gentoo.Comparison.Limitations=[{Code:'IUSE_MISSING',Field:'IUSE',Side:'after',Evidence:[]}];
+ await page.route('**/api/analyses/**',route=>route.fulfill({json:fixture})); await page.goto(`/analyses/${fixture.id}`); const card=page.locator('section').filter({has:page.getByRole('heading',{name:'dev-libs/libei',exact:true})}); await expect(card.getByText('Сравнение: partial')).toBeVisible(); await card.getByText('Ограничения сравнения',{exact:true}).click(); await expect(card.locator('pre').filter({hasText:'IUSE_MISSING'})).toContainText('after');
+});
+test('отсутствующие изменения IUSE не считаются пустым diff', async ({page}) => { const fixture=structuredClone(apiFixture); fixture.result.Reports[0].Report.Gentoo.Comparison.Changes.IUSE=null; await page.route('**/api/analyses/**',route=>route.fulfill({json:fixture})); await page.goto(`/analyses/${fixture.id}`); const card=page.locator('section').filter({has:page.getByRole('heading',{name:'dev-libs/libei',exact:true})}); await expect(card.getByText('Сравнённые поля: EAPI, SLOT, IUSE')).toBeVisible(); await expect(card.getByText('В сравнённых полях различий нет.')).toHaveCount(0); });

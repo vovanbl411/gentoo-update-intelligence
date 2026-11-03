@@ -30,7 +30,7 @@ function form() {
 function report(parent: HTMLElement, view: Obj) {
   const r = view.Report; if (!r) return; const section = el('section'); add(section, 'h3', 'Metadata');
   const g = r.Gentoo; if (g) { add(section, 'p', `Сравнение: ${g.Status}`); const c = g.Comparison;
-    if (c) { add(section, 'p', `Сравнённые поля: ${array(c.ComparedFields).join(', ') || 'не указаны'}`); const changes = c.Changes; const i = changes?.IUSE; if (array(c.ComparedFields).length && changes && !changes.EAPI && !changes.Slot && !changes.Subslot && !array(i?.Added).length && !array(i?.Removed).length && !array(i?.DefaultChanges).length) add(section, 'p', 'В сравнённых полях различий нет.'); detail(section, 'Изменения', changes); detail(section, 'Ограничения сравнения', c.Limitations); detail(section, 'Provenance', { Before: c.Before, After: c.After }); }
+    if (c) { add(section, 'p', `Сравнённые поля: ${array(c.ComparedFields).join(', ') || 'не указаны'}`); const changes = c.Changes; const i = changes?.IUSE; if (array(c.ComparedFields).length && changes && (!array(c.ComparedFields).includes('IUSE') || (i && ['Added', 'Removed', 'DefaultChanges'].every(key => Array.isArray(i[key])))) && !changes.EAPI && !changes.Slot && !changes.Subslot && !array(i?.Added).length && !array(i?.Removed).length && !array(i?.DefaultChanges).length) add(section, 'p', 'В сравнённых полях различий нет.'); detail(section, 'Изменения', changes); detail(section, 'Ограничения сравнения', c.Limitations); detail(section, 'Provenance', { Before: c.Before, After: c.After }); }
     detail(section, 'Диагностики связи', g.Diagnostics);
   }
   for (const [name, lookup] of [['before', view.BeforeLookup], ['after', view.AfterLookup]] as const) {
