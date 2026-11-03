@@ -9,6 +9,8 @@
 - [docs/analyzer.md](docs/analyzer.md) фиксирует контракт Analyzer v0.1 и границы его правил.
 - [docs/metadata-diff.md](docs/metadata-diff.md) фиксирует контракт первого среза Gentoo metadata diff.
 - [docs/metadata-provider.md](docs/metadata-provider.md) фиксирует контракт локального Metadata Provider.
+- [docs/metadata-preparation.md](docs/metadata-preparation.md) фиксирует контракт выбора исторической ревизии ebuild и границу подготовки
+  metadata.
 - [docs/change-report.md](docs/change-report.md) фиксирует контракт и поведение ограниченного ChangeReport.
 - [docs/report-service.md](docs/report-service.md) фиксирует контракт внутреннего reportservice.
 - [docs/plan-service.md](docs/plan-service.md) фиксирует контракт внутреннего planservice.
