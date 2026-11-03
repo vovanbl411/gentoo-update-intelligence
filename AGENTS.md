@@ -15,6 +15,7 @@
 - [docs/report-service.md](docs/report-service.md) фиксирует контракт внутреннего reportservice.
 - [docs/plan-service.md](docs/plan-service.md) фиксирует контракт внутреннего planservice.
 - [docs/cli.md](docs/cli.md) фиксирует контракт ручного CLI.
+- [docs/http-api.md](docs/http-api.md) фиксирует контракт HTTP API и хранения анализа.
 - [docs/plan.md](docs/plan.md) задаёт этапы и критерии их завершения.
 - Реализованное состояние проверяй по коду и результатам проверок. Не описывай запланированные возможности как реализованные.
 - Не копируй архитектуру и план в этот файл.

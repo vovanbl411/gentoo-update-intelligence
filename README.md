@@ -38,11 +38,13 @@ Gentoo Update Intelligence — проект сервиса, который ан�
 
 Локальный Metadata Provider читает точный cache-файл из закреплённого commit локального Git-репозитория и нормализует его через `metadatadiff.Normalize`. Для работы нужен установленный Git CLI. Он не проверяет `SourceURL` по сети; интеграционный тест связывает Provider с reportservice на временном синтетическом репозитории.
 
+HTTP backend предоставляет `POST /analyses` и `GET /analyses/{id}`. Он использует существующие `planservice` и Metadata Provider, сохраняет полный результат в PostgreSQL и возвращает его по UUID. Параметры подключения к PostgreSQL и закреплённому metadata repository передаются через окружение backend; контракт API описан в [документе HTTP API](docs/http-api.md).
+
 `internal/ebuildresolver` выбирает точный ebuild по first-parent истории. `internal/metadatagenerator` проверяет выбранный commit, blob и содержимое ebuild, запускает `egencache` в изолированной временной конфигурации и возвращает cache точной версии, SHA-256 и provenance. Он рассчитан на подготовленный временный checkout Gentoo; загрузка репозиториев, master repositories для оверлеев и публичный интерфейс генерации остаются отдельными этапами. Реальный прогон `libei` проверил обе версии, Git-снимок и существующий CLI; его артефакты описаны в [контракте подготовки metadata](docs/metadata-preparation.md).
 
 ## Состояние проекта
 
-Реализованы Parser v0.1, Analyzer v0.1, первый срез metadata diff, ограниченный ChangeReport, локальный Metadata Provider, reportservice, planservice, выбор исторической ревизии ebuild и генератор metadata. Поддержка downgrade, blockers и удалений покрыта синтетическими тестами; реальные текстовые fixtures этих сценариев пока не предоставлены. Blockers приняты после review `a38074f`, planservice — после review `013523e`, CLI — после review `a7d794e`; resolver и генератор подготовлены к review. HTTP API, хранение и пользовательский интерфейс пока не реализованы; архитектура остального сервиса остаётся baseline для дальнейшей разработки.
+Реализованы Parser v0.1, Analyzer v0.1, первый срез metadata diff, ограниченный ChangeReport, локальный Metadata Provider, reportservice, planservice, выбор исторической ревизии ebuild, генератор metadata, HTTP API и постоянное PostgreSQL-хранение анализа. Поддержка downgrade, blockers и удалений покрыта синтетическими тестами; реальные текстовые fixtures этих сценариев пока не предоставлены. Blockers приняты после review `a38074f`, planservice — после review `013523e`, CLI — после review `a7d794e`, resolver — после review `6716bdc`, metadatagenerator — после review `666beaa`. Frontend, Redis, Docker Compose и HTTP-генерация metadata остаются отдельными этапами.
 
 ## Документы
 
@@ -57,4 +59,5 @@ Gentoo Update Intelligence — проект сервиса, который ан�
 - [Контракт внутреннего reportservice](docs/report-service.md)
 - [Контракт внутреннего planservice](docs/plan-service.md)
 - [Контракт CLI](docs/cli.md)
+- [Контракт HTTP API](docs/http-api.md)
 - [План разработки](docs/plan.md)

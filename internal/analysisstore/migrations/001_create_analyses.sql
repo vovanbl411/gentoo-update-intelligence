@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS analyses (
+    id UUID PRIMARY KEY,
+    result JSONB NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
