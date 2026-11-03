@@ -1,8 +1,8 @@
 # Frontend анализа
 
-Frontend находится на review. Результаты реальной браузерной проверки и её ограничения описаны в [acceptance.md](acceptance.md).
+Минимальный frontend принят и проверен в браузере с реальным backend и PostgreSQL. Результаты проверки и её ограничения описаны в [acceptance.md](acceptance.md). OpenSpec change `add-analysis-frontend` архивирован; действует [спецификация frontend](../openspec/specs/analysis-frontend/spec.md).
 
-Для локального запуска нужны Node.js, npm и запущенный backend, настроенный по [контракту HTTP API](../docs/http-api.md). Из корня репозитория:
+Для локального запуска нужны Node.js версии `^20.19.0 || >=22.12.0`, npm и запущенный backend, настроенный по [контракту HTTP API](../docs/http-api.md). Из корня репозитория:
 
 ```sh
 npm ci --prefix frontend

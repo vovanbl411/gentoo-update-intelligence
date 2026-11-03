@@ -17,9 +17,9 @@ OpenSpec подключён как пилот для следующих согл
 замени перенесённые требования ссылкой на спецификацию, сохранив полезные пояснения.
 Не поддерживай два независимых описания одного требования. Если область ещё не
 перенесена, не создавай в OpenSpec её частичную копию без явного определения границ.
-Перенесённых областей пока нет. Первый функциональный change —
-[`add-analysis-frontend`](../openspec/changes/add-analysis-frontend/proposal.md);
-его артефакты описывают предлагаемый frontend, а не реализованное поведение.
+Перенесённых областей пока нет. Спецификация новой области frontend находится в
+[`openspec/specs/analysis-frontend/spec.md`](../openspec/specs/analysis-frontend/spec.md).
+Первый функциональный change [`add-analysis-frontend`](../openspec/changes/archive/2026-11-03-add-analysis-frontend/proposal.md) архивирован.
 
 ## Локальный инструмент
 
