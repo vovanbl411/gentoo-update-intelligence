@@ -61,3 +61,4 @@ HTTP backend предоставляет `POST /analyses` и `GET /analyses/{id}`
 - [Контракт CLI](docs/cli.md)
 - [Контракт HTTP API](docs/http-api.md)
 - [План разработки](docs/plan.md)
+- [Работа с OpenSpec](docs/openspec.md)

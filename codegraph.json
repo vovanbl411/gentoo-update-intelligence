@@ -1,0 +1,23 @@
+{
+  "exclude": [
+    "**/.env*",
+    "**/*.pem",
+    "**/*.key",
+    "**/*.p12",
+    "**/*.pfx",
+    "**/*.tfstate*",
+    "**/*.tfvars*",
+    "**/.aws/**",
+    "**/.ssh/**",
+    "**/.gnupg/**",
+    "**/.kube/**",
+    "**/.docker/**",
+    "**/.codex/**",
+    "**/.agents/**",
+    "**/credentials/**",
+    "**/secrets/**",
+    "**/sessions/**",
+    "**/history/**",
+    "**/telemetry/**"
+  ]
+}
