@@ -34,15 +34,15 @@ Gentoo Update Intelligence — проект сервиса, который ан�
 
 `internal/planservice` объединяет Parser, Analyzer и reportservice для целого текстового плана. Он сохраняет результаты компонентов и последовательно собирает отчёт для каждой записи; общий статус и новые правила анализа не добавляет. Planservice принят после review `013523e`.
 
-Минимальный `cmd/gentoo-update-intelligence` читает план из файла или stdin, открывает Metadata Provider на указанном пользователем commit и выводит результат planservice в JSON. CLI подготовлен и ожидает review; он не выполняет обновление системы.
+Минимальный `cmd/gentoo-update-intelligence` читает план из файла или stdin, открывает Metadata Provider на указанном пользователем commit и выводит результат planservice в JSON. CLI принят после review `a7d794e`; он не выполняет обновление системы.
 
 Локальный Metadata Provider читает точный cache-файл из закреплённого commit локального Git-репозитория и нормализует его через `metadatadiff.Normalize`. Для работы нужен установленный Git CLI. Он не проверяет `SourceURL` по сети; интеграционный тест связывает Provider с reportservice на временном синтетическом репозитории.
 
-Контракт выбора исторической ревизии ebuild и последующей подготовки metadata описан в [документе о подготовке metadata](docs/metadata-preparation.md) и подготовлен к review. Resolver и генератор пока не реализованы; Provider по-прежнему читает только готовые cache-снимки.
+Контракт выбора исторической ревизии ebuild принят после review `a9a7a42`. Resolver реализован в `internal/ebuildresolver` и подготовлен к review. Генератор пока не реализован; Provider по-прежнему читает только готовые cache-снимки.
 
 ## Состояние проекта
 
-Реализованы Parser v0.1, Analyzer v0.1, первый срез metadata diff, ограниченный ChangeReport, локальный Metadata Provider, reportservice и planservice. Поддержка downgrade, blockers и удалений покрыта синтетическими тестами; реальные текстовые fixtures этих сценариев пока не предоставлены. Blockers приняты после review `a38074f`, planservice — после review `013523e`; CLI подготовлен и ожидает review. HTTP API, хранение и пользовательский интерфейс пока не реализованы; архитектура остального сервиса остаётся baseline для дальнейшей разработки.
+Реализованы Parser v0.1, Analyzer v0.1, первый срез metadata diff, ограниченный ChangeReport, локальный Metadata Provider, reportservice, planservice и выбор исторической ревизии ebuild. Поддержка downgrade, blockers и удалений покрыта синтетическими тестами; реальные текстовые fixtures этих сценариев пока не предоставлены. Blockers приняты после review `a38074f`, planservice — после review `013523e`, CLI — после review `a7d794e`; resolver подготовлен к review. HTTP API, хранение и пользовательский интерфейс пока не реализованы; архитектура остального сервиса остаётся baseline для дальнейшей разработки.
 
 ## Документы
 
