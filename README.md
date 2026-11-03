@@ -38,11 +38,11 @@ Gentoo Update Intelligence — проект сервиса, который ан�
 
 Локальный Metadata Provider читает точный cache-файл из закреплённого commit локального Git-репозитория и нормализует его через `metadatadiff.Normalize`. Для работы нужен установленный Git CLI. Он не проверяет `SourceURL` по сети; интеграционный тест связывает Provider с reportservice на временном синтетическом репозитории.
 
-Контракт выбора исторической ревизии ebuild принят после review `a9a7a42`. Resolver реализован в `internal/ebuildresolver` и подготовлен к review. Генератор пока не реализован; Provider по-прежнему читает только готовые cache-снимки.
+`internal/ebuildresolver` выбирает точный ebuild по first-parent истории. `internal/metadatagenerator` проверяет выбранный commit, blob и содержимое ebuild, запускает `egencache` в изолированной временной конфигурации и возвращает cache точной версии, SHA-256 и provenance. Он рассчитан на подготовленный временный checkout Gentoo; загрузка репозиториев, master repositories для оверлеев и публичный интерфейс генерации остаются отдельными этапами. Реальный прогон `libei` проверил обе версии, Git-снимок и существующий CLI; его артефакты описаны в [контракте подготовки metadata](docs/metadata-preparation.md).
 
 ## Состояние проекта
 
-Реализованы Parser v0.1, Analyzer v0.1, первый срез metadata diff, ограниченный ChangeReport, локальный Metadata Provider, reportservice, planservice и выбор исторической ревизии ebuild. Поддержка downgrade, blockers и удалений покрыта синтетическими тестами; реальные текстовые fixtures этих сценариев пока не предоставлены. Blockers приняты после review `a38074f`, planservice — после review `013523e`, CLI — после review `a7d794e`; resolver подготовлен к review. HTTP API, хранение и пользовательский интерфейс пока не реализованы; архитектура остального сервиса остаётся baseline для дальнейшей разработки.
+Реализованы Parser v0.1, Analyzer v0.1, первый срез metadata diff, ограниченный ChangeReport, локальный Metadata Provider, reportservice, planservice, выбор исторической ревизии ebuild и генератор metadata. Поддержка downgrade, blockers и удалений покрыта синтетическими тестами; реальные текстовые fixtures этих сценариев пока не предоставлены. Blockers приняты после review `a38074f`, planservice — после review `013523e`, CLI — после review `a7d794e`; resolver и генератор подготовлены к review. HTTP API, хранение и пользовательский интерфейс пока не реализованы; архитектура остального сервиса остаётся baseline для дальнейшей разработки.
 
 ## Документы
 
