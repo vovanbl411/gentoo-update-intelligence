@@ -144,8 +144,12 @@ func (r *Resolver) Resolve(input Input) (Result, error) {
 			return Result{Status: StatusNotFound, ReferenceCommit: string(reference), EbuildPath: path}, nil
 		}
 		commit = parents[0]
-		if _, err := runGit(r.localPath, "cat-file", "-t", commit); err != nil {
+		parentType, err := runGit(r.localPath, "cat-file", "-t", commit)
+		if err != nil {
 			return Result{}, fmt.Errorf("%w: first parent %s of %s unavailable: %v", ErrRead, commit, string(reference), err)
+		}
+		if strings.TrimSpace(string(parentType)) != "commit" {
+			return Result{}, fmt.Errorf("%w: first parent %s of %s has type %q, want commit", ErrRead, commit, string(reference), strings.TrimSpace(string(parentType)))
 		}
 		first = false
 	}

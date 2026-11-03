@@ -280,6 +280,31 @@ func TestResolveMissingParentOutsideShallowBoundaryIsError(t *testing.T) {
 	}
 }
 
+func TestResolveRejectsTreeObjectInFirstParentField(t *testing.T) {
+	r := newRepo(t)
+	path := "cat/pkg/pkg-1.ebuild"
+	ebuildCommit := r.commit("ebuild tree", map[string]string{path: "content"})
+	ebuildTree := r.git("rev-parse", ebuildCommit+"^{tree}")
+	refBase := r.commit("reference tree", map[string]string{"README": "no ebuild here"}, path)
+	refTree := r.git("rev-parse", refBase+"^{tree}")
+	malformedCommit := fmt.Sprintf("tree %s\nparent %s\nauthor Resolver Test <resolver@example.invalid> 946684800 +0000\ncommitter Resolver Test <resolver@example.invalid> 946684800 +0000\n\nmalformed parent type\n", refTree, ebuildTree)
+	cmd := exec.Command("git", "-C", r.path, "hash-object", "-t", "commit", "-w", "--stdin")
+	cmd.Stdin = strings.NewReader(malformedCommit)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("write malformed commit fixture: %v\n%s", err, output)
+	}
+	reference := strings.TrimSpace(string(output))
+	resolver, err := Open(r.path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	result, err := resolver.Resolve(inputFor(reference, "cat", "pkg", "1"))
+	if !errors.Is(err, ErrRead) {
+		t.Fatalf("tree parent must return ErrRead, result=%+v error=%v", result, err)
+	}
+}
+
 func TestResolveRejectsUnsupportedEntry(t *testing.T) {
 	r := newRepo(t)
 	path := "cat/pkg/pkg-1.ebuild"
