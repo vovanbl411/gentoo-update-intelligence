@@ -1,0 +1,12 @@
+# Реальная браузерная проверка
+
+Для проверки использованы backend проекта, временный PostgreSQL 18, Chrome из Flatpak и `testdata/parser/ebuild-updates.txt`. Metadata Provider читал локальный Git-снимок с commit `1d1580515aeae5bf0c3d33a9d7d099bdc4a2aed3` и именем repository `gentoo`.
+
+SHA-256 содержимого cache в commit:
+
+- `dev-libs/libei-1.6.0`: `0168526a96c712e1fad72f920ba5fbf3af34ddbcca1fd69db5c211448ffa0002`.
+- `dev-libs/libei-1.6.0-r1`: `e0d82b81a0e872e19cefc32a1f0229a23628726acf8a2ecd2ad53e965f4337e8`.
+
+CLI подтвердил оба Lookup `found` и доступное сравнение. Браузерный прогон создал анализ `8a576223-4046-4ddf-8d7f-a03f5483cb26`; JSON POST и GET совпали. Проверены шесть пакетов, операции и доступные версии, пустой diff EAPI, SLOT/SUBSLOT и IUSE, а также отображение результата в новой вкладке и после refresh. UUID относится к временному хранилищу и не является постоянной ссылкой.
+
+В поле локально патченных пакетов указан `dev-libs/libei`: finding и его `ContextIndex: 0` подтверждены по JSON и на экране, в том числе после открытия в новой вкладке и refresh. Другие metadata в снимке отсутствуют. Непустой diff проверен отдельно на контролируемом ответе API; полное покрытие остальных сценариев change остаётся незавершённым.

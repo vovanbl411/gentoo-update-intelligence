@@ -1,0 +1,7 @@
+:root { font-family: system-ui, sans-serif; color: #202931; background: #f5f7f7; line-height: 1.5; }
+main { max-width: 64rem; margin: 2rem auto; padding: 0 1rem; }
+label { display: block; font-weight: 600; margin-top: 1rem; }
+textarea { display: block; box-sizing: border-box; width: 100%; margin-top: .4rem; font: inherit; }
+button { font: inherit; padding: .5rem 1rem; cursor: pointer; }
+section, article { background: white; border: 1px solid #d4dada; border-radius: .4rem; padding: 1rem; margin: 1rem 0; }
+pre { overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }

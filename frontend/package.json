@@ -1,0 +1,19 @@
+{
+  "name": "gentoo-update-intelligence-frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run src",
+    "test:browser": "playwright test",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.1",
+    "typescript": "5.9.2",
+    "vite": "5.4.21",
+    "vitest": "2.1.9"
+  }
+}
