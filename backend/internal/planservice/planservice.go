@@ -37,6 +37,16 @@ func (p *analysisLookup) Lookup(query metadataprovider.Query) (metadataprovider.
 	return result, err
 }
 
+// RepositoryFailure preserves repository preparation errors for reportservice
+// when it skips metadata lookups because a binding was rejected.
+func (p *analysisLookup) RepositoryFailure(name string) error {
+	source, ok := p.provider.(interface{ RepositoryFailure(string) error })
+	if !ok {
+		return nil
+	}
+	return source.RepositoryFailure(name)
+}
+
 func memoizeLookups(provider reportservice.MetadataLookup) reportservice.MetadataLookup {
 	if provider == nil {
 		return nil

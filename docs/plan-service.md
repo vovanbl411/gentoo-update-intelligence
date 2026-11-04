@@ -18,13 +18,13 @@ type Result struct {
 }
 ```
 
-`Plan` — полный результат одного `parser.Parse(input)`. `Analysis` — полный результат одного отдельного `analyzer.Analyze(Plan, context)`. `Reports` сохраняет полные результаты последовательных вызовов `reportservice.Build(Plan, i, provider)` для каждого `Plan.Entries[i]`. В рамках `Analyze` результат или ошибка `Lookup` сохраняется по точному `metadataprovider.Query`; повторный запрос использует этот исход и не вызывает Provider снова.
+`Plan` — полный результат одного `parser.Parse(input)`. `Analysis` — полный результат одного отдельного `analyzer.Analyze(Plan, context)`. `Reports` сохраняет полные результаты последовательных вызовов `reportservice.Build(Plan, i, provider)` для каждого `Plan.Entries[i]`. В рамках `Analyze` результат или ошибка `Lookup` сохраняется по точному `metadataprovider.Query`; повторный запрос использует этот исход и не вызывает Provider снова. Обёртка кэша также передаёт `RepositoryFailure(string) error`, если исходный Provider поддерживает этот необязательный метод.
 
 ## Алгоритм и связи
 
 1. Один раз разобрать исходный текст через `parser.Parse`.
 2. Один раз передать результат Parser и пользовательский `context` в `analyzer.Analyze`.
-3. Подготовить `Reports` и кэш Lookup для этого вызова `Analyze`, затем последовательно вызвать `reportservice.Build` для каждого индекса `Plan.Entries`, начиная с нуля. Кэш сохраняет успешные ответы и ошибки по полному `Query`.
+3. Подготовить `Reports` и кэш Lookup для этого вызова `Analyze`, затем последовательно вызвать `reportservice.Build` для каждого индекса `Plan.Entries`, начиная с нуля. Кэш сохраняет успешные ответы и ошибки по полному `Query`. Запросы с одинаковым `Query` в пределах вызова используют один и тот же исход.
 4. При успехе вернуть исходные результаты Parser и Analyzer вместе со всеми отчётами.
 
 Порядок записей Parser не меняется. На каждую запись приходится один отчёт; повторяющиеся пакеты не объединяются. При `nil error` выполняется `len(Reports) == len(Plan.Entries)`, а `Reports[i].Report.EntryIndex == i`. Findings Analyzer ссылаются на записи через `Finding.EntryIndex`; finding по blocker сохраняет `EntryIndex = nil` и `UnresolvedBlockerEvidence.BlockerIndex`.
@@ -40,6 +40,8 @@ type Result struct {
 Если есть хотя бы одна запись, Provider требуется согласно контракту reportservice, даже если все записи — `NS` и Lookup будет пропущен. planservice не проверяет обычный или typed-nil Provider самостоятельно. Первый вызов `reportservice.Build` возвращает `ErrProviderRequired`; `errors.Is` сохраняет распознавание этой причины, а `Analyze` возвращает нулевой `Result`.
 
 Ошибки Lookup, статусы `not_found` и `repository_unavailable`, `reportservice.ErrInvalidLookupResult` и причины пропуска хранятся в соответствующем `reportservice.Result`. Они не становятся внешней ошибкой и не отменяют обработку следующих записей.
+
+Если `reportservice` отклоняет binding и задаёт `SkipBindingRejected`, Lookup не выполняется, а `BeforeLookup` и `AfterLookup` сохраняют этот `SkipReason` без Query и Result. Если исходный Provider поддерживает `RepositoryFailure`, planservice передаёт этот вызов через свою обёртку: ошибка подготовки установленных repository добавляется к `BeforeLookup.Err`, а ошибка целевого repository остаётся в `AfterLookup.Err`. Несколько ошибок установленных repository объединяются через `errors.Join`. Поэтому причина подготовки остаётся на стороне записи, даже когда binding не допускает metadata lookup. Provider без `RepositoryFailure` сохраняет причины пропуска без дополнительной ошибки.
 
 Любая внешняя ошибка `reportservice.Build` останавливает цикл. `Analyze` возвращает нулевой `Result`, не выдавая частичный список отчётов за полный. Ошибка оборачивается с индексом записи через `%w`, поэтому исходная причина доступна через `errors.Is`. При штатном обходе некорректный индекс не ожидается; planservice не подменяет Build и не добавляет отдельную проверку этого случая.
 

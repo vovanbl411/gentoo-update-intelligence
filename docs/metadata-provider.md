@@ -1,6 +1,6 @@
 # Локальный Metadata Provider
 
-`backend/internal/metadataprovider` читает точный cache-файл из Git-объектов одного закреплённого commit и передаёт содержимое существующей `metadatadiff.Normalize`. Provider обслуживает один логический repository и один commit. Он не интегрирован с `ChangeReport` или `Analyzer`.
+`backend/internal/metadataprovider` читает точный cache-файл из Git-объектов одного закреплённого commit и передаёт содержимое существующей `metadatadiff.Normalize`. Provider обслуживает один логический repository и один commit; сам пакет не вызывает `ChangeReport`, `Analyzer` или metadata-worker. Backend связывает его с `reportservice` и при настроенном worker отдельно выполняет подготовку после `not_found`.
 
 ## API
 
@@ -20,7 +20,7 @@ func (p *Provider) Lookup(query Query) (LookupResult, error)
 
 `Query` содержит `Repository`, `Category`, `Name` и `Version`. Он не может переопределить путь репозитория, URL источника или commit.
 
-`LookupResult` содержит статус `found`, `not_found` или `repository_unavailable` и указатель `Snapshot`. Снимок не задан (`nil`) для двух последних статусов и при ошибке. При любой ошибке `Lookup` возвращает нулевой `LookupResult`.
+`LookupResult` содержит статус `found`, `not_found` или `repository_unavailable`, указатель `Snapshot` и необязательный `Provenance`. В прямом результате Provider поле `Provenance` не задаётся: источник cache находится в `Snapshot.Source`. Снимок не задан (`nil`) для двух последних статусов и при ошибке. При любой ошибке `Lookup` возвращает нулевой `LookupResult`.
 
 ## Проверка конфигурации и закрепление commit
 
@@ -86,6 +86,8 @@ Provider запускает Git CLI через `os/exec` с отдельными
 | `Commit` | фактически выбранный полный SHA commit |
 | `CachePath` | точный путь объекта в commit |
 
+Для прямого результата `found` это закреплённый commit, переданный в `Open`. Выбранный source commit ebuild и его provenance остаются отдельными данными подготовки.
+
 `Normalize` сохраняет точное содержимое cache в `Snapshot.Content`, вычисляет SHA-256 этого содержимого и добавляет диагностики. SHA-256 содержимого не является Git object ID. Если обычный файл найден, но metadata повреждены или неполны, статус остаётся `found`; диагностики доступны в `Snapshot`.
 
 `not_found` означает только отсутствие точной записи в выбранном commit. Provider не подбирает другую версию или ревизию. Snapshot описывает metadata выбранного repository, но не подтверждает, что они соответствуют установленной пользовательской сборке, полны или происходят из заявленного `SourceURL`.
@@ -107,4 +109,4 @@ go vet ./...
 git diff --check
 ```
 
-Metadata Provider читает точную запись cache из закреплённой ревизии. Backend обращается к нему через `MetadataLookup`; при `not_found` запрос передаётся metadata-worker. Возвращённый snapshot участвует в построении `ChangeReport`.
+Metadata Provider читает точную запись cache только из закреплённой ревизии и не ищет исторические cache самостоятельно. В backend `pinnedRepositories` сначала вызывает этот Provider. Только при `not_found` и настроенном `GENTOO_UPDATE_INTELLIGENCE_METADATA_WORKER_URL` запрос передаётся metadata-worker: worker разрешает ebuild от reference commit по first-parent истории, проверяет точный cache выбранного commit и лишь затем ищет сохранённый результат генерации или запускает `egencache`. При отключённом worker остаётся исход `not_found`. Snapshot, возвращённый оркестратором, участвует в построении `ChangeReport`; для результата worker `LookupResult.Provenance` дополнительно содержит сведения о найденном историческом cache либо полной генерации.

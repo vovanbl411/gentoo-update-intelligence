@@ -16,6 +16,7 @@ import (
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/metadataprovider"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/parser"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/reportservice"
+	"github.com/vovanbl411/gentoo-update-intelligence/internal/repositorymanager"
 )
 
 type lookupAnswer struct {
@@ -26,6 +27,25 @@ type lookupAnswer struct {
 type fakeLookup struct {
 	answers []lookupAnswer
 	calls   []metadataprovider.Query
+}
+
+type repositoryFailureLookup struct {
+	results  map[metadataprovider.Query]lookupAnswer
+	failures map[string]error
+	calls    []metadataprovider.Query
+}
+
+func (f *repositoryFailureLookup) Lookup(query metadataprovider.Query) (metadataprovider.LookupResult, error) {
+	f.calls = append(f.calls, query)
+	answer, ok := f.results[query]
+	if !ok {
+		return metadataprovider.LookupResult{}, fmt.Errorf("unexpected lookup: %+v", query)
+	}
+	return answer.result, answer.err
+}
+
+func (f *repositoryFailureLookup) RepositoryFailure(name string) error {
+	return f.failures[name]
 }
 
 func (f *fakeLookup) Lookup(query metadataprovider.Query) (metadataprovider.LookupResult, error) {
@@ -180,6 +200,108 @@ func TestAnalyzeReusesLookupResultsAndErrorsAcrossRepeatedEntries(t *testing.T) 
 	}
 	if got.Reports[0].AfterLookup.Result.Snapshot != got.Reports[1].AfterLookup.Result.Snapshot || got.Reports[2].BeforeLookup.Result.Snapshot != got.Reports[3].BeforeLookup.Result.Snapshot {
 		t.Fatal("repeated reports did not retain the cached snapshot result")
+	}
+}
+
+func TestAnalyzeKeepsPreparationFailuresOnTheirSidesAndSuccessfulComparison(t *testing.T) {
+	input := strings.Join([]string{
+		"[ebuild U] dev-libs/good-2::gentoo [1::gentoo]",
+		"[ebuild U] dev-libs/unknown-2::unknown-overlay [1::gentoo]",
+		"[ebuild U] dev-libs/ambiguous-2::ambiguous-overlay [1::gentoo]",
+		"[ebuild U] dev-libs/history-2::gentoo [1::history-overlay]",
+		"[ebuild U] dev-libs/master-2::gentoo [1::missing-master-overlay]",
+		"[ebuild U] dev-libs/generate-2::generation-overlay [1::gentoo]",
+		"[ebuild U] dev-libs/rejected-2::rejected-after [1::rejected-before] [1::rejected-before]",
+	}, "\n")
+	queries := []metadataprovider.Query{
+		{Repository: "gentoo", Category: "dev-libs", Name: "good", Version: "1"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "good", Version: "2"},
+		{Repository: "unknown-overlay", Category: "dev-libs", Name: "unknown", Version: "2"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "unknown", Version: "1"},
+		{Repository: "ambiguous-overlay", Category: "dev-libs", Name: "ambiguous", Version: "2"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "ambiguous", Version: "1"},
+		{Repository: "history-overlay", Category: "dev-libs", Name: "history", Version: "1"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "history", Version: "2"},
+		{Repository: "missing-master-overlay", Category: "dev-libs", Name: "master", Version: "1"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "master", Version: "2"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "generate", Version: "1"},
+		{Repository: "generation-overlay", Category: "dev-libs", Name: "generate", Version: "2"},
+	}
+	before := metadatadiff.Normalize(metadatadiff.Source{Category: "dev-libs", Name: "good", Version: "1", Repository: "gentoo", SourceURL: "synthetic://gentoo", Commit: "before-commit", CachePath: "metadata/md5-cache/dev-libs/good-1"}, "EAPI=8\nSLOT=1/1\nIUSE=old\n")
+	after := metadatadiff.Normalize(metadatadiff.Source{Category: "dev-libs", Name: "good", Version: "2", Repository: "gentoo", SourceURL: "synthetic://gentoo", Commit: "after-commit", CachePath: "metadata/md5-cache/dev-libs/good-2"}, "EAPI=8\nSLOT=2/2\nIUSE=new\n")
+	lookupErrors := map[metadataprovider.Query]error{
+		queries[2]:  repositorymanager.ErrUnknownRepository,
+		queries[4]:  repositorymanager.ErrAmbiguousRepository,
+		queries[6]:  errors.New("history incomplete: shallow boundary reached"),
+		queries[8]:  errors.New("pinned master gentoo is unavailable"),
+		queries[11]: errors.New("metadata generation failed: egencache exited 1"),
+	}
+	results := map[metadataprovider.Query]lookupAnswer{}
+	for _, query := range queries {
+		if err := lookupErrors[query]; err != nil {
+			results[query] = lookupAnswer{err: err}
+			continue
+		}
+		results[query] = lookupAnswer{result: metadataprovider.LookupResult{Status: metadataprovider.StatusNotFound}}
+	}
+	results[queries[0]] = lookupAnswer{result: metadataprovider.LookupResult{Status: metadataprovider.StatusFound, Snapshot: &before}}
+	results[queries[1]] = lookupAnswer{result: metadataprovider.LookupResult{Status: metadataprovider.StatusFound, Snapshot: &after}}
+	provider := &repositoryFailureLookup{results: results, failures: map[string]error{
+		"unknown-overlay":        repositorymanager.ErrUnknownRepository,
+		"ambiguous-overlay":      repositorymanager.ErrAmbiguousRepository,
+		"history-overlay":        errors.New("history incomplete: shallow boundary reached"),
+		"missing-master-overlay": errors.New("pinned master gentoo is unavailable"),
+		"generation-overlay":     errors.New("metadata generation failed: egencache exited 1"),
+		"rejected-before":        repositorymanager.ErrUnknownRepository,
+		"rejected-after":         repositorymanager.ErrAmbiguousRepository,
+	}}
+
+	got, err := Analyze(input, analyzer.Context{}, provider)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got.Reports) != 7 {
+		t.Fatalf("reports = %d, want one per entry", len(got.Reports))
+	}
+	comparison := got.Reports[0].Report.Gentoo.Comparison
+	if comparison == nil || comparison.Changes.Slot == nil || comparison.Changes.Slot.Before != "1" || comparison.Changes.Slot.After != "2" {
+		t.Fatalf("successful package comparison was lost: %#v", got.Reports[0].Report.Gentoo)
+	}
+	for i, want := range []struct {
+		side   string
+		marker string
+	}{
+		{side: "after", marker: "unknown repository"},
+		{side: "after", marker: "ambiguous repository"},
+		{side: "before", marker: "history incomplete"},
+		{side: "before", marker: "pinned master gentoo is unavailable"},
+		{side: "after", marker: "metadata generation failed"},
+	} {
+		report := got.Reports[i+1]
+		outcome := report.AfterLookup
+		if want.side == "before" {
+			outcome = report.BeforeLookup
+		}
+		if outcome.Err == nil || !strings.Contains(outcome.Err.Error(), want.marker) {
+			t.Errorf("report[%d] %s cause = %v, want %q", i+1, want.side, outcome.Err, want.marker)
+		}
+		other := report.BeforeLookup
+		if want.side == "before" {
+			other = report.AfterLookup
+		}
+		if other.Err != nil {
+			t.Errorf("report[%d] unexpected opposite-side cause: %v", i+1, other.Err)
+		}
+	}
+	rejected := got.Reports[6]
+	if rejected.BeforeLookup.SkipReason != reportservice.SkipBindingRejected || rejected.AfterLookup.SkipReason != reportservice.SkipBindingRejected {
+		t.Fatalf("rejected binding skip reasons = %#v / %#v", rejected.BeforeLookup, rejected.AfterLookup)
+	}
+	if !errors.Is(rejected.BeforeLookup.Err, repositorymanager.ErrUnknownRepository) || !errors.Is(rejected.AfterLookup.Err, repositorymanager.ErrAmbiguousRepository) {
+		t.Fatalf("RepositoryFailure lost through planservice dedup wrapper: before=%v after=%v", rejected.BeforeLookup.Err, rejected.AfterLookup.Err)
+	}
+	if rejected.BeforeLookup.Query != nil || rejected.AfterLookup.Query != nil {
+		t.Fatalf("rejected binding unexpectedly has Lookup queries: %#v", rejected)
 	}
 }
 
