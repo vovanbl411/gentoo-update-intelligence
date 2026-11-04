@@ -1,0 +1,47 @@
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-8081}:80"
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      GENTOO_UPDATE_INTELLIGENCE_LISTEN_ADDR: 0.0.0.0:8080
+      GENTOO_UPDATE_INTELLIGENCE_DATABASE_URL: postgres://guit:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/guit?sslmode=disable
+      GENTOO_UPDATE_INTELLIGENCE_REPOSITORY: ${GENTOO_UPDATE_INTELLIGENCE_REPOSITORY:?Set repository name in .env}
+      GENTOO_UPDATE_INTELLIGENCE_SOURCE_URL: ${GENTOO_UPDATE_INTELLIGENCE_SOURCE_URL:?Set source URL in .env}
+      GENTOO_UPDATE_INTELLIGENCE_REPOSITORY_PATH: /metadata
+      GENTOO_UPDATE_INTELLIGENCE_COMMIT: ${GENTOO_UPDATE_INTELLIGENCE_COMMIT:?Set full commit SHA in .env}
+    volumes:
+      - type: bind
+        source: ${GENTOO_UPDATE_INTELLIGENCE_SNAPSHOT_PATH:?Set absolute snapshot path in .env}
+        target: /metadata
+        read_only: true
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: guit
+      POSTGRES_USER: guit
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guit -d guit"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:

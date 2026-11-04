@@ -2,3 +2,4 @@
 /tools/openspec/node_modules/
 /tools/openspec/.config/
 /tools/openspec/.data/
+.env

@@ -44,7 +44,7 @@ HTTP backend предоставляет `POST /analyses` и `GET /analyses/{id}`
 
 ## Состояние проекта
 
-Реализованы Parser v0.1, Analyzer v0.1, первый срез metadata diff, ограниченный ChangeReport, локальный Metadata Provider, reportservice, planservice, выбор исторической ревизии ebuild, генератор metadata, HTTP API и постоянное PostgreSQL-хранение анализа. Поддержка downgrade, blockers и удалений покрыта синтетическими тестами; реальные текстовые fixtures этих сценариев пока не предоставлены. Blockers приняты после review `a38074f`, planservice — после review `013523e`, CLI — после review `a7d794e`, resolver — после review `6716bdc`, metadatagenerator — после review `666beaa`. Минимальный frontend принят и проверен в браузере с реальным backend и PostgreSQL; инструкция запуска и [отчёт приёмки](frontend/acceptance.md) доступны в [frontend/README.md](frontend/README.md). OpenSpec change `add-analysis-frontend` архивирован; действует [спецификация frontend](openspec/specs/analysis-frontend/spec.md). Redis, Docker Compose и HTTP-генерация metadata остаются отдельными этапами.
+Реализованы Parser v0.1, Analyzer v0.1, первый срез metadata diff, ограниченный ChangeReport, локальный Metadata Provider, reportservice, planservice, выбор исторической ревизии ebuild, генератор metadata, HTTP API и постоянное PostgreSQL-хранение анализа. Поддержка downgrade, blockers и удалений покрыта синтетическими тестами; реальные текстовые fixtures этих сценариев пока не предоставлены. Blockers приняты после review `a38074f`, planservice — после review `013523e`, CLI — после review `a7d794e`, resolver — после review `6716bdc`, metadatagenerator — после review `666beaa`. Минимальный frontend принят и проверен в браузере с реальным backend и PostgreSQL; инструкция запуска и [отчёт приёмки](frontend/acceptance.md) доступны в [frontend/README.md](frontend/README.md). OpenSpec change `add-analysis-frontend` архивирован; действует [спецификация frontend](openspec/specs/analysis-frontend/spec.md). Добавлен локальный запуск через Docker Compose; порядок настройки и приёмки описан в [инструкции локального запуска](docs/local-compose.md). Redis и HTTP-генерация metadata остаются отдельными этапами.
 
 ## Документы
 
@@ -62,3 +62,4 @@ HTTP backend предоставляет `POST /analyses` и `GET /analyses/{id}`
 - [Контракт HTTP API](docs/http-api.md)
 - [План разработки](docs/plan.md)
 - [Работа с OpenSpec](docs/openspec.md)
+- [Локальный запуск через Docker Compose](docs/local-compose.md)
