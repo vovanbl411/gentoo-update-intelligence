@@ -109,3 +109,23 @@ docker logs guit-acceptance-20261104-concurrency-metadata-worker-1
 ```
 
 Все шесть анализов завершились успешно, каждый сохранил одну запись и один отчёт; совокупно они запросили 12 различных metadata keys. UUID: `5d33262b-2743-4a0e-b5f6-f11bb332ec4d`, `fdab2fd8-71c9-4eaf-8122-8979f8a21107`, `828c8c22-3670-4d3c-9e7f-b84d1137d335`, `7eb51888-2ea6-4b30-824e-4bd42310d0d2`, `ed790131-c352-41ac-9758-72521f09d606`, `59c2bd7f-4aac-4a87-ae99-29800e3937fc`. Worker записал 12 `metadata generated` для этих разных keys, все с Gentoo revision `e5e514491d2c320d947d12da59d399094367a0b0`; каждый вызов `egencache` завершился с кодом 0. Тестовый cache после прогона содержал 12 файлов. Измеритель вокруг запуска `egencache` зафиксировал максимум `2` одновременных процесса, после завершения active count вернулся к `0`. Таким образом, лимит проверен на реальных промахах в общем worker при конкурирующих анализах; прогретый основной cache не использовался.
+
+## Этап 4.4: итоговые проверки
+
+Проверки выполнены на ревизии `579d8683a99ae7c0b1ff66c890591c6fea96e88b` (`579d868`, ветка `main`). На момент запуска рабочее дерево было чистым; `HEAD` совпадал с указанной пользователем базой `579d868`.
+
+```sh
+(cd backend && GOCACHE=/tmp/guit-acceptance-4.4-gocache go test -count=1 ./...)
+(cd backend && GOCACHE=/tmp/guit-acceptance-4.4-gocache go vet ./...)
+(cd backend && GOCACHE=/tmp/guit-acceptance-4.4-gocache go build -o /tmp/gentoo-update-intelligence ./cmd/gentoo-update-intelligence)
+(cd frontend && npm run typecheck)
+(cd frontend && npm test)
+(cd frontend && PLAYWRIGHT_BROWSER_EXECUTABLE=/var/lib/flatpak/app/com.google.Chrome/x86_64/stable/4f7f4fb16e633276bc51b98bf0a37586616b781400599552163d6c8e2a2f98b6/files/extra/chrome npm run test:browser)
+(cd frontend && npm run build)
+sh scripts/openspec.sh validate add-automatic-metadata-preparation --strict
+git diff --check
+```
+
+Все Go-пакеты с тестами прошли `go test -count=1 ./...`; `internal/analysisstore` сообщил `[no test files]`. `go vet ./...` и сборка CLI прошли. Go-файлы в этой приёмке не менялись, поэтому `gofmt` для изменённых Go-файлов не требовался. Frontend typecheck, 10 unit-тестов, production build и browser suite прошли: 30 browser-тестов успешно, 1 пропущен. Пропущен opt-in тест `frontend/tests/live.spec.ts`: он требует `LIVE_ACCEPTANCE=1` и локальный backend с закреплённой metadata и PostgreSQL; этот флаг не включали в общий browser suite. Строгая OpenSpec-валидация и `git diff --check` прошли.
+
+Первый запуск Go без отдельного `GOCACHE` остановился до компиляции, потому что стандартный `/home/vladimir/.cache/go-build` недоступен для записи в sandbox; повтор с кэшем в `/tmp` прошёл. Первый запуск browser suite также не смог открыть localhost-порт из sandbox; повтор с разрешённым локальным bind прошёл.
