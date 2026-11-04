@@ -44,11 +44,11 @@ http://127.0.0.1:8081/analyses/<UUID>
 
 ### Порт frontend
 
-Frontend доступен на `http://127.0.0.1:8081`; только он публикует порт хоста и привязан к loopback. При необходимости задайте переменную `FRONTEND_PORT`. Backend, metadata-worker и PostgreSQL не публикуют host ports. Подробнее о переменных окружения см. в [`.env.example`](../.env.example).
+Только frontend публикует host port и привязан к loopback. Чтобы изменить порт, задайте `FRONTEND_PORT`. Backend, metadata-worker и PostgreSQL host ports не публикуют. Пример операторских переменных находится в [`.env.example`](../.env.example).
 
 ### Gentoo mirror
 
-По умолчанию используется `https://anongit.gentoo.org/git/repo/gentoo.git`. Источник можно заменить переменной `GENTOO_REPOSITORY_URL`; она применяется для синхронизации и provenance. Например, для [зеркала Gentoo на GitHub](https://github.com/gentoo/gentoo) задайте перед запуском:
+Чтобы использовать другое зеркало, задайте `GENTOO_REPOSITORY_URL` перед запуском. Например, для [зеркала Gentoo на GitHub](https://github.com/gentoo/gentoo):
 
 ```sh
 export GENTOO_REPOSITORY_URL='https://github.com/gentoo/gentoo.git'
@@ -72,13 +72,47 @@ Compose передаёт каталог backend. При локальном за�
 
 ### Metadata worker
 
-Backend сначала ищет точный cache в закреплённом commit Gentoo. Если записи нет, он обращается к `metadata-worker`, который ищет ebuild в закреплённой истории и генерирует cache.
+Backend ищет точный cache в закреплённой Git-ревизии соответствующего repository. При `not_found` backend передаёт worker точный запрос и закреплённые ревизии; `metadata-worker` ищет ebuild в закреплённой истории и готовит cache, если исходники и профиль доступны.
 
-`metadata-worker` объединяет одновременно поступившие одинаковые запросы подготовки, включая создание временных checkout. Переменная `METADATA_WORKER_GENERATION_LIMIT` задаёт общий для всех анализов предел одновременных запусков `egencache`; значение по умолчанию — `2`. Укажите положительное целое число. После изменения пересоздайте worker:
+`metadata-worker` объединяет одновременно поступившие одинаковые запросы подготовки, включая создание временных checkout. Чтобы изменить общий предел параллельной генерации, задайте `METADATA_WORKER_GENERATION_LIMIT` и пересоздайте worker:
 
 ```sh
 docker compose up -d metadata-worker
 ```
+
+### Переменные окружения
+
+#### Параметры, которые оператор задаёт для Compose
+
+Указанные переменные можно задать в `.env` или окружении перед запуском `docker compose`. `.env.example` содержит пароль, порт frontend, URL Gentoo repository и предел генерации; каталог overlays и профиль metadata — дополнительные параметры Compose.
+
+| Переменная | Роль и значение по умолчанию |
+|---|---|
+| `POSTGRES_PASSWORD` | Обязательный пароль PostgreSQL. Compose подставляет его в DSN backend и в начальную конфигурацию сервиса PostgreSQL. Используйте URL-safe символы, поскольку пароль входит в URL подключения. |
+| `FRONTEND_PORT` | Необязательный host port frontend; по умолчанию `8081`. Привязка остаётся к `127.0.0.1`. |
+| `GENTOO_REPOSITORY_URL` | URL Gentoo Git repository для синхронизации и provenance; по умолчанию `https://anongit.gentoo.org/git/repo/gentoo.git`. |
+| `METADATA_WORKER_GENERATION_LIMIT` | Общий предел одновременных запусков `egencache`; по умолчанию `2`. Задайте положительное целое число. |
+| `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG` | Необязательный JSON-каталог дополнительных доверенных overlays; по умолчанию пустой. |
+| `GENTOO_UPDATE_INTELLIGENCE_METADATA_PROFILE` | Необязательный профиль Portage для подготовки metadata; по умолчанию пустой, тогда backend выбирает профиль по умолчанию. |
+
+#### Окружение backend
+
+Compose задаёт backend следующие параметры. При запуске backend вне Compose задайте обязательный DSN PostgreSQL и параметры Gentoo repository (`GENTOO_UPDATE_INTELLIGENCE_REPOSITORY`, `GENTOO_UPDATE_INTELLIGENCE_SOURCE_URL`, `GENTOO_UPDATE_INTELLIGENCE_REPOSITORY_PATH`); остальные параметры включайте по необходимости.
+
+| Переменная backend | Compose задаёт | Backend вне Compose |
+|---|---|---|
+| `GENTOO_UPDATE_INTELLIGENCE_DATABASE_URL` | `postgres://guit:${POSTGRES_PASSWORD}@postgres:5432/guit?sslmode=disable`. | Обязательный DSN доступной базы PostgreSQL. В ней хранятся задания и результаты. |
+| `GENTOO_UPDATE_INTELLIGENCE_LISTEN_ADDR` | `0.0.0.0:8080` внутри сети Compose. | Необязательная настройка; если не задана, backend слушает `127.0.0.1:8080`. |
+| `GENTOO_UPDATE_INTELLIGENCE_REPOSITORY` | `gentoo`. | Имя основного Gentoo repository, например `gentoo`. |
+| `GENTOO_UPDATE_INTELLIGENCE_SOURCE_URL` | Значение `GENTOO_REPOSITORY_URL` или URL по умолчанию из предыдущей таблицы. | URL источника основного repository для provenance. |
+| `GENTOO_UPDATE_INTELLIGENCE_REPOSITORY_PATH` | `/metadata/gentoo.git`; volume Gentoo подключён backend только для чтения. | Путь к локальному Git repository. |
+| `GENTOO_UPDATE_INTELLIGENCE_COMMIT` | Compose не задаёт; backend разрешает `refs/gentoo/published`. | Необязательный полный commit SHA. Если не задан, используется `refs/gentoo/published`. |
+| `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_PATH` | `/overlays`. | Необязательный путь для локальных копий overlays; пустое значение отключает их подготовку. |
+| `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG` | Значение из предыдущей таблицы или пустая строка. | Необязательный JSON-каталог доверенных репозиториев; применяется при настроенном `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_PATH`. |
+| `GENTOO_UPDATE_INTELLIGENCE_METADATA_WORKER_URL` | `http://metadata-worker:8090` во внутренней сети Compose. | Необязательный URL worker; если не задан, backend не передаёт ему metadata-запросы. |
+| `GENTOO_UPDATE_INTELLIGENCE_METADATA_PROFILE` | Значение из предыдущей таблицы или пустая строка. | Необязательный профиль Portage. Пустое значение означает `profiles/default/linux/amd64/23.0`; для профиля overlay укажите master, например `gentoo:profiles/default/linux/amd64/23.0`. |
+
+Compose задаёт самому metadata worker `METADATA_WORKER_LISTEN_ADDR=:8090`, `METADATA_WORKER_CACHE_PATH=/metadata-cache`, `METADATA_WORKER_TEMP_PATH=/var/tmp/gentoo-update-intelligence`, `METADATA_WORKER_PORTAGE_USER=portage` и `METADATA_WORKER_PORTAGE_GROUP=portage`. Это параметры worker, не backend. Именованный volume `metadata-cache` хранит подготовленные файлы; задания и результаты хранит PostgreSQL.
 
 ## Диагностика
 

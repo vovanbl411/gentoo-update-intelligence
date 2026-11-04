@@ -51,6 +51,24 @@ Resolver использует только объекты локального r
 
 ### Порядок поиска metadata
 
+```mermaid
+flowchart TD
+    Start[Точный Query и закреплённый commit] --> Cache{Cache есть в commit?}
+    Cache -->|Да| Result[Вернуть metadata с источником]
+    Cache -->|not_found| Enabled{Worker настроен?}
+    Enabled -->|Нет| Missing[Вернуть not_found]
+    Enabled -->|Да| Resolve[Выбрать точный ebuild в истории]
+    Resolve --> Historical{Cache есть в выбранной ревизии?}
+    Historical -->|Да| Result
+    Historical -->|Нет| Checkout[Checkout repository и masters, профиль и ключ cache]
+    Checkout --> Stored{Generated-cache найден?}
+    Stored -->|Да| Result
+    Stored -->|Нет| Generate[egencache и сохранение результата]
+    Generate --> Result
+```
+
+На схеме показан порядок поиска при успешных промежуточных шагах. Ошибка Provider не запускает worker; ошибки разрешения ebuild или подготовки сохраняются в Lookup соответствующей стороны отчёта.
+
 Для каждого точного `Query` backend действует в следующем порядке:
 
 1. `pinnedRepositories` вызывает Metadata Provider для закреплённого commit запрошенного repository. Если точный cache найден, он сразу передаётся в отчёт; worker не вызывается.

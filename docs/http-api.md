@@ -2,6 +2,36 @@
 
 API принимает текст emerge plan, сохраняет задание в PostgreSQL и возвращает UUID до начала фонового анализа. Клиент использует этот UUID для проверки состояния и получения результата или причины сбоя. API не запускает `emerge` напрямую.
 
+| Точка входа | Отправка задания | Проверка задания |
+|---|---|---|
+| Backend напрямую | `POST /analyses` | `GET /analyses/{id}` |
+| API через Compose frontend proxy | `POST /api/analyses` | `GET /api/analyses/{id}` |
+| Страница frontend | — | `/analyses/{id}` — страница приложения, не API |
+
+Compose frontend удаляет префикс `/api` при проксировании в backend и передаёт клиенту HTTP-код, `Content-Type` и тело ответа.
+
+## Путь задания
+
+```mermaid
+sequenceDiagram
+    participant Client as Клиент
+    participant API as Backend
+    participant DB as PostgreSQL
+    Client->>API: POST /analyses
+    API->>DB: Сохранить задание
+    DB-->>API: UUID
+    API-->>Client: 202 Accepted, UUID
+    Note over API,DB: Фоновая обработка: закрепление ревизий, анализ, сохранение прогресса
+    loop До завершения задания
+        Client->>API: GET /analyses/{id}
+        API->>DB: Прочитать состояние
+        DB-->>API: Статус, прогресс, результат или ошибка
+        API-->>Client: Состояние задания
+    end
+```
+
+Схема показывает успешное принятие запроса. Если задание не удалось сохранить, API возвращает ошибку без UUID. Повторное открытие по UUID читает сохранённое состояние и не запускает анализ заново.
+
 ## Отправка задания
 
 ### `POST /analyses`
@@ -50,7 +80,7 @@ UUID возвращается только после сохранения за�
 | HTTP-код | Причина |
 |---|---|
 | `400 Bad Request` | Некорректный JSON, несколько JSON-значений, неизвестное поле, неверный тип или недопустимое значение поля, пустой `plan`; сюда же обработчик относит ошибку чтения тела, в том числе превышение 4 MiB. |
-| `415 Unsupported Media Type` | `Content-Type` не равен `application/json`. |
+| `415 Unsupported Media Type` | Обработчик разбирает `Content-Type` и проверяет media type: он должен быть `application/json`. Параметры разрешены, например `application/json; charset=utf-8`. |
 | `500 Internal Server Error` | Не удалось сериализовать запрос для сохранения. |
 | `503 Service Unavailable` | Хранилище недоступно или не удалось сохранить задание. |
 
@@ -132,32 +162,10 @@ PostgreSQL — постоянное хранилище заданий и ана�
 
 При старте backend восстанавливает задания `pending` и `running`, повторяя обработку с начала. Если ревизии репозиториев уже сохранены, Provider открывается на тех же commits; если ревизии ещё не записаны, backend заново выбирает их. Если закреплённые commits или нужные Git-объекты недоступны либо восстановление невозможно по другой причине, задание получает `failed` с причиной. UUID остаётся доступным для GET. Перезапуск не меняет результат уже завершённого задания, сохранённый в PostgreSQL.
 
-Файловый `metadata-cache` metadata worker — отдельное хранилище подготовленных metadata, а не хранилище заданий. В Compose worker сначала использует точный cache из закреплённых репозиториев; если записи там нет, он может подготовить metadata по точной версии и сохранить её в постоянный volume `metadata-cache`. Backend передаёт worker точный запрос и закреплённые ревизии. Результат и provenance подготовки попадают в `Reports[].BeforeLookup.Result` или `Reports[].AfterLookup.Result`.
+Backend ищет точный cache в закреплённой Git-ревизии. Если Lookup возвращает `not_found` и настроен `GENTOO_UPDATE_INTELLIGENCE_METADATA_WORKER_URL`, backend передаёт worker точный запрос и закреплённые ревизии. Worker может подготовить metadata по точной версии и сохранить их в файловом `metadata-cache`; результат и provenance подготовки попадают в `Reports[].BeforeLookup.Result` или `Reports[].AfterLookup.Result`. `metadata-cache` хранит подготовленные metadata, а PostgreSQL — задания и результаты анализа.
 
-Маршруты зависят от точки входа:
-
-| Точка входа | Отправка задания | Проверка задания |
-|---|---|---|
-| Backend напрямую | `POST /analyses` | `GET /analyses/{id}` |
-| Frontend в Compose | `POST /api/analyses` | `GET /api/analyses/{id}` |
-
-Compose frontend удаляет префикс `/api` при проксировании в backend и передаёт клиенту HTTP-код, `Content-Type` и тело ответа. Страница интерфейса при этом открывается по `/analyses/{id}`; это маршрут frontend, а не API. Backend по умолчанию слушает `127.0.0.1:8080`; в Compose он слушает `0.0.0.0:8080` во внутренней сети, а на host публикуется только frontend на loopback.
+Backend по умолчанию слушает `127.0.0.1:8080`; в Compose он слушает `0.0.0.0:8080` во внутренней сети, а на host публикуется только frontend на loopback.
 
 ## Конфигурация
 
-| Переменная | Назначение и значение |
-|---|---|
-| `GENTOO_UPDATE_INTELLIGENCE_DATABASE_URL` | DSN PostgreSQL для заданий и результатов; в Compose указывает на сервис `postgres`. |
-| `POSTGRES_PASSWORD` | Обязательный пароль PostgreSQL для Compose; задаёт подключение backend и начальную учётную запись базы. |
-| `GENTOO_UPDATE_INTELLIGENCE_LISTEN_ADDR` | Адрес HTTP listener. По умолчанию `127.0.0.1:8080`; Compose задаёт `0.0.0.0:8080` для внутренней сети. |
-| `GENTOO_UPDATE_INTELLIGENCE_REPOSITORY` | Логическое имя основного Gentoo repository; Compose задаёт `gentoo`. |
-| `GENTOO_UPDATE_INTELLIGENCE_SOURCE_URL` | Источник основного repository для provenance; Compose берёт его из `GENTOO_REPOSITORY_URL`. |
-| `GENTOO_UPDATE_INTELLIGENCE_REPOSITORY_PATH` | Путь локального Git repository на backend; Compose задаёт `/metadata/gentoo.git`. |
-| `GENTOO_UPDATE_INTELLIGENCE_COMMIT` | Полный commit SHA основного repository. Если не задан, backend использует `refs/gentoo/published`. |
-| `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_PATH` | Путь для локальных копий известных overlays; пустое значение отключает загрузку overlays. Compose задаёт `/overlays`. |
-| `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG` | Необязательный JSON-массив доверенных записей `name`, `url`, `masters`, дополняющий встроенный каталог overlays. URL из пользовательского плана для загрузки не используются. |
-| `GENTOO_UPDATE_INTELLIGENCE_METADATA_WORKER_URL` | URL metadata worker. Compose задаёт внутренний адрес `http://metadata-worker:8090`. |
-| `GENTOO_UPDATE_INTELLIGENCE_METADATA_PROFILE` | Профиль Portage для генерации. По умолчанию используется `profiles/default/linux/amd64/23.0`; для overlay укажите master с префиксом, например `gentoo:profiles/default/linux/amd64/23.0`. |
-| `METADATA_WORKER_GENERATION_LIMIT` | Положительное целое число: общий предел одновременных запусков генерации metadata; по умолчанию `2`. Не задаёт объём PostgreSQL или лимит заданий. |
-| `GENTOO_REPOSITORY_URL` | URL Gentoo repository для синхронизации в Compose; значение по умолчанию — `https://anongit.gentoo.org/git/repo/gentoo.git`. Также используется как `GENTOO_UPDATE_INTELLIGENCE_SOURCE_URL`. |
-| `FRONTEND_PORT` | Порт host для Compose frontend, привязанный к `127.0.0.1`; по умолчанию `8081`. Backend и PostgreSQL host ports не публикуют. |
+Настройки Compose и параметры окружения backend описаны в разделе [«Настройки» инструкции Compose](local-compose.md#настройки). В этом документе приведён только контракт API.
