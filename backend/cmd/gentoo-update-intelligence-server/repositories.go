@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/metadataprovider"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/parser"
@@ -16,15 +17,21 @@ type pinnedRepositories struct {
 	revisions map[string]repositorymanager.Revision
 }
 
+func (p *pinnedRepositories) RepositoryFailure(name string) error {
+	if err := p.failures[name]; err != nil {
+		return err
+	}
+	if p.providers[name] == nil {
+		return fmt.Errorf("%w: %s", repositorymanager.ErrUnknownRepository, name)
+	}
+	return nil
+}
+
 func (p *pinnedRepositories) Lookup(query metadataprovider.Query) (metadataprovider.LookupResult, error) {
-	if err := p.failures[query.Repository]; err != nil {
+	if err := p.RepositoryFailure(query.Repository); err != nil {
 		return metadataprovider.LookupResult{}, err
 	}
-	provider := p.providers[query.Repository]
-	if provider == nil {
-		return metadataprovider.LookupResult{Status: metadataprovider.StatusRepositoryUnavailable}, nil
-	}
-	return provider.Lookup(query)
+	return p.providers[query.Repository].Lookup(query)
 }
 
 func (p *pinnedRepositories) RepositoryRevisions() map[string]repositorymanager.Revision {
@@ -53,8 +60,9 @@ func prepareRepositories(ctx context.Context, plan parser.Result, config metadat
 		if name == "gentoo" {
 			continue
 		}
-		revisions, err := manager.Pin(ctx, []string{name}, main)
+		revisions, err := manager.PinAdditional(ctx, []string{name}, result.revisions)
 		if errors.Is(err, repositorymanager.ErrUnknownRepository) {
+			result.failures[name] = err
 			continue
 		}
 		if err != nil {

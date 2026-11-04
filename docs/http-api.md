@@ -36,7 +36,7 @@
 
 `result` сохраняет полные результаты Parser, Analyzer и reportservice с исходными полями и значениями. Поле `Err` каждого Lookup outcome сериализуется строкой из `error.Error()`. Также сохраняются `Query`, `SkipReason`, полный `LookupResult` со статусом и snapshot, отчёт, diagnostics, findings и evidence. Ошибка Lookup не прерывает анализ и остаётся в соответствующем outcome.
 
-При включённой подготовке overlays `result.Repositories` содержит закреплённые commits, URL и masters доступных репозиториев; локальные пути в ответ не входят. Неизвестный repository даёт `repository_unavailable`. Ошибка загрузки известного overlay сохраняется в Lookup соответствующей стороны; остальные записи продолжают обрабатываться.
+При включённой подготовке overlays `result.Repositories` содержит закреплённые commits, URL и masters доступных репозиториев; локальные пути в ответ не входят. Неизвестное или неоднозначное имя repository сохраняется как ошибка Lookup соответствующей стороны. Ошибка первой загрузки overlay также сохраняется на соответствующей стороне; при ошибке обновления используется последняя успешно опубликованная ревизия. Остальные записи продолжают обрабатываться.
 
 Если Metadata Provider недоступен, `POST` возвращает `503 Service Unavailable` без ID. Эта ошибка не мешает чтению ранее сохранённых анализов через `GET`. Если анализ не может быть собран или запись не подтверждена PostgreSQL, API не отправляет `201 Created` и не возвращает ID. Ошибка запроса возвращает JSON с объяснением и `400 Bad Request`; другой `Content-Type` — `415 Unsupported Media Type`; внутренняя ошибка анализа — `500 Internal Server Error`; недоступность Provider или хранилища — `503 Service Unavailable`. Ответ об ошибке не содержит ID.
 
@@ -59,6 +59,7 @@ PostgreSQL — постоянное хранилище этого подэтап
 | `GENTOO_UPDATE_INTELLIGENCE_REPOSITORY_PATH` | Путь локального Git repository на backend |
 | `GENTOO_UPDATE_INTELLIGENCE_COMMIT` | Полный commit SHA; если не задан, используется `refs/gentoo/published` |
 | `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_PATH` | Путь для локальных копий известных overlays; если не задан, их загрузка отключена |
+| `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG` | Необязательный JSON-массив доверенных записей `name`, `url`, `masters`, дополняющий встроенный каталог |
 
 Секреты и DSN задаются окружением процесса и не сохраняются в результате анализа. Backend по умолчанию слушает только loopback; способы внешней публикации и аутентификация относятся к отдельному этапу.
 

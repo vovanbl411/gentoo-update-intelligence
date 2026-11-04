@@ -22,6 +22,7 @@ services:
       GENTOO_UPDATE_INTELLIGENCE_SOURCE_URL: ${GENTOO_REPOSITORY_URL:-https://anongit.gentoo.org/git/repo/gentoo.git}
       GENTOO_UPDATE_INTELLIGENCE_REPOSITORY_PATH: /metadata/gentoo.git
       GENTOO_UPDATE_INTELLIGENCE_OVERLAY_PATH: /overlays
+      GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG: ${GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG:-}
     volumes:
       - type: volume
         source: gentoo-data

@@ -27,7 +27,15 @@ export GENTOO_REPOSITORY_URL='https://github.com/gentoo/gentoo.git'
 
 Если стек уже запущен, после изменения переменной выполните `docker compose up -d`, чтобы обновить конфигурацию и Gentoo runtime, и backend. Перед последующими командами Compose в новом shell задайте выбранный URL снова; простой `restart` не меняет окружение существующего контейнера.
 
-Каталог известных overlays пока содержит `guru` с master `gentoo`. При первом запросе плана с `::guru` backend загружает его в отдельный именованный volume `overlay-data`; последующие анализы используют локальную копию. Источник и master проверены по [каталогу Gentoo](https://raw.githubusercontent.com/gentoo/api-gentoo-org/master/files/overlays/repositories.xml) и [конфигурации GURU](https://raw.githubusercontent.com/gentoo-mirror/guru/master/metadata/layout.conf). Автоматическое обновление overlay пока не реализовано; неизвестные имена не разрешаются в сетевые адреса.
+Встроенный каталог содержит `guru` с master `gentoo`. При первом запросе backend загружает overlay в именованный volume `overlay-data`. Перед последующим анализом он пытается обновить локальную копию и публикует только проверенный commit. При ошибке обновления используется последняя успешная публикация; уже начатый анализ сохраняет свои ревизии. Источник и master GURU указаны в [каталоге Gentoo](https://raw.githubusercontent.com/gentoo/api-gentoo-org/master/files/overlays/repositories.xml) и [конфигурации GURU](https://raw.githubusercontent.com/gentoo-mirror/guru/master/metadata/layout.conf).
+
+Для других overlays оператор задаёт доверенный JSON-каталог через `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG`. Например, замените адреса и masters на соответствующие вашим репозиториям:
+
+```sh
+export GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG='[{"name":"gentoo-zh","url":"https://example.invalid/gentoo-zh.git","masters":["gentoo"]},{"name":"umbriel-overlay","url":"https://example.invalid/umbriel-overlay.git","masters":["gentoo"]}]'
+```
+
+Compose передаёт переменную backend. Для локального запуска backend задайте её вместе с `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_PATH`. Поддерживаются HTTPS URL без учётных данных и абсолютные локальные пути, доступные backend; локальный путь внутри Compose должен быть смонтирован в контейнер. Адреса из плана не используются. Повторное имя, включая встроенное, считается неоднозначным; неизвестные и неоднозначные имена указываются в ошибке соответствующей стороны отчёта. Неверный каталог или ссылка на неизвестный master препятствуют запуску backend. После изменения каталога пересоздайте backend через `docker compose up -d`. Если URL уже загруженного overlay изменён, backend сообщает о несовпадении источника и не использует прежнюю копию под новым адресом.
 
 Первая загрузка overlay выполняется во время синхронного POST и может занимать несколько минут; timeout frontend proxy составляет один час. Асинхронная обработка с прогрессом относится к следующему этапу.
 

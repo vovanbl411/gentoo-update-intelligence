@@ -2,10 +2,14 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/analysishttp"
@@ -47,12 +51,31 @@ func run() error {
 		if config.Repository != "gentoo" {
 			return errors.New("overlay preparation requires the gentoo repository")
 		}
-		overlays, err = repositorymanager.New(path, repositorymanager.KnownOverlays())
+		overlays, err = overlayManager(path, os.Getenv("GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG"))
 		if err != nil {
 			return err
 		}
 	}
-	providerFactory := func(ctx context.Context, plan parser.Result) (reportservice.MetadataLookup, error) {
+	providerFactory := newProviderFactory(config, overlays)
+
+	address := os.Getenv("GENTOO_UPDATE_INTELLIGENCE_LISTEN_ADDR")
+	if address == "" {
+		address = "127.0.0.1:8080"
+	}
+	server := &http.Server{
+		Addr:              address,
+		Handler:           analysishttp.NewHandlerWithPlanProviderFactory(store, providerFactory),
+		ReadHeaderTimeout: 5 * time.Second,
+		IdleTimeout:       60 * time.Second,
+	}
+	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		return err
+	}
+	return nil
+}
+
+func newProviderFactory(config metadataprovider.Config, overlays *repositorymanager.Manager) func(context.Context, parser.Result) (reportservice.MetadataLookup, error) {
+	return func(ctx context.Context, plan parser.Result) (reportservice.MetadataLookup, error) {
 		var provider *metadataprovider.Provider
 		var err error
 		if config.Commit == "" {
@@ -69,19 +92,26 @@ func run() error {
 		}
 		return prepareRepositories(ctx, plan, config, provider, overlays), nil
 	}
+}
 
-	address := os.Getenv("GENTOO_UPDATE_INTELLIGENCE_LISTEN_ADDR")
-	if address == "" {
-		address = "127.0.0.1:8080"
+// overlayManager accepts only operator-provided catalog configuration.
+func overlayManager(path, catalogJSON string) (*repositorymanager.Manager, error) {
+	catalog := repositorymanager.KnownOverlays()
+	if catalogJSON != "" {
+		decoder := json.NewDecoder(strings.NewReader(catalogJSON))
+		decoder.DisallowUnknownFields()
+		var configured []repositorymanager.Repository
+		if err := decoder.Decode(&configured); err != nil {
+			return nil, fmt.Errorf("invalid overlay catalog: %w", err)
+		}
+		if configured == nil {
+			return nil, errors.New("overlay catalog must be a JSON array")
+		}
+		var extra any
+		if err := decoder.Decode(&extra); err != io.EOF {
+			return nil, errors.New("overlay catalog must contain one JSON array")
+		}
+		catalog = append(catalog, configured...)
 	}
-	server := &http.Server{
-		Addr:              address,
-		Handler:           analysishttp.NewHandlerWithPlanProviderFactory(store, providerFactory),
-		ReadHeaderTimeout: 5 * time.Second,
-		IdleTimeout:       60 * time.Second,
-	}
-	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-		return err
-	}
-	return nil
+	return repositorymanager.New(path, catalog)
 }

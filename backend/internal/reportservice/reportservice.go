@@ -54,8 +54,20 @@ func Build(plan parser.Result, entryIndex int, provider MetadataLookup) (Result,
 		return Result{}, fmt.Errorf("%w", ErrProviderRequired)
 	}
 	if !lookupAllowed(preliminary.Gentoo.Diagnostics) {
-		outcome := LookupOutcome{SkipReason: SkipBindingRejected}
-		return Result{Report: preliminary, BeforeLookup: outcome, AfterLookup: outcome}, nil
+		before := LookupOutcome{SkipReason: SkipBindingRejected}
+		after := LookupOutcome{SkipReason: SkipBindingRejected}
+		if source, ok := provider.(interface{ RepositoryFailure(string) error }); ok {
+			entry := plan.Entries[entryIndex]
+			for _, installed := range entry.Installed.Versions {
+				if installed.Repository != nil {
+					before.Err = errors.Join(before.Err, source.RepositoryFailure(*installed.Repository))
+				}
+			}
+			if entry.Target.Repository != nil {
+				after.Err = source.RepositoryFailure(*entry.Target.Repository)
+			}
+		}
+		return Result{Report: preliminary, BeforeLookup: before, AfterLookup: after}, nil
 	}
 
 	entry := plan.Entries[entryIndex]

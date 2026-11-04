@@ -5,6 +5,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -14,6 +16,7 @@ import (
 )
 
 var ErrUnknownRepository = errors.New("unknown repository")
+var ErrAmbiguousRepository = errors.New("ambiguous repository")
 
 // Repository is trusted application configuration, never a plan-supplied URL.
 type Repository struct {
@@ -36,9 +39,10 @@ type Revision struct {
 }
 
 type Manager struct {
-	root    string
-	catalog map[string]Repository
-	mu      sync.Mutex
+	root      string
+	catalog   map[string]Repository
+	ambiguous map[string]bool
+	mu        sync.Mutex
 }
 
 var validName = regexp.MustCompile(`^[A-Za-z0-9_][A-Za-z0-9_-]*$`)
@@ -49,13 +53,14 @@ func New(root string, catalog []Repository) (*Manager, error) {
 	if root == "" {
 		return nil, errors.New("repository storage path is required")
 	}
-	m := &Manager{root: root, catalog: make(map[string]Repository, len(catalog))}
+	m := &Manager{root: root, catalog: make(map[string]Repository, len(catalog)), ambiguous: make(map[string]bool)}
 	for _, entry := range catalog {
-		if !validName.MatchString(entry.Name) || entry.Name == "gentoo" || entry.URL == "" || strings.HasPrefix(entry.URL, "-") {
+		if !validName.MatchString(entry.Name) || entry.Name == "gentoo" || !validSource(entry.URL) {
 			return nil, fmt.Errorf("invalid repository catalog entry %q", entry.Name)
 		}
 		if _, exists := m.catalog[entry.Name]; exists {
-			return nil, fmt.Errorf("duplicate repository %q", entry.Name)
+			m.ambiguous[entry.Name] = true
+			continue
 		}
 		entry.Masters = append([]string(nil), entry.Masters...)
 		m.catalog[entry.Name] = entry
@@ -72,21 +77,44 @@ func New(root string, catalog []Repository) (*Manager, error) {
 	return m, nil
 }
 
+func validSource(source string) bool {
+	if strings.ContainsAny(source, "\x00\r\n") {
+		return false
+	}
+	if filepath.IsAbs(source) {
+		return true
+	}
+	parsed, err := url.Parse(source)
+	return err == nil && parsed.Scheme == "https" && parsed.Hostname() != "" && parsed.User == nil && parsed.RawQuery == "" && parsed.Fragment == ""
+}
+
 // Pin returns immutable commit IDs for the named overlays and their masters.
 // gentoo must already be pinned by the caller before this method is called.
-// An existing local mirror is reused; it is not implicitly fetched again.
+// An existing mirror is refreshed before its published revision is pinned.
 func (m *Manager) Pin(ctx context.Context, names []string, gentoo Revision) (map[string]Revision, error) {
+	return m.PinAdditional(ctx, names, map[string]Revision{"gentoo": gentoo})
+}
+
+// PinAdditional preserves revisions already pinned for the same analysis.
+func (m *Manager) PinAdditional(ctx context.Context, names []string, pinned map[string]Revision) (map[string]Revision, error) {
+	gentoo := pinned["gentoo"]
 	if gentoo.Name != "gentoo" || !validCommit.MatchString(gentoo.Commit) || gentoo.Path == "" {
 		return nil, errors.New("pinned gentoo revision is required")
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	result := map[string]Revision{"gentoo": gentoo}
+	result := make(map[string]Revision, len(pinned))
+	for name, revision := range pinned {
+		result[name] = revision
+	}
 	visiting := make(map[string]bool)
 	var visit func(string) error
 	visit = func(name string) error {
 		if _, ok := result[name]; ok {
 			return nil
+		}
+		if m.ambiguous[name] {
+			return fmt.Errorf("%w: %s", ErrAmbiguousRepository, name)
 		}
 		entry, ok := m.catalog[name]
 		if !ok {
@@ -115,22 +143,59 @@ func (m *Manager) Pin(ctx context.Context, names []string, gentoo Revision) (map
 			if _, err = runGit(ctx, "clone", "--mirror", "--", entry.URL, staging); err != nil {
 				return fmt.Errorf("clone %s: %w", name, err)
 			}
+			id, err := resolveCommit(ctx, staging, "HEAD^{commit}")
+			if err != nil {
+				return fmt.Errorf("pin %s: %w", name, err)
+			}
+			if err = publish(ctx, staging, id); err != nil {
+				return fmt.Errorf("publish %s: %w", name, err)
+			}
 			if err = os.Rename(staging, path); err != nil {
 				return fmt.Errorf("publish %s: %w", name, err)
 			}
 		} else if err != nil {
 			return err
+		} else {
+			origin, err := runGit(ctx, "-C", path, "config", "--get", "remote.origin.url")
+			if err != nil || strings.TrimSpace(string(origin)) != entry.URL {
+				return fmt.Errorf("repository %s source does not match configured URL", name)
+			}
+			if _, err := runGit(ctx, "-C", path, "show-ref", "--verify", "--quiet", "refs/gentoo/published"); err != nil {
+				var exitErr *exec.ExitError
+				if !errors.As(err, &exitErr) || exitErr.ExitCode() != 1 {
+					return fmt.Errorf("read publication %s: %w", name, err)
+				}
+				// Mirrors from the previous implementation have only HEAD.
+				id, headErr := resolveCommit(ctx, path, "HEAD^{commit}")
+				if headErr != nil {
+					return fmt.Errorf("pin %s: %w", name, headErr)
+				}
+				if err := publish(ctx, path, id); err != nil {
+					return fmt.Errorf("publish %s: %w", name, err)
+				}
+			}
+			if _, err := resolveCommit(ctx, path, "refs/gentoo/published^{commit}"); err != nil {
+				return fmt.Errorf("invalid publication %s: %w", name, err)
+			}
+			_, fetchErr := runGit(ctx, "-C", path, "fetch", "--no-tags", "--no-write-fetch-head", "--refmap=", "--force", "--", entry.URL, "+HEAD:refs/gentoo/candidate")
+			if fetchErr == nil {
+				id, resolveErr := resolveCommit(ctx, path, "refs/gentoo/candidate^{commit}")
+				if resolveErr == nil {
+					resolveErr = publish(ctx, path, id)
+				}
+				fetchErr = resolveErr
+			}
+			if ctx.Err() != nil {
+				return ctx.Err()
+			}
+			// An unsuccessful refresh leaves the previous published ref intact.
+			if fetchErr != nil {
+				log.Printf("overlay %s refresh failed; using last published revision", name)
+			}
 		}
-		commit, err := runGit(ctx, "-C", path, "rev-parse", "--verify", "HEAD^{commit}")
+		id, err := resolveCommit(ctx, path, "refs/gentoo/published^{commit}")
 		if err != nil {
 			return fmt.Errorf("pin %s: %w", name, err)
-		}
-		id := strings.TrimSpace(string(commit))
-		if !validCommit.MatchString(id) {
-			return fmt.Errorf("invalid commit returned for %s", name)
-		}
-		if _, err := runGit(ctx, "-C", path, "update-ref", "refs/gentoo/snapshots/"+id, id); err != nil {
-			return fmt.Errorf("retain %s: %w", name, err)
 		}
 		result[name] = Revision{Name: name, URL: entry.URL, Path: path, Commit: id, Masters: append([]string(nil), entry.Masters...)}
 		return nil
@@ -141,6 +206,29 @@ func (m *Manager) Pin(ctx context.Context, names []string, gentoo Revision) (map
 		}
 	}
 	return result, nil
+}
+
+func resolveCommit(ctx context.Context, path, ref string) (string, error) {
+	output, err := runGit(ctx, "-C", path, "rev-parse", "--verify", ref)
+	if err != nil {
+		return "", err
+	}
+	id := strings.TrimSpace(string(output))
+	if !validCommit.MatchString(id) {
+		return "", errors.New("invalid full commit ID")
+	}
+	return id, nil
+}
+
+func publish(ctx context.Context, path, id string) error {
+	if _, err := runGit(ctx, "-C", path, "fsck", "--connectivity-only", "--no-reflogs", "--no-dangling", id); err != nil {
+		return err
+	}
+	if _, err := runGit(ctx, "-C", path, "update-ref", "refs/gentoo/snapshots/"+id, id); err != nil {
+		return err
+	}
+	_, err := runGit(ctx, "-C", path, "update-ref", "refs/gentoo/published", id)
+	return err
 }
 
 func runGit(ctx context.Context, args ...string) ([]byte, error) {

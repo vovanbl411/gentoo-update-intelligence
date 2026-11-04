@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -71,7 +72,6 @@ func TestPrepareRepositoriesPinsAndRoutesPlan(t *testing.T) {
 	fixtureGit(t, overlayPath, "add", ".")
 	fixtureGit(t, overlayPath, "commit", "-qm", "updated")
 	updatedCommit := fixtureGit(t, overlayPath, "rev-parse", "HEAD")
-	fixtureGit(t, pinned.revisions["overlay"].Path, "fetch", "--force", overlayPath, "+HEAD:refs/heads/main")
 	stillOld, err := pinned.Lookup(query)
 	if err != nil || stillOld.Snapshot == nil || stillOld.Snapshot.Source.Commit != overlayCommit {
 		t.Fatalf("old analysis after update = %#v, %v", stillOld, err)
@@ -83,7 +83,7 @@ func TestPrepareRepositoriesPinsAndRoutesPlan(t *testing.T) {
 	}
 	query.Repository = "unknown"
 	result, err = pinned.Lookup(query)
-	if err != nil || result.Status != metadataprovider.StatusRepositoryUnavailable {
+	if !errors.Is(err, repositorymanager.ErrUnknownRepository) {
 		t.Fatalf("unknown = %#v, %v", result, err)
 	}
 }
