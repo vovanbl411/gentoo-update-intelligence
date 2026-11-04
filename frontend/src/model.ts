@@ -1,6 +1,13 @@
 // Go API retains exported field names; null slices and pointer fields are expected.
 export type Obj = Record<string, any>;
 export interface ApiEnvelope { id: string; result: ApiResult }
+export interface AnalysisJob {
+  id: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  progress: { stage: string; completed: number; total: number };
+  result?: ApiResult;
+  error?: string;
+}
 export interface ApiResult extends Obj { Plan: ApiPlan; Analysis: ApiAnalysis; Reports: ApiReport[] | null }
 export interface ApiPlan extends Obj { Status: string; Entries: ApiEntry[] | null; Blockers: Obj[] | null; Diagnostics: Obj[] | null }
 export interface ApiEntry extends Obj { Package: Obj; Target: Obj; Installed: Obj; FlagGroups?: Obj[] | null }
@@ -21,6 +28,17 @@ export function envelope(value: unknown): value is ApiEnvelope {
   return array(Plan.Entries).every(entry => object(entry.Package) && object(entry.Target) && object(entry.Installed) && objects(entry.Installed.Versions) && (entry.FlagGroups === undefined || objects(entry.FlagGroups)) && array(entry.FlagGroups).every((group: Obj) => objects(group.Values)))
     && array(Reports).every(view => object(view.Report))
     && array(Analysis.Findings).every(finding => typeof finding.Message === 'string');
+}
+export function analysisJob(value: unknown): value is AnalysisJob | ApiEnvelope {
+  if (!object(value) || typeof value.id !== 'string' || !uuid.test(value.id)) return false;
+  // Continue to open saved results from the previous synchronous response shape.
+  if ('result' in value && !('status' in value)) return envelope(value);
+  if (!['pending', 'running', 'completed', 'failed'].includes(value.status)) return false;
+  if (!object(value.progress) || typeof value.progress.stage !== 'string' ||
+      !Number.isInteger(value.progress.completed) || value.progress.completed < 0 ||
+      !Number.isInteger(value.progress.total) || value.progress.total < 0) return false;
+  if (value.status === 'completed') return envelope({ id: value.id, result: value.result });
+  return value.result === undefined && (value.error === undefined || typeof value.error === 'string');
 }
 export function input(plan: string, lines: string) {
   if (!plan.trim()) throw new Error('Введите план.');

@@ -1,4 +1,4 @@
-import { array, envelope, evidence, input, type Obj } from './model';
+import { analysisJob, array, evidence, input, type Obj } from './model';
 import './style.css';
 const app = document.querySelector<HTMLElement>('#app')!;
 let generation = 0;
@@ -19,9 +19,9 @@ function form() {
     pending = true; button.disabled = true; status.textContent = 'Отправка…';
     try {
       const response = await fetch('/api/analyses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (response.status !== 201) { let explanation = ''; try { const data = await response.json(); explanation = typeof data.error === 'string' ? `: ${data.error}` : ''; } catch {} status.textContent = `${response.status === 503 ? 'Сервис недоступен' : 'Ошибка запроса'} (${response.status})${explanation}`; return; }
+      if (response.status !== 202) { let explanation = ''; try { const data = await response.json(); explanation = typeof data.error === 'string' ? `: ${data.error}` : ''; } catch {} status.textContent = `${response.status === 503 ? 'Сервис недоступен' : 'Ошибка запроса'} (${response.status})${explanation}`; return; }
       let data: unknown; try { data = await response.json(); } catch { status.textContent = 'Некорректный ответ: сохранение не подтверждено.'; return; }
-      if (!envelope(data)) { status.textContent = 'Некорректный ответ: сохранение не подтверждено.'; return; }
+      if (!analysisJob(data) || !('status' in data) || !['pending', 'running'].includes(data.status)) { status.textContent = 'Некорректный ответ: сохранение не подтверждено.'; return; }
       navigate(`/analyses/${data.id}`);
     } catch { status.textContent = 'Ошибка сети: сохранение не подтверждено. Повторная отправка может создать второй анализ.'; }
     finally { pending = false; button.disabled = false; }
@@ -51,12 +51,39 @@ function result(data: Obj, app: HTMLElement) {
   const others = findings.filter(f => !Number.isInteger(f.EntryIndex) || f.EntryIndex < 0 || f.EntryIndex >= entries.length); if (others.length) { add(app, 'h2', 'Другие findings'); others.forEach(f => showFinding(app, f)); }
 }
 async function load(id: string, current: number) {
-  app.replaceChildren(); add(app, 'h1', 'Загрузка анализа'); const state = add(app, 'p', 'Загрузка…'); state.setAttribute('role', 'status');
-  const retry = () => { if (current === generation) load(id, current); };
-  try { const response = await fetch(`/api/analyses/${encodeURIComponent(id)}`); if (current !== generation) return;
-    if (!response.ok) { state.textContent = response.status === 404 ? 'Анализ не найден.' : response.status === 503 ? 'Сервис недоступен.' : `Ошибка загрузки (${response.status}).`; if (response.status === 404) link(app, 'К форме', '/'); else { const b = el('button', 'Повторить загрузку'); b.onclick = retry; app.append(b); } return; }
-    const data: unknown = await response.json(); if (current !== generation) return; if (!envelope(data) || data.id.toLowerCase() !== id.toLowerCase()) { state.textContent = 'Некорректный ответ сервиса.'; const b = el('button', 'Повторить загрузку'); b.onclick = retry; app.append(b); return; } const content = el('div'); result(data.result, content); app.replaceChildren(content);
-  } catch { if (current !== generation) return; state.textContent = 'Сервис недоступен или ответ некорректен.'; const b = el('button', 'Повторить загрузку'); b.onclick = retry; app.append(b); }
+  app.replaceChildren(); add(app, 'h1', 'Анализ'); link(app, 'Новый анализ', '/');
+  const state = add(app, 'p', 'Загрузка состояния…'); state.setAttribute('role', 'status');
+  const retry = () => { if (current === generation) void load(id, current); };
+  const stageNames: Record<string, string> = { queued: 'В очереди', preparing: 'Подготовка', analyzing: 'Анализ', completed: 'Завершён', failed: 'Ошибка' };
+  const showRetry = () => { const button = el('button', 'Повторить загрузку'); button.onclick = retry; app.append(button); };
+  const poll = async () => {
+    try {
+      const response = await fetch(`/api/analyses/${encodeURIComponent(id)}`);
+      if (current !== generation) return;
+      if (!response.ok) {
+        state.textContent = response.status === 404 ? 'Анализ не найден.' : response.status === 503 ? 'Сервис недоступен.' : `Ошибка загрузки (${response.status}).`;
+        if (response.status === 404) link(app, 'К форме', '/'); else showRetry();
+        return;
+      }
+      const data: unknown = await response.json();
+      if (current !== generation) return;
+      if (!analysisJob(data) || data.id.toLowerCase() !== id.toLowerCase()) { state.textContent = 'Некорректный ответ сервиса.'; showRetry(); return; }
+      if (!('status' in data)) { const content = el('div'); result(data.result, content); app.replaceChildren(content); return; }
+      const progress = data.progress;
+      const stage = stageNames[progress.stage] || progress.stage;
+      if (data.status === 'completed') {
+        if (!data.result) { state.textContent = 'Сервис сообщил о завершении без итогового отчёта.'; showRetry(); return; }
+        const content = el('div'); result(data.result, content); app.replaceChildren(content); return;
+      }
+      if (data.status === 'failed') { state.textContent = `Анализ завершился с ошибкой: ${data.error || 'причина не указана'}`; return; }
+      state.textContent = `${data.status === 'pending' ? 'Ожидание' : 'Выполняется'}: ${stage}. Обработано ${progress.completed}${progress.total > 0 ? ` из ${progress.total}` : ''}.`;
+      window.setTimeout(() => { if (current === generation) void poll(); }, 1000);
+    } catch {
+      if (current !== generation) return;
+      state.textContent = 'Сервис недоступен или ответ некорректен.'; showRetry();
+    }
+  };
+  void poll();
 }
 function render() { const current = ++generation; app.replaceChildren(); if (location.pathname === '/') form(); else if (location.pathname.startsWith('/analyses/') && location.pathname.slice(10) && !location.pathname.slice(10).includes('/')) void load(location.pathname.slice(10), current); else { add(app, 'h1', 'Страница не найдена'); link(app, 'К форме', '/'); } }
 window.addEventListener('popstate', render); render();
