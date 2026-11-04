@@ -56,6 +56,9 @@ type Provider struct {
 	commit     string
 }
 
+// Commit returns the full commit pinned by this provider.
+func (p *Provider) Commit() string { return p.commit }
+
 var (
 	versionPattern = regexp.MustCompile(`^[0-9]+(\.[0-9]+)*[a-z]?(_(alpha|beta|pre|rc|p)[0-9]*)*(-r[0-9]+)?$`)
 	versionSuffix  = regexp.MustCompile(`-[0-9]+(\.[0-9]+)*[a-z]?(_(alpha|beta|pre|rc|p)[0-9]*)*(-r[0-9]+)?$`)

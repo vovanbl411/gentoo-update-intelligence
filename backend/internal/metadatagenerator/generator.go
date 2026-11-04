@@ -41,27 +41,42 @@ type Request struct {
 	Checkout   string
 	Profile    string
 	TempDir    string
+	Repository string
+	Masters    []Master
+}
+
+// Master is a clean checkout pinned to the commit used for generation.
+type Master struct {
+	Name     string
+	Checkout string
+	Commit   string
+}
+
+type MasterRevision struct {
+	Name   string `json:"name"`
+	Commit string `json:"commit"`
 }
 
 type Provenance struct {
-	ReferenceCommit  string   `json:"reference_commit"`
-	SelectedCommit   string   `json:"selected_commit"`
-	SelectionReason  string   `json:"selection_reason"`
-	EbuildPath       string   `json:"ebuild_path"`
-	EbuildBlobID     string   `json:"ebuild_blob_id"`
-	Profile          string   `json:"profile"`
-	PortageVersion   string   `json:"portage_version"`
-	CachePath        string   `json:"cache_path"`
-	CacheSHA256      string   `json:"cache_sha256"`
-	EgencachePath    string   `json:"egencache_path"`
-	EgencacheArgs    []string `json:"egencache_args"`
-	EgencacheStdout  string   `json:"egencache_stdout"`
-	EgencacheStderr  string   `json:"egencache_stderr"`
-	Repositories     string   `json:"repositories_configuration"`
-	MakeConf         string   `json:"make_conf"`
-	Path             string   `json:"path"`
-	PortageUserName  string   `json:"portage_username,omitempty"`
-	PortageGroupName string   `json:"portage_group_name,omitempty"`
+	ReferenceCommit  string           `json:"reference_commit"`
+	SelectedCommit   string           `json:"selected_commit"`
+	SelectionReason  string           `json:"selection_reason"`
+	EbuildPath       string           `json:"ebuild_path"`
+	EbuildBlobID     string           `json:"ebuild_blob_id"`
+	Profile          string           `json:"profile"`
+	PortageVersion   string           `json:"portage_version"`
+	CachePath        string           `json:"cache_path"`
+	CacheSHA256      string           `json:"cache_sha256"`
+	EgencachePath    string           `json:"egencache_path"`
+	EgencacheArgs    []string         `json:"egencache_args"`
+	EgencacheStdout  string           `json:"egencache_stdout"`
+	EgencacheStderr  string           `json:"egencache_stderr"`
+	Repositories     string           `json:"repositories_configuration"`
+	MakeConf         string           `json:"make_conf"`
+	Path             string           `json:"path"`
+	PortageUserName  string           `json:"portage_username,omitempty"`
+	PortageGroupName string           `json:"portage_group_name,omitempty"`
+	MasterRevisions  []MasterRevision `json:"master_revisions,omitempty"`
 }
 
 type Result struct {
@@ -80,6 +95,8 @@ type Generator struct {
 var versionPattern = regexp.MustCompile(`^[0-9]+(\.[0-9]+)*[a-z]?(_(alpha|beta|pre|rc|p)[0-9]*)*(-r[0-9]+)?$`)
 var portageIdentityPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_.-]*$`)
 var portageVersionPattern = regexp.MustCompile(`(?m)^Portage ([^ ]+)`)
+var repositoryNamePattern = regexp.MustCompile(`^[A-Za-z0-9_][A-Za-z0-9_-]*$`)
+var fullCommitPattern = regexp.MustCompile(`^([a-f0-9]{40}|[a-f0-9]{64})$`)
 
 func New(config Config) *Generator {
 	egencache := config.EgencachePath
@@ -94,7 +111,11 @@ func New(config Config) *Generator {
 }
 
 func (g *Generator) Generate(request Request) (Result, error) {
+	if request.Repository == "" {
+		request.Repository = "gentoo"
+	}
 	if g == nil || !validPair(request.Category, request.Name) || !versionPattern.MatchString(request.Version) ||
+		!repositoryNamePattern.MatchString(request.Repository) ||
 		g.userName != "" && !portageIdentityPattern.MatchString(g.userName) || g.groupName != "" && !portageIdentityPattern.MatchString(g.groupName) ||
 		request.Resolution.Status != ebuildresolver.StatusFound || request.Resolution.ReferenceCommit == "" ||
 		request.Resolution.SelectedCommit == "" || request.Resolution.BlobID == "" || request.Resolution.EbuildPath == "" ||
@@ -121,7 +142,27 @@ func (g *Generator) Generate(request Request) (Result, error) {
 	if err != nil {
 		return Result{}, fmt.Errorf("%w: resolve temp directory: %v", ErrInvalidInput, err)
 	}
-	if err := validateCheckout(checkout, profile, request); err != nil {
+	profileRoots := []string{checkout}
+	masterRevisions := make([]MasterRevision, 0, len(request.Masters))
+	repositories := ""
+	seenRepositories := map[string]bool{request.Repository: true}
+	for _, master := range request.Masters {
+		if !repositoryNamePattern.MatchString(master.Name) || seenRepositories[master.Name] || !fullCommitPattern.MatchString(master.Commit) || master.Checkout == "" {
+			return Result{}, fmt.Errorf("%w: invalid or duplicate master repository %q", ErrInvalidInput, master.Name)
+		}
+		masterPath, pathErr := filepath.Abs(master.Checkout)
+		if pathErr != nil || strings.ContainsAny(masterPath, "\x00\r\n") {
+			return Result{}, fmt.Errorf("%w: invalid master checkout path", ErrInvalidInput)
+		}
+		if err := validateMaster(masterPath, master.Commit); err != nil {
+			return Result{}, fmt.Errorf("%w: master %s: %v", ErrCheckout, master.Name, err)
+		}
+		seenRepositories[master.Name] = true
+		profileRoots = append(profileRoots, masterPath)
+		masterRevisions = append(masterRevisions, MasterRevision{Name: master.Name, Commit: master.Commit})
+		repositories += "[" + master.Name + "]\nlocation = " + masterPath + "\n"
+	}
+	if err := validateCheckout(checkout, profile, request, profileRoots); err != nil {
 		return Result{}, err
 	}
 	resolvedCheckout, err := filepath.EvalSymlinks(checkout)
@@ -145,6 +186,19 @@ func (g *Generator) Generate(request Request) (Result, error) {
 	profileRelative, err := filepath.Rel(resolvedCheckout, resolvedProfile)
 	if err != nil {
 		return Result{}, fmt.Errorf("%w: resolve selected profile relative to checkout: %v", ErrInvalidInput, err)
+	}
+	if profileRelative == ".." || strings.HasPrefix(profileRelative, ".."+string(os.PathSeparator)) {
+		for _, master := range request.Masters {
+			root, rootErr := filepath.EvalSymlinks(master.Checkout)
+			if rootErr != nil {
+				continue
+			}
+			rel, relErr := filepath.Rel(root, resolvedProfile)
+			if relErr == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+				profileRelative = master.Name + ":" + filepath.ToSlash(rel)
+				break
+			}
+		}
 	}
 	configRoot := filepath.Join(tempDir, "config-root")
 	cacheDir := filepath.Join(tempDir, "intermediate-cache")
@@ -174,8 +228,10 @@ func (g *Generator) Generate(request Request) (Result, error) {
 	if err := os.Mkdir(cacheDir, 0o700); err != nil {
 		return Result{}, fmt.Errorf("%w: create intermediate cache: %v", ErrInvalidInput, err)
 	}
-	repositories := "[gentoo]\nlocation = " + checkout + "\n"
-	portageOutput, err := exec.Command(g.emergePath, "--version").Output()
+	repositories += "[" + request.Repository + "]\nlocation = " + checkout + "\n"
+	versionCommand := exec.Command(g.emergePath, "--version")
+	versionCommand.Env = isolatedEnvironment(tempDir)
+	portageOutput, err := versionCommand.Output()
 	if err != nil {
 		return Result{}, fmt.Errorf("%w: read Portage version with %q --version: %v", ErrEgencache, g.emergePath, err)
 	}
@@ -189,12 +245,12 @@ func (g *Generator) Generate(request Request) (Result, error) {
 	}
 	portageVersion = versionMatch[1]
 	args := []string{
-		"--ignore-default-opts", "--repo", "gentoo", "--update", request.Category + "/" + request.Name,
+		"--ignore-default-opts", "--repo", request.Repository, "--update", request.Category + "/" + request.Name,
 		"--config-root", configRoot, "--cache-dir", cacheDir, "--repositories-configuration", repositories,
 	}
 	command := exec.Command(g.egencachePath, args...)
 	command.Dir = checkout
-	command.Env = isolatedEnvironment()
+	command.Env = isolatedEnvironment(tempDir)
 	var stdout, stderr bytes.Buffer
 	command.Stdout = &stdout
 	command.Stderr = &stderr
@@ -241,11 +297,12 @@ func (g *Generator) Generate(request Request) (Result, error) {
 			Path:             os.Getenv("PATH"),
 			PortageUserName:  g.userName,
 			PortageGroupName: g.groupName,
+			MasterRevisions:  masterRevisions,
 		},
 	}, nil
 }
 
-func validateCheckout(checkout, profile string, request Request) error {
+func validateCheckout(checkout, profile string, request Request, profileRoots []string) error {
 	root, err := git(checkout, "rev-parse", "--show-toplevel")
 	if err != nil || filepath.Clean(strings.TrimSpace(string(root))) != filepath.Clean(checkout) {
 		return fmt.Errorf("%w: %s is not a Git checkout root", ErrCheckout, checkout)
@@ -287,13 +344,20 @@ func validateCheckout(checkout, profile string, request Request) error {
 	if err != nil {
 		return fmt.Errorf("%w: selected profile is unavailable: %v", ErrInvalidInput, err)
 	}
-	resolvedRoot, err := filepath.EvalSymlinks(checkout)
-	if err != nil {
-		return fmt.Errorf("%w: resolve checkout: %v", ErrCheckout, err)
+	profileAllowed := false
+	for _, root := range profileRoots {
+		resolvedRoot, rootErr := filepath.EvalSymlinks(root)
+		if rootErr != nil {
+			return fmt.Errorf("%w: resolve checkout: %v", ErrCheckout, rootErr)
+		}
+		rel, relErr := filepath.Rel(resolvedRoot, resolvedProfile)
+		if relErr == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+			profileAllowed = true
+			break
+		}
 	}
-	rel, err := filepath.Rel(resolvedRoot, resolvedProfile)
-	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
-		return fmt.Errorf("%w: profile must resolve inside the selected checkout", ErrInvalidInput)
+	if !profileAllowed {
+		return fmt.Errorf("%w: profile must resolve inside a pinned checkout", ErrInvalidInput)
 	}
 	info, err := os.Stat(resolvedProfile)
 	if err != nil || !info.IsDir() {
@@ -304,6 +368,22 @@ func validateCheckout(checkout, profile string, request Request) error {
 		return fmt.Errorf("%w: requested cache already exists in source checkout", ErrCheckout)
 	} else if !errors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("%w: inspect requested cache: %v", ErrCheckout, err)
+	}
+	return nil
+}
+
+func validateMaster(checkout, commit string) error {
+	root, err := git(checkout, "rev-parse", "--show-toplevel")
+	if err != nil || filepath.Clean(strings.TrimSpace(string(root))) != filepath.Clean(checkout) {
+		return errors.New("not a Git checkout root")
+	}
+	head, err := git(checkout, "rev-parse", "--verify", "HEAD")
+	if err != nil || strings.TrimSpace(string(head)) != commit {
+		return errors.New("HEAD does not match pinned commit")
+	}
+	status, err := git(checkout, "status", "--porcelain", "--untracked-files=all", "--ignored")
+	if err != nil || len(status) != 0 {
+		return errors.New("checkout is not clean")
 	}
 	return nil
 }
@@ -322,16 +402,8 @@ func git(repo string, args ...string) ([]byte, error) {
 	return nil, err
 }
 
-func isolatedEnvironment() []string {
-	var env []string
-	for _, entry := range os.Environ() {
-		key, _, _ := strings.Cut(entry, "=")
-		if strings.HasPrefix(key, "PORTAGE_") || key == "EGENCACHE_DEFAULT_OPTS" {
-			continue
-		}
-		env = append(env, entry)
-	}
-	return env
+func isolatedEnvironment(tempDir string) []string {
+	return []string{"PATH=" + os.Getenv("PATH"), "HOME=" + tempDir, "TMPDIR=" + tempDir, "LANG=C"}
 }
 
 func validPair(category, name string) bool {

@@ -9,8 +9,9 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/gentoo-update-inte
 
 FROM alpine:3.22
 RUN apk add --no-cache ca-certificates git \
-    && git config --system --add safe.directory /metadata \
-    && addgroup -S app && adduser -S -G app app
+    && git config --system --add safe.directory /metadata/gentoo.git \
+    && addgroup -S app && adduser -S -G app app \
+    && mkdir /overlays && chown app:app /overlays
 COPY --from=build /out/gentoo-update-intelligence-server /usr/local/bin/gentoo-update-intelligence-server
 
 USER app

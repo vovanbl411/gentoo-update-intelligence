@@ -11,7 +11,9 @@ import (
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/analysishttp"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/analysisstore"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/metadataprovider"
+	"github.com/vovanbl411/gentoo-update-intelligence/internal/parser"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/reportservice"
+	"github.com/vovanbl411/gentoo-update-intelligence/internal/repositorymanager"
 )
 
 func main() {
@@ -40,7 +42,17 @@ func run() error {
 		LocalPath:  os.Getenv("GENTOO_UPDATE_INTELLIGENCE_REPOSITORY_PATH"),
 		Commit:     os.Getenv("GENTOO_UPDATE_INTELLIGENCE_COMMIT"),
 	}
-	providerFactory := func() (reportservice.MetadataLookup, error) {
+	var overlays *repositorymanager.Manager
+	if path := os.Getenv("GENTOO_UPDATE_INTELLIGENCE_OVERLAY_PATH"); path != "" {
+		if config.Repository != "gentoo" {
+			return errors.New("overlay preparation requires the gentoo repository")
+		}
+		overlays, err = repositorymanager.New(path, repositorymanager.KnownOverlays())
+		if err != nil {
+			return err
+		}
+	}
+	providerFactory := func(ctx context.Context, plan parser.Result) (reportservice.MetadataLookup, error) {
 		var provider *metadataprovider.Provider
 		var err error
 		if config.Commit == "" {
@@ -52,7 +64,10 @@ func run() error {
 			log.Printf("Metadata Provider unavailable: %v", err)
 			return nil, err
 		}
-		return provider, nil
+		if overlays == nil {
+			return provider, nil
+		}
+		return prepareRepositories(ctx, plan, config, provider, overlays), nil
 	}
 
 	address := os.Getenv("GENTOO_UPDATE_INTELLIGENCE_LISTEN_ADDR")
@@ -61,7 +76,7 @@ func run() error {
 	}
 	server := &http.Server{
 		Addr:              address,
-		Handler:           analysishttp.NewHandlerWithProviderFactory(store, providerFactory),
+		Handler:           analysishttp.NewHandlerWithPlanProviderFactory(store, providerFactory),
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}

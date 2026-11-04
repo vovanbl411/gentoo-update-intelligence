@@ -18,15 +18,29 @@ services:
     environment:
       GENTOO_UPDATE_INTELLIGENCE_LISTEN_ADDR: 0.0.0.0:8080
       GENTOO_UPDATE_INTELLIGENCE_DATABASE_URL: postgres://guit:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/guit?sslmode=disable
-      GENTOO_UPDATE_INTELLIGENCE_REPOSITORY: ${GENTOO_UPDATE_INTELLIGENCE_REPOSITORY:?Set repository name in .env}
-      GENTOO_UPDATE_INTELLIGENCE_SOURCE_URL: ${GENTOO_UPDATE_INTELLIGENCE_SOURCE_URL:?Set source URL in .env}
-      GENTOO_UPDATE_INTELLIGENCE_REPOSITORY_PATH: /metadata
-      GENTOO_UPDATE_INTELLIGENCE_COMMIT: ${GENTOO_UPDATE_INTELLIGENCE_COMMIT:?Set full commit SHA in .env}
+      GENTOO_UPDATE_INTELLIGENCE_REPOSITORY: gentoo
+      GENTOO_UPDATE_INTELLIGENCE_SOURCE_URL: ${GENTOO_REPOSITORY_URL:-https://anongit.gentoo.org/git/repo/gentoo.git}
+      GENTOO_UPDATE_INTELLIGENCE_REPOSITORY_PATH: /metadata/gentoo.git
+      GENTOO_UPDATE_INTELLIGENCE_OVERLAY_PATH: /overlays
     volumes:
-      - type: bind
-        source: ${GENTOO_UPDATE_INTELLIGENCE_SNAPSHOT_PATH:?Set absolute snapshot path in .env}
+      - type: volume
+        source: gentoo-data
         target: /metadata
         read_only: true
+      - overlay-data:/overlays
+
+  gentoo:
+    build:
+      context: .
+      dockerfile: gentoo/Dockerfile
+    environment:
+      GENTOO_REPOSITORY_URL: ${GENTOO_REPOSITORY_URL:-https://anongit.gentoo.org/git/repo/gentoo.git}
+    volumes:
+      - gentoo-data:/metadata
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
 
   postgres:
     image: postgres:17-alpine
@@ -45,3 +59,5 @@ services:
 
 volumes:
   postgres-data:
+  gentoo-data:
+  overlay-data:

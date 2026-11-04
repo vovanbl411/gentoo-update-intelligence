@@ -40,7 +40,7 @@ Gentoo Update Intelligence — проект сервиса, который ан�
 
 HTTP backend предоставляет `POST /analyses` и `GET /analyses/{id}`. Он использует существующие `planservice` и Metadata Provider, сохраняет полный результат в PostgreSQL и возвращает его по UUID. Параметры подключения к PostgreSQL и закреплённому metadata repository передаются через окружение backend; контракт API описан в [документе HTTP API](docs/http-api.md).
 
-`backend/internal/ebuildresolver` выбирает точный ebuild по first-parent истории. `backend/internal/metadatagenerator` проверяет выбранный commit, blob и содержимое ebuild, запускает `egencache` в изолированной временной конфигурации и возвращает cache точной версии, SHA-256 и provenance. Он рассчитан на подготовленный временный checkout Gentoo; загрузка репозиториев, master repositories для оверлеев и публичный интерфейс генерации остаются отдельными этапами. Реальный прогон `libei` проверил обе версии, Git-снимок и существующий CLI; его артефакты описаны в [контракте подготовки metadata](docs/metadata-preparation.md).
+`backend/internal/ebuildresolver` выбирает точный ebuild по first-parent истории. `backend/internal/metadatagenerator` проверяет выбранный commit, blob и содержимое ebuild, запускает `egencache` в изолированной временной конфигурации и возвращает cache точной версии, SHA-256 и provenance. Он рассчитан на подготовленный временный checkout Gentoo; настройка master repositories для генерации и её подключение к HTTP остаются отдельными этапами. Реальный прогон `libei` проверил обе версии, Git-снимок и существующий CLI; его артефакты описаны в [контракте подготовки metadata](docs/metadata-preparation.md).
 
 ## Состояние проекта
 

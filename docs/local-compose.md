@@ -1,71 +1,65 @@
 # Локальный запуск через Docker Compose
 
-Для запуска нужны Docker Engine с Compose plugin. Snapshot Gentoo готовится отдельно: backend не загружает и не изменяет его.
+Для запуска нужны Docker Engine с Compose plugin и доступ к registry и источникам Gentoo. Gentoo runtime загружает основное дерево в именованный volume `gentoo-data` при запуске и повторяет синхронизацию через пять часов после завершения предыдущей попытки. Первая загрузка полной Git-истории может занять продолжительное время и значительное место на диске.
 
-## Подготовка snapshot
+## Запуск
 
-Укажите абсолютный путь к локальному Git-репозиторию Gentoo и полный commit SHA, который содержит нужные cache-файлы. Для приемочного плана из `testdata/parser/ebuild-updates.txt` commit должен содержать `metadata/md5-cache/dev-libs/libei-1.6.0` и `metadata/md5-cache/dev-libs/libei-1.6.0-r1`. Snapshot и Git-объекты должны быть доступны backend-контейнеру для чтения; backend читает их через Git CLI.
-
-Если нужен воспроизводимый снимок из предыдущего приёмочного прогона, его commit указан в [отчёте frontend](../frontend/acceptance.md). Сам путь к локальному snapshot зависит от машины.
-
-## Настройка и запуск
-
-Создайте локальный env-файл и укажите параметры snapshot и пароль PostgreSQL:
+Задайте локальный пароль PostgreSQL из URL-safe символов и запустите стек:
 
 ```sh
-cp .env.example .env
-```
-
-Задайте в `.env`:
-
-- `GENTOO_UPDATE_INTELLIGENCE_SNAPSHOT_PATH` — абсолютный путь к подготовленному Git-репозиторию;
-- `GENTOO_UPDATE_INTELLIGENCE_REPOSITORY` — логическое имя репозитория, например `gentoo`;
-- `GENTOO_UPDATE_INTELLIGENCE_SOURCE_URL` — URL происхождения для provenance; Provider не проверяет его по сети;
-- `GENTOO_UPDATE_INTELLIGENCE_COMMIT` — полный commit SHA, содержащий cache;
-- `POSTGRES_PASSWORD` — локальный пароль из URL-safe символов;
-- `FRONTEND_PORT` — необязательный loopback-порт frontend, по умолчанию `8081`.
-
-Проверьте Compose-конфигурацию и запустите сервисы:
-
-```sh
+export POSTGRES_PASSWORD='<your-local-password>'
 docker compose config -q
 docker compose up --build -d
 docker compose ps
 ```
 
-Frontend доступен по адресу `http://127.0.0.1:8081` (или заданному `FRONTEND_PORT`). Только frontend публикует host port. Backend ждёт успешный PostgreSQL healthcheck и слушает `0.0.0.0:8080` внутри сети Compose. Snapshot подключён в backend как `/metadata` только для чтения. Именованный volume `postgres-data` сохраняет анализы при пересоздании контейнеров.
+Команды запускайте из корня репозитория. Для уже созданного `postgres-data` используйте тот же пароль: изменение `POSTGRES_PASSWORD` в окружении не меняет пароль в существующей базе. При запуске из нового shell задайте пароль снова.
 
-Проверить закреплённый commit, cache-файлы и режим mount можно из backend-контейнера:
+Frontend доступен на `http://127.0.0.1:8081`. При необходимости задайте `FRONTEND_PORT`; только frontend публикует host port. Backend ждёт PostgreSQL и читает volume Gentoo через mount только для чтения. Именованный volume `postgres-data` сохраняет анализы при пересоздании контейнеров.
+
+По умолчанию используется `https://anongit.gentoo.org/git/repo/gentoo.git`. При необходимости источник можно задать параметром `GENTOO_REPOSITORY_URL`; он применяется к синхронизации и provenance. Проверенный commit `e99406921148088a6990e6b921440a2808a223a6` этого Git-источника не содержит `metadata/md5-cache`: текущий backend читает готовый cache и не запускает генерацию metadata, поэтому Lookup в таком снимке возвращает `not_found`.
+
+Например, для [зеркала Gentoo на GitHub](https://github.com/gentoo/gentoo) перед запуском задайте:
 
 ```sh
-docker compose exec backend sh -ec '
-  git -C /metadata --no-replace-objects cat-file -t "$GENTOO_UPDATE_INTELLIGENCE_COMMIT"
-  git -C /metadata --no-replace-objects cat-file -e "$GENTOO_UPDATE_INTELLIGENCE_COMMIT:metadata/md5-cache/dev-libs/libei-1.6.0"
-  git -C /metadata --no-replace-objects cat-file -e "$GENTOO_UPDATE_INTELLIGENCE_COMMIT:metadata/md5-cache/dev-libs/libei-1.6.0-r1"
-  mount | grep " /metadata " | grep -q "(ro,"
-'
+export GENTOO_REPOSITORY_URL='https://github.com/gentoo/gentoo.git'
 ```
 
-Первый вывод должен быть `commit`; две следующие команды должны завершиться с кодом `0`. Последняя проверяет, что mount `/metadata` read-only.
+Если стек уже запущен, после изменения переменной выполните `docker compose up -d`, чтобы обновить конфигурацию и Gentoo runtime, и backend. Перед последующими командами Compose в новом shell задайте выбранный URL снова; простой `restart` не меняет окружение существующего контейнера.
 
-## Приёмка API и сохранения
+Каталог известных overlays пока содержит `guru` с master `gentoo`. При первом запросе плана с `::guru` backend загружает его в отдельный именованный volume `overlay-data`; последующие анализы используют локальную копию. Источник и master проверены по [каталогу Gentoo](https://raw.githubusercontent.com/gentoo/api-gentoo-org/master/files/overlays/repositories.xml) и [конфигурации GURU](https://raw.githubusercontent.com/gentoo-mirror/guru/master/metadata/layout.conf). Автоматическое обновление overlay пока не реализовано; неизвестные имена не разрешаются в сетевые адреса.
 
-1. Откройте `http://127.0.0.1:8081`, вставьте содержимое `testdata/parser/ebuild-updates.txt` в поле плана и укажите `dev-libs/libei` в поле локально патченных пакетов.
-2. Отправьте план и сохраните выданный UUID. В отчёте для `dev-libs/libei` оба Lookup, `BeforeLookup` и `AfterLookup`, должны иметь статус `found`.
-3. Сверьте GET-ответ API с результатом интерфейса:
+Первая загрузка overlay выполняется во время синхронного POST и может занимать несколько минут; timeout frontend proxy составляет один час. Асинхронная обработка с прогрессом относится к следующему этапу.
 
-   ```sh
-   curl -fsS "http://127.0.0.1:8081/api/analyses/<UUID>"
-   ```
+До первой успешной публикации POST возвращает `503`; сохранённые анализы доступны через GET. После публикации повторите POST: перезапуск backend не требуется. Проверить синхронизацию и опубликованный commit можно командами:
 
-4. Проверьте прямое открытие `http://127.0.0.1:8081/analyses/<UUID>` и обновление страницы.
-5. Пересоздайте контейнеры, не удаляя volume, и снова откройте сохранённый UUID:
+```sh
+docker compose logs gentoo
+docker compose exec gentoo git -C /metadata/gentoo.git rev-parse --verify refs/gentoo/published
+```
 
-   ```sh
-   docker compose up --build -d --force-recreate
-   docker compose ps
-   ```
+Вторая команда выводит полный commit. При сбое следующей синхронизации ссылка остаётся на последней успешно проверенной ревизии. Анализ использует commit, выбранный при его начале. Опубликованные commits сохраняются в Git refs; автоматическая очистка хранилища не предусмотрена.
 
-   API и UI должны вернуть тот же результат. Запрос `GET /api/analyses/<UUID>` через frontend сохраняет HTTP status, `Content-Type` и тело backend; неизвестный UUID можно использовать для проверки ошибочного JSON-ответа.
+Если публикации ещё нет, `rev-parse` завершится с ошибкой; проверьте журнал `gentoo` и дождитесь окончания загрузки и проверки. При неудачной попытке runtime повторит её через пять часов. Чтобы повторить завершившуюся с ошибкой попытку сразу, перезапустите только этот сервис:
 
-Остановить Compose без удаления данных можно командой `docker compose down`. Не используйте `docker compose down -v`, если нужно сохранить анализы: она удаляет именованный volume.
+```sh
+docker compose restart gentoo
+```
+
+## Проверка API и сохранения
+
+1. Откройте frontend, вставьте текст плана и отправьте его. Текущий API возвращает результат синхронно; если cache для версии отсутствует, результат содержит соответствующий статус.
+2. Сохраните UUID и откройте `http://127.0.0.1:8081/analyses/<UUID>` напрямую или запросите `http://127.0.0.1:8081/api/analyses/<UUID>`.
+3. Пересоздайте контейнеры командой `docker compose up --build -d --force-recreate` и снова откройте тот же UUID.
+
+Проверить POST без браузера можно после публикации commit:
+
+```sh
+curl -fsS -H 'Content-Type: application/json' \
+  -d '{"plan":"[ebuild U] dev-libs/libxml2-2.14.6::gentoo [2.13.9::gentoo]"}' \
+  http://127.0.0.1:8081/api/analyses
+```
+
+При другом `FRONTEND_PORT` замените порт в URL. Успешный ответ содержит `id` и `result`; статус `not_found` для Lookup возможен, если в опубликованном commit нет cache запрошенной версии.
+
+Остановить Compose без удаления данных можно командой `docker compose down`. Команда `docker compose down -v` удаляет volumes, включая сохранённые анализы и загруженное дерево.

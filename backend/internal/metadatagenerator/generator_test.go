@@ -2,6 +2,7 @@ package metadatagenerator
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -52,6 +53,54 @@ printf '%s\n' "$@" > `+shellQuote(filepath.Join(fixture.root, "args.log"))+`
 	}
 	if strings.Contains(string(args), "--external-cache-only") || strings.Contains(string(args), "--tolerant") {
 		t.Fatalf("unexpected tolerant/external-only flag: %q", args)
+	}
+}
+
+func TestGenerateWithPinnedMasterAndProfile(t *testing.T) {
+	fixture := newFixture(t)
+	master := newFixture(t)
+	fixture.stubEgencache(t, "#!/bin/sh\nmkdir -p metadata/md5-cache/dev-libs\nprintf 'EAPI=8\\n' > metadata/md5-cache/dev-libs/libei-1.6.0-r1\n")
+	request := fixture.request()
+	request.Repository = "guru"
+	request.Profile = filepath.Join(master.root, "profiles/test")
+	request.Masters = []Master{{Name: "gentoo", Checkout: master.root, Commit: master.commit}}
+	result, err := fixture.generator().Generate(request)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(result.Provenance.Repositories, "[gentoo]\nlocation = "+master.root+"\n") ||
+		!strings.Contains(result.Provenance.Repositories, "[guru]\nlocation = "+fixture.root+"\n") {
+		t.Fatalf("repository configuration = %q", result.Provenance.Repositories)
+	}
+	if result.Provenance.Profile != "gentoo:profiles/test" || len(result.Provenance.MasterRevisions) != 1 || result.Provenance.MasterRevisions[0].Commit != master.commit {
+		t.Fatalf("master provenance = %#v", result.Provenance)
+	}
+	if len(result.Provenance.EgencacheArgs) < 3 || result.Provenance.EgencacheArgs[2] != "guru" {
+		t.Fatalf("egencache args = %v", result.Provenance.EgencacheArgs)
+	}
+}
+
+func TestGenerateRejectsUnpinnedOrDirtyMaster(t *testing.T) {
+	for _, dirty := range []bool{false, true} {
+		t.Run(fmt.Sprintf("dirty=%t", dirty), func(t *testing.T) {
+			fixture := newFixture(t)
+			master := newFixture(t)
+			fixture.stubEgencache(t, "#!/bin/sh\nexit 0\n")
+			request := fixture.request()
+			request.Repository = "guru"
+			request.Profile = filepath.Join(master.root, "profiles/test")
+			request.Masters = []Master{{Name: "gentoo", Checkout: master.root, Commit: master.commit}}
+			if dirty {
+				if err := os.WriteFile(filepath.Join(master.root, "profiles/test/eapi"), []byte("changed"), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				request.Masters[0].Commit = strings.Repeat("0", 40)
+			}
+			if _, err := fixture.generator().Generate(request); !errors.Is(err, ErrCheckout) {
+				t.Fatalf("error = %v", err)
+			}
+		})
 	}
 }
 
@@ -159,6 +208,15 @@ func TestGenerateWritesOnlyExplicitPortageIdentityOverrides(t *testing.T) {
 	}
 	if got, want := string(makeConf), "PORTAGE_USERNAME=\"builder\"\nPORTAGE_GRPNAME=\"builders\"\n"; got != want {
 		t.Fatalf("make.conf = %q, want %q", got, want)
+	}
+}
+
+func TestGenerateDoesNotInheritUnrelatedEnvironment(t *testing.T) {
+	t.Setenv("GUIT_TEST_PRIVATE_VALUE", "must-not-be-inherited")
+	fixture := newFixture(t)
+	fixture.stubEgencache(t, "#!/bin/sh\n[ -z \"${GUIT_TEST_PRIVATE_VALUE+x}\" ] || exit 42\nmkdir -p metadata/md5-cache/dev-libs\nprintf 'EAPI=8\\n' > metadata/md5-cache/dev-libs/libei-1.6.0-r1\n")
+	if _, err := fixture.generator().Generate(fixture.request()); err != nil {
+		t.Fatal(err)
 	}
 }
 

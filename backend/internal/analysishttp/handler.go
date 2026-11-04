@@ -2,6 +2,7 @@
 package analysishttp
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"mime"
@@ -17,6 +18,7 @@ import (
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/parser"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/planservice"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/reportservice"
+	"github.com/vovanbl411/gentoo-update-intelligence/internal/repositorymanager"
 )
 
 const maxRequestBody = 4 << 20
@@ -28,7 +30,7 @@ var (
 
 type Handler struct {
 	store           analysisstore.Store
-	providerFactory func() (reportservice.MetadataLookup, error)
+	providerFactory func(context.Context, parser.Result) (reportservice.MetadataLookup, error)
 }
 
 type createRequest struct {
@@ -42,9 +44,10 @@ type response struct {
 }
 
 type resultView struct {
-	Plan     parser.Result
-	Analysis analyzer.Result
-	Reports  []reportView
+	Plan         parser.Result
+	Analysis     analyzer.Result
+	Reports      []reportView
+	Repositories map[string]repositorymanager.Revision `json:",omitempty"`
 }
 
 type reportView struct {
@@ -70,6 +73,16 @@ func NewHandler(store analysisstore.Store, provider reportservice.MetadataLookup
 
 // NewHandlerWithProviderFactory obtains one pinned provider per analysis.
 func NewHandlerWithProviderFactory(store analysisstore.Store, factory func() (reportservice.MetadataLookup, error)) http.Handler {
+	return NewHandlerWithPlanProviderFactory(store, func(_ context.Context, _ parser.Result) (reportservice.MetadataLookup, error) {
+		if factory == nil {
+			return nil, nil
+		}
+		return factory()
+	})
+}
+
+// NewHandlerWithPlanProviderFactory pins the repositories needed by the plan.
+func NewHandlerWithPlanProviderFactory(store analysisstore.Store, factory func(context.Context, parser.Result) (reportservice.MetadataLookup, error)) http.Handler {
 	handler := &Handler{store: store, providerFactory: factory}
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /analyses", handler.create)
@@ -112,7 +125,7 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusServiceUnavailable, "metadata provider is unavailable")
 		return
 	}
-	provider, err := h.providerFactory()
+	provider, err := h.providerFactory(r.Context(), parser.Parse(request.Plan))
 	if err != nil || isNilProvider(provider) {
 		writeError(w, http.StatusServiceUnavailable, "metadata provider is unavailable")
 		return
@@ -123,7 +136,13 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "analysis failed")
 		return
 	}
-	serialized, err := json.Marshal(presentResult(result))
+	view := presentResult(result)
+	if source, ok := provider.(interface {
+		RepositoryRevisions() map[string]repositorymanager.Revision
+	}); ok {
+		view.Repositories = source.RepositoryRevisions()
+	}
+	serialized, err := json.Marshal(view)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "analysis serialization failed")
 		return
