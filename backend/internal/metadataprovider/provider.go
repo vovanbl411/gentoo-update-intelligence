@@ -61,6 +61,23 @@ var (
 	versionSuffix  = regexp.MustCompile(`-[0-9]+(\.[0-9]+)*[a-z]?(_(alpha|beta|pre|rc|p)[0-9]*)*(-r[0-9]+)?$`)
 )
 
+// OpenPublished resolves the published reference once and pins the resulting
+// commit for all lookups made through the returned provider.
+func OpenPublished(config Config) (*Provider, error) {
+	if config.Commit != "" {
+		return nil, fmt.Errorf("%w: Commit must be empty when opening the published reference", ErrInvalidConfig)
+	}
+	if config.LocalPath == "" {
+		return nil, fmt.Errorf("%w: LocalPath is required", ErrInvalidConfig)
+	}
+	commit, err := runGit(config.LocalPath, "rev-parse", "--verify", "refs/gentoo/published^{commit}")
+	if err != nil {
+		return nil, fmt.Errorf("%w: published commit unavailable: %v", ErrRepositoryAccess, err)
+	}
+	config.Commit = strings.TrimSpace(string(commit))
+	return Open(config)
+}
+
 func Open(config Config) (*Provider, error) {
 	if !validRepository(config.Repository) || config.SourceURL == "" || config.LocalPath == "" || config.Commit == "" {
 		return nil, fmt.Errorf("%w: Repository, SourceURL, LocalPath and Commit are required; Repository must be a Gentoo repository name", ErrInvalidConfig)

@@ -34,17 +34,25 @@ func run() error {
 		return err
 	}
 
-	var metadataLookup reportservice.MetadataLookup
-	provider, err := metadataprovider.Open(metadataprovider.Config{
+	config := metadataprovider.Config{
 		Repository: os.Getenv("GENTOO_UPDATE_INTELLIGENCE_REPOSITORY"),
 		SourceURL:  os.Getenv("GENTOO_UPDATE_INTELLIGENCE_SOURCE_URL"),
 		LocalPath:  os.Getenv("GENTOO_UPDATE_INTELLIGENCE_REPOSITORY_PATH"),
 		Commit:     os.Getenv("GENTOO_UPDATE_INTELLIGENCE_COMMIT"),
-	})
-	if err != nil {
-		log.Printf("Metadata Provider unavailable; POST /analyses will return 503: %v", err)
-	} else {
-		metadataLookup = provider
+	}
+	providerFactory := func() (reportservice.MetadataLookup, error) {
+		var provider *metadataprovider.Provider
+		var err error
+		if config.Commit == "" {
+			provider, err = metadataprovider.OpenPublished(config)
+		} else {
+			provider, err = metadataprovider.Open(config)
+		}
+		if err != nil {
+			log.Printf("Metadata Provider unavailable: %v", err)
+			return nil, err
+		}
+		return provider, nil
 	}
 
 	address := os.Getenv("GENTOO_UPDATE_INTELLIGENCE_LISTEN_ADDR")
@@ -53,7 +61,7 @@ func run() error {
 	}
 	server := &http.Server{
 		Addr:              address,
-		Handler:           analysishttp.NewHandler(store, metadataLookup),
+		Handler:           analysishttp.NewHandlerWithProviderFactory(store, providerFactory),
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}

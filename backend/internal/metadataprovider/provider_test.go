@@ -134,6 +134,45 @@ func TestLookupNotFoundAndRepositoryUnavailable(t *testing.T) {
 	}
 }
 
+func TestOpenPublishedPinsCommitAcrossPublication(t *testing.T) {
+	repo := newTestRepo(t, "sha1")
+	config := Config{Repository: "gentoo", SourceURL: "https://example.invalid/gentoo", LocalPath: repo.path}
+	if _, err := OpenPublished(config); !errors.Is(err, ErrRepositoryAccess) {
+		t.Fatalf("missing published ref: %v", err)
+	}
+	writeCache(t, repo.path, "dev-libs", "widget", "1", "EAPI=8\nSLOT=0\nIUSE=old\n", 0o644)
+	first := repo.commit(t)
+	if output, err := testGit(repo.path, "update-ref", "refs/gentoo/published", first); err != nil {
+		t.Fatalf("publish: %s: %v", output, err)
+	}
+	oldProvider, err := OpenPublished(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeCache(t, repo.path, "dev-libs", "widget", "1", "EAPI=8\nSLOT=0\nIUSE=new\n", 0o644)
+	second := repo.commit(t)
+	if output, err := testGit(repo.path, "update-ref", "refs/gentoo/published", second); err != nil {
+		t.Fatalf("publish: %s: %v", output, err)
+	}
+	newProvider, err := OpenPublished(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+	query := Query{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "1"}
+	for _, tc := range []struct {
+		provider        *Provider
+		commit, content string
+	}{
+		{oldProvider, first, "EAPI=8\nSLOT=0\nIUSE=old\n"},
+		{newProvider, second, "EAPI=8\nSLOT=0\nIUSE=new\n"},
+	} {
+		got, err := tc.provider.Lookup(query)
+		if err != nil || got.Snapshot == nil || got.Snapshot.Source.Commit != tc.commit || got.Snapshot.Content != tc.content {
+			t.Fatalf("lookup = %#v, %v; want commit %s", got, err, tc.commit)
+		}
+	}
+}
+
 func TestQueryValidationPrecedesRepositoryMismatch(t *testing.T) {
 	repo := newTestRepo(t, "sha1")
 	repo.commit(t)

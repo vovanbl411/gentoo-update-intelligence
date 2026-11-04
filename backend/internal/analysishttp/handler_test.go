@@ -11,9 +11,35 @@ import (
 
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/metadatadiff"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/metadataprovider"
+	"github.com/vovanbl411/gentoo-update-intelligence/internal/reportservice"
 )
 
 const testID = "28b28f31-7e85-4e6a-a839-84658f32cc74"
+
+func TestProviderFactoryOncePerAnalysisAndRecovers(t *testing.T) {
+	store := &memoryStore{id: testID}
+	calls := 0
+	provider := &sequenceProvider{}
+	handler := NewHandlerWithProviderFactory(store, func() (reportservice.MetadataLookup, error) {
+		calls++
+		if calls == 1 {
+			return nil, errors.New("not published")
+		}
+		return provider, nil
+	})
+	for _, status := range []int{http.StatusServiceUnavailable, http.StatusCreated} {
+		request := httptest.NewRequest(http.MethodPost, "/analyses", strings.NewReader(`{"plan":"[ebuild U] dev-libs/widget-2::gentoo [1::gentoo]"}`))
+		request.Header.Set("Content-Type", "application/json")
+		response := httptest.NewRecorder()
+		handler.ServeHTTP(response, request)
+		if response.Code != status {
+			t.Fatalf("status = %d, want %d: %s", response.Code, status, response.Body.String())
+		}
+	}
+	if calls != 2 || provider.calls != 2 || store.saveCalls != 1 {
+		t.Fatalf("factory calls %d, lookup calls %d, saves %d", calls, provider.calls, store.saveCalls)
+	}
+}
 
 func TestPostPersistsFullResultAndGetReturnsIt(t *testing.T) {
 	store := &memoryStore{id: testID}

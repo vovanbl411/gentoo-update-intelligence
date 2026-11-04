@@ -19,7 +19,7 @@
 
 `plan` — обязательная непустая строка с исходным текстом плана. `locally_patched_packages` — необязательный список точных Gentoo category/name; пустое или пропущенное поле означает пустой Analyzer context. Размер тела ограничен 4 MiB. Неизвестные JSON-поля и некорректные типы отклоняются как `400 Bad Request`; другой `Content-Type` — как `415 Unsupported Media Type`. Статусы Parser `partial` и `unsupported` являются результатами анализа и сами по себе не отклоняют запрос.
 
-Backend открывает один закреплённый Metadata Provider из своей конфигурации и передаёт запрос в `planservice.Analyze`. Путь локального Git repository и commit задаются только конфигурацией backend, не HTTP-запросом.
+Для каждого анализа backend открывает Metadata Provider с закреплённым commit и передаёт запрос в `planservice.Analyze`. Путь локального Git repository и способ выбора commit задаются конфигурацией backend, не HTTP-запросом. При отсутствии явно заданного commit backend один раз читает `refs/gentoo/published`; последующее обновление ссылки не меняет commit текущего анализа.
 
 Успешный анализ сохраняется до отправки ответа. Ответ `201 Created`:
 
@@ -46,7 +46,7 @@ Backend открывает один закреплённый Metadata Provider �
 
 PostgreSQL — постоянное хранилище этого подэтапа. Минимальная миграция создаёт таблицу `analyses` с UUID primary key, JSONB полного результата и временем создания. Запись результата и получение созданного ID — единая операция вставки; API выдаёт ID только после её успешного завершения. Redis и кэш не участвуют.
 
-На старте backend применяет встроенную идемпотентную миграцию и открывает Metadata Provider. Если Provider открыть не удалось, backend продолжает обслуживать GET; POST возвращает `503 Service Unavailable`. Переменные окружения:
+На старте backend применяет встроенную идемпотентную миграцию. Provider открывается для каждого POST; если открыть его не удалось, POST возвращает `503 Service Unavailable`, а GET остаётся доступным. После появления опубликованного commit новый POST может успешно открыть Provider без перезапуска backend. Переменные окружения:
 
 | Переменная | Назначение |
 |---|---|
@@ -55,7 +55,7 @@ PostgreSQL — постоянное хранилище этого подэтап
 | `GENTOO_UPDATE_INTELLIGENCE_REPOSITORY` | Логическое имя Gentoo repository |
 | `GENTOO_UPDATE_INTELLIGENCE_SOURCE_URL` | Заявленный источник для provenance |
 | `GENTOO_UPDATE_INTELLIGENCE_REPOSITORY_PATH` | Путь локального Git repository на backend |
-| `GENTOO_UPDATE_INTELLIGENCE_COMMIT` | Полный commit SHA, закрепляемый Provider |
+| `GENTOO_UPDATE_INTELLIGENCE_COMMIT` | Полный commit SHA; если не задан, используется `refs/gentoo/published` |
 
 Секреты и DSN задаются окружением процесса и не сохраняются в результате анализа. Backend по умолчанию слушает только loopback; способы внешней публикации и аутентификация относятся к отдельному этапу.
 

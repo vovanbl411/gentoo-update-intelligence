@@ -27,8 +27,8 @@ var (
 )
 
 type Handler struct {
-	store    analysisstore.Store
-	provider reportservice.MetadataLookup
+	store           analysisstore.Store
+	providerFactory func() (reportservice.MetadataLookup, error)
 }
 
 type createRequest struct {
@@ -65,7 +65,12 @@ type errorResponse struct {
 }
 
 func NewHandler(store analysisstore.Store, provider reportservice.MetadataLookup) http.Handler {
-	handler := &Handler{store: store, provider: provider}
+	return NewHandlerWithProviderFactory(store, func() (reportservice.MetadataLookup, error) { return provider, nil })
+}
+
+// NewHandlerWithProviderFactory obtains one pinned provider per analysis.
+func NewHandlerWithProviderFactory(store analysisstore.Store, factory func() (reportservice.MetadataLookup, error)) http.Handler {
+	handler := &Handler{store: store, providerFactory: factory}
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /analyses", handler.create)
 	mux.HandleFunc("GET /analyses/{id}", handler.get)
@@ -103,12 +108,17 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusServiceUnavailable, "analysis storage is unavailable")
 		return
 	}
-	if isNilProvider(h.provider) {
+	if h.providerFactory == nil {
+		writeError(w, http.StatusServiceUnavailable, "metadata provider is unavailable")
+		return
+	}
+	provider, err := h.providerFactory()
+	if err != nil || isNilProvider(provider) {
 		writeError(w, http.StatusServiceUnavailable, "metadata provider is unavailable")
 		return
 	}
 
-	result, err := planservice.Analyze(request.Plan, analyzer.Context{LocallyPatchedPackages: request.LocallyPatchedPackages}, h.provider)
+	result, err := planservice.Analyze(request.Plan, analyzer.Context{LocallyPatchedPackages: request.LocallyPatchedPackages}, provider)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "analysis failed")
 		return

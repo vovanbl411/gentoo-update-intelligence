@@ -38,4 +38,19 @@ if git -C "$work/empty" show-ref --verify --quiet refs/gentoo/published; then
     echo 'failed initial fetch published a ref' >&2
     exit 1
 fi
+
+# Stop the scheduler at its first sleep and inspect the requested interval.
+mkdir "$work/bin"
+cat > "$work/bin/sleep" <<'EOF'
+#!/bin/sh
+printf '%s\n' "$1" > "$SYNC_TEST_INTERVAL"
+exit 1
+EOF
+chmod +x "$work/bin/sleep"
+if PATH="$work/bin:$PATH" SYNC_TEST_INTERVAL="$work/interval" sh "$root/scripts/run-gentoo-sync.sh" "$work/mirror" "$work/missing"; then
+    echo 'expected the test sleep to stop the scheduler' >&2
+    exit 1
+fi
+test "$(cat "$work/interval")" = 18000
+test "$(git -C "$work/mirror" rev-parse refs/gentoo/published)" = "$second"
 echo 'repository synchronization tests passed'
