@@ -87,27 +87,28 @@ func newProviderFactory(config metadataprovider.Config, overlays *repositorymana
 
 func newResumableProviderFactory(config metadataprovider.Config, overlays *repositorymanager.Manager) func(context.Context, parser.Result, map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error) {
 	return func(ctx context.Context, plan parser.Result, pinned map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error) {
+		analysisConfig := config
 		if gentoo, ok := pinned["gentoo"]; ok {
 			if gentoo.Name != "gentoo" || gentoo.Commit == "" {
 				return nil, errors.New("saved gentoo revision is invalid")
 			}
-			config.Commit = gentoo.Commit
+			analysisConfig.Commit = gentoo.Commit
 		}
 		var provider *metadataprovider.Provider
 		var err error
-		if config.Commit == "" {
-			provider, err = metadataprovider.OpenPublished(config)
+		if analysisConfig.Commit == "" {
+			provider, err = metadataprovider.OpenPublished(analysisConfig)
 		} else {
-			provider, err = metadataprovider.Open(config)
+			provider, err = metadataprovider.Open(analysisConfig)
 		}
 		if err != nil {
 			log.Printf("Metadata Provider unavailable: %v", err)
 			return nil, err
 		}
 		if overlays == nil {
-			return preparePinnedRepositories(ctx, plan, config, provider, nil, pinned)
+			return preparePinnedRepositories(ctx, plan, analysisConfig, provider, nil, pinned)
 		}
-		return preparePinnedRepositories(ctx, plan, config, provider, overlays, pinned)
+		return preparePinnedRepositories(ctx, plan, analysisConfig, provider, overlays, pinned)
 	}
 }
 

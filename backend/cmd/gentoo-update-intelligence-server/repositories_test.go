@@ -169,6 +169,46 @@ func TestPrepareRepositoriesPinsAndRoutesPlan(t *testing.T) {
 	}
 }
 
+func TestResumableProviderFactoryDoesNotReusePinnedCommit(t *testing.T) {
+	root := t.TempDir()
+	gentooPath := filepath.Join(root, "gentoo")
+	oldCommit := fixtureRepo(t, gentooPath, "EAPI=8\nSLOT=0\nIUSE=old\n")
+	fixtureGit(t, gentooPath, "update-ref", "refs/gentoo/published", oldCommit)
+	config := metadataprovider.Config{Repository: "gentoo", SourceURL: "https://example.invalid/gentoo", LocalPath: gentooPath}
+	factory := newResumableProviderFactory(config, nil)
+	plan := parser.Parse("[ebuild U] dev-libs/widget-1::gentoo")
+	pinned, err := factory(context.Background(), plan, map[string]repositorymanager.Revision{
+		"gentoo": {Name: "gentoo", URL: config.SourceURL, Commit: oldCommit},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := pinned.(interface {
+		RepositoryRevisions() map[string]repositorymanager.Revision
+	}).RepositoryRevisions()["gentoo"].Commit; got != oldCommit {
+		t.Fatalf("resumed commit = %s, want %s", got, oldCommit)
+	}
+
+	cachePath := filepath.Join(gentooPath, "metadata/md5-cache/dev-libs/widget-1")
+	if err := os.WriteFile(cachePath, []byte("EAPI=8\nSLOT=0\nIUSE=new\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	fixtureGit(t, gentooPath, "add", ".")
+	fixtureGit(t, gentooPath, "commit", "-qm", "published update")
+	newCommit := fixtureGit(t, gentooPath, "rev-parse", "HEAD")
+	fixtureGit(t, gentooPath, "update-ref", "refs/gentoo/published", newCommit)
+
+	newAnalysis, err := factory(context.Background(), plan, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := newAnalysis.(interface {
+		RepositoryRevisions() map[string]repositorymanager.Revision
+	}).RepositoryRevisions()["gentoo"].Commit; got != newCommit {
+		t.Fatalf("new analysis commit = %s, want newly published %s", got, newCommit)
+	}
+}
+
 func TestOverlayFailureDoesNotBlockGentooLookup(t *testing.T) {
 	root := t.TempDir()
 	gentooPath := filepath.Join(root, "gentoo")

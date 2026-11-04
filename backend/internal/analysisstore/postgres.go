@@ -97,7 +97,7 @@ func (p *Postgres) CreateJob(ctx context.Context, request []byte) (string, error
 	}
 	var insertedID string
 	err = p.db.QueryRowContext(ctx,
-		`INSERT INTO analysis_jobs (id, request) VALUES ($1::uuid, $2::jsonb) RETURNING id::text`,
+		`INSERT INTO analysis_jobs (id, request, status) VALUES ($1::uuid, $2::jsonb, 'pending') RETURNING id::text`,
 		id, string(request),
 	).Scan(&insertedID)
 	if err != nil {
