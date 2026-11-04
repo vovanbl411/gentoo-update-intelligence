@@ -82,3 +82,30 @@ UI создал анализ `55dbe68a-3e8e-423d-a7a2-f5d44f085992`. Parser ве
 Worker подтвердил попадание именно в файловый metadata cache. В его журнале за интервал `20:31:53–20:35:55 UTC` записано 20 строк `metadata cache hit`: 14 для `gentoo`, 2 для `gentoo-zh` и 4 для `umbriel-overlay`. Новых строк `metadata generated` за повторный прогон нет. В volume до и после оставалось 20 JSON-файлов cache объёмом 136 KiB. Первая обработка, напротив, оставила 20 событий `metadata generated` в журнале. Эти события соответствуют ветке успешного `Store.Load` в `backend/cmd/metadata-worker/main.go`; статус Lookup `found` отдельно для подтверждения cache hit не использовался.
 
 Промахов metadata cache не было, поэтому изменений ревизий и вызванных ими промахов для разбора нет. Этап 4.3 с нагрузочным планом остаётся отдельной проверкой.
+
+## Этап 4.3: повторы и общий лимит генерации
+
+Проверка выполнена на source revision `e18090b`. Для большого задания взяты те же десять строк из 4.1; весь блок повторён 100 раз без перестановки строк. Вход был синтетическим, отдельный реальный план не использовался. SHA-256 текста из 1000 строк: `602435d595cd660b277b4f2f2c90e840e6f7418d1d4287812e9762da9ef7bf0d`.
+
+```sh
+awk '{ rows[NR] = $0 } END { for (i = 0; i < 100; i++) for (j = 1; j <= NR; j++) print rows[j] }' /tmp/guit-acceptance-4.1.plan > /tmp/guit-acceptance-4.3-plan
+node /tmp/guit-acceptance-4.3-large.mjs
+node /tmp/guit-acceptance-4.3-large-poll.mjs
+```
+
+UI принял задание `81eb752b-d5c4-4a19-b516-163b7721a28b`. Оно завершилось со статусом `completed`: Parser сохранил 1000 записей и создано 1000 отчётов. Проверка результата подтвердила, что каждая из десяти строк вошла 100 раз, порядок строк повторённого блока сохранён, а каждый отчёт ссылается на свой индекс записи. Получено 20 уникальных metadata-запросов (`Query`), прогресс завершился на `20/20`. Worker получил 20 запросов `/prepare`; в журнале за `20:54:14–20:58:23 UTC` есть ровно 20 `metadata cache hit` — по одному на каждый уникальный запрос, требующий worker. Ревизии совпали с 4.1/4.2: `gentoo` `e5e514491d2c320d947d12da59d399094367a0b0`, `gentoo-zh` `16005b518245e2a5d63ed25c5f4338484689bbdc`, `umbriel-overlay` `7b73f8dfac5f5896b088def7e1670e7073437947`.
+
+Общий лимит проверен отдельно шестью одновременно отправленными однострочными анализами с разными Gentoo package/version keys. Использован Compose-проект `guit-acceptance-20261104-concurrency`: опубликованный Gentoo volume подключён только для чтения; backend закреплён на ревизии `e5e514491d2c320d947d12da59d399094367a0b0`. Для metadata cache создан отдельный volume `guit-acceptance-20261104-concurrency_metadata-cache`. Перед запуском в cache было 0 файлов. Настроенный `METADATA_WORKER_GENERATION_LIMIT` — `2`.
+
+```sh
+POSTGRES_PASSWORD=acceptance-only FRONTEND_PORT=18934 GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG='[]' \
+  docker compose --env-file /dev/null -p guit-acceptance-20261104-concurrency \
+  -f compose.yaml -f /tmp/guit-acceptance-4.3-compose-override.yaml \
+  up -d --no-build backend metadata-worker postgres
+node /tmp/guit-acceptance-4.3-concurrent.mjs
+docker exec guit-acceptance-20261104-concurrency-metadata-worker-1 \
+  sh -c 'cat /test-metrics/events.log; cat /test-metrics/maximum'
+docker logs guit-acceptance-20261104-concurrency-metadata-worker-1
+```
+
+Все шесть анализов завершились успешно, каждый сохранил одну запись и один отчёт; совокупно они запросили 12 различных metadata keys. UUID: `5d33262b-2743-4a0e-b5f6-f11bb332ec4d`, `fdab2fd8-71c9-4eaf-8122-8979f8a21107`, `828c8c22-3670-4d3c-9e7f-b84d1137d335`, `7eb51888-2ea6-4b30-824e-4bd42310d0d2`, `ed790131-c352-41ac-9758-72521f09d606`, `59c2bd7f-4aac-4a87-ae99-29800e3937fc`. Worker записал 12 `metadata generated` для этих разных keys, все с Gentoo revision `e5e514491d2c320d947d12da59d399094367a0b0`; каждый вызов `egencache` завершился с кодом 0. Тестовый cache после прогона содержал 12 файлов. Измеритель вокруг запуска `egencache` зафиксировал максимум `2` одновременных процесса, после завершения active count вернулся к `0`. Таким образом, лимит проверен на реальных промахах в общем worker при конкурирующих анализах; прогретый основной cache не использовался.
