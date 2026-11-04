@@ -40,9 +40,9 @@ func (f *fakeLookup) Lookup(query metadataprovider.Query) (metadataprovider.Look
 func TestAnalyzeBuildsReportsSequentiallyAndPreservesFullOutcomes(t *testing.T) {
 	input := strings.Join([]string{
 		"[ebuild U] dev-libs/widget-2::gentoo [1::gentoo]",
-		"[ebuild U] dev-libs/widget-3::gentoo [2::gentoo]",
-		"[ebuild U] dev-libs/widget-4::gentoo [3::gentoo]",
-		"[ebuild U] dev-libs/widget-5::gentoo [4::gentoo]",
+		"[ebuild U] dev-libs/gadget-3::gentoo [2::gentoo]",
+		"[ebuild U] dev-libs/tool-4::gentoo [3::gentoo]",
+		"[ebuild U] dev-libs/other-5::gentoo [4::gentoo]",
 	}, "\n")
 	lookupErrBefore := fmt.Errorf("synthetic before failure: %w", metadataprovider.ErrRead)
 	lookupErrAfter := fmt.Errorf("synthetic after failure: %w", metadataprovider.ErrUnsupportedEntry)
@@ -67,12 +67,12 @@ func TestAnalyzeBuildsReportsSequentiallyAndPreservesFullOutcomes(t *testing.T) 
 	wantQueries := []metadataprovider.Query{
 		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "1"},
 		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "2"},
-		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "2"},
-		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "3"},
-		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "3"},
-		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "4"},
-		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "4"},
-		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "5"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "gadget", Version: "2"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "gadget", Version: "3"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "tool", Version: "3"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "tool", Version: "4"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "other", Version: "4"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "other", Version: "5"},
 	}
 	if !reflect.DeepEqual(provider.calls, wantQueries) {
 		t.Fatalf("lookup order = %#v, want %#v", provider.calls, wantQueries)
@@ -126,6 +126,60 @@ func TestAnalyzeBuildsReportsSequentiallyAndPreservesFullOutcomes(t *testing.T) 
 	}
 	if !reflect.DeepEqual(first, second) {
 		t.Fatal("same input and Provider answers produced different results")
+	}
+}
+
+func TestAnalyzeReusesLookupResultsAndErrorsAcrossRepeatedEntries(t *testing.T) {
+	input := strings.Join([]string{
+		"[ebuild U] dev-libs/widget-2::gentoo [1::gentoo]",
+		"[ebuild U] dev-libs/widget-2::gentoo [1::gentoo]",
+		"[ebuild U] dev-libs/widget-3::gentoo [2::gentoo]",
+		"[ebuild U] dev-libs/widget-3::gentoo [2::gentoo]",
+	}, "\n")
+	lookupErr := fmt.Errorf("synthetic lookup failure: %w", metadataprovider.ErrRead)
+	v2 := metadatadiff.Normalize(metadatadiff.Source{
+		Category: "dev-libs", Name: "widget", Version: "2", Repository: "gentoo",
+	}, "EAPI=8\nSLOT=0\nIUSE=\n")
+	provider := &fakeLookup{answers: []lookupAnswer{
+		{err: lookupErr},
+		{result: metadataprovider.LookupResult{Status: metadataprovider.StatusFound, Snapshot: &v2}},
+		{result: metadataprovider.LookupResult{Status: metadataprovider.StatusNotFound}},
+	}}
+
+	got, err := Analyze(input, analyzer.Context{}, provider)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantQueries := []metadataprovider.Query{
+		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "1"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "2"},
+		{Repository: "gentoo", Category: "dev-libs", Name: "widget", Version: "3"},
+	}
+	if !reflect.DeepEqual(provider.calls, wantQueries) {
+		t.Fatalf("worker lookup calls = %#v, want one call per unique query: %#v", provider.calls, wantQueries)
+	}
+	if len(got.Reports) != 4 {
+		t.Fatalf("reports = %d, want 4", len(got.Reports))
+	}
+	for index, report := range got.Reports {
+		if report.Report.EntryIndex != index {
+			t.Errorf("report[%d] entry index = %d", index, report.Report.EntryIndex)
+		}
+	}
+	for _, index := range []int{0, 1} {
+		report := got.Reports[index]
+		if !errors.Is(report.BeforeLookup.Err, metadataprovider.ErrRead) || report.AfterLookup.Result == nil || report.AfterLookup.Result.Status != metadataprovider.StatusFound {
+			t.Errorf("repeated error/found outcomes report[%d] = %#v", index, report)
+		}
+	}
+	for _, index := range []int{2, 3} {
+		report := got.Reports[index]
+		if report.BeforeLookup.Result == nil || report.BeforeLookup.Result.Status != metadataprovider.StatusFound || report.AfterLookup.Result == nil || report.AfterLookup.Result.Status != metadataprovider.StatusNotFound {
+			t.Errorf("repeated found/not-found outcomes report[%d] = %#v", index, report)
+		}
+	}
+	if got.Reports[0].AfterLookup.Result.Snapshot != got.Reports[1].AfterLookup.Result.Snapshot || got.Reports[2].BeforeLookup.Result.Snapshot != got.Reports[3].BeforeLookup.Result.Snapshot {
+		t.Fatal("repeated reports did not retain the cached snapshot result")
 	}
 }
 

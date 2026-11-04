@@ -17,6 +17,8 @@ docker compose ps
 
 Frontend доступен на `http://127.0.0.1:8081`. При необходимости задайте `FRONTEND_PORT`; только frontend публикует host port. Backend ждёт PostgreSQL и metadata-worker. Backend и worker читают закреплённые Git-зеркала через read-only mounts. Worker не подключён к PostgreSQL; отдельный volume `metadata-cache` хранит сгенерированные результаты. Именованный volume `postgres-data` сохраняет анализы при пересоздании контейнеров.
 
+`metadata-worker` объединяет одновременно поступившие одинаковые запросы подготовки, включая создание временных checkout. Переменная `METADATA_WORKER_GENERATION_LIMIT` задаёт общий для всех анализов предел одновременных запусков `egencache`; по умолчанию он равен `2`. Значение должно быть положительным целым числом. После его изменения пересоздайте worker командой `docker compose up -d metadata-worker`.
+
 По умолчанию используется `https://anongit.gentoo.org/git/repo/gentoo.git`. При необходимости источник можно задать параметром `GENTOO_REPOSITORY_URL`; он применяется к синхронизации и provenance. Backend сначала читает точный cache из закреплённого commit. Если записи нет, он обращается к `metadata-worker`, который ищет ebuild в закреплённой истории и генерирует cache в общей Gentoo-базе.
 
 Например, для [зеркала Gentoo на GitHub](https://github.com/gentoo/gentoo) перед запуском задайте:

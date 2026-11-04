@@ -18,13 +18,13 @@ type Result struct {
 }
 ```
 
-`Plan` — полный результат одного `parser.Parse(input)`. `Analysis` — полный результат одного отдельного `analyzer.Analyze(Plan, context)`. `Reports` сохраняет полные результаты последовательных вызовов `reportservice.Build(Plan, i, provider)` для каждого `Plan.Entries[i]`.
+`Plan` — полный результат одного `parser.Parse(input)`. `Analysis` — полный результат одного отдельного `analyzer.Analyze(Plan, context)`. `Reports` сохраняет полные результаты последовательных вызовов `reportservice.Build(Plan, i, provider)` для каждого `Plan.Entries[i]`. В рамках `Analyze` результат или ошибка `Lookup` сохраняется по точному `metadataprovider.Query`; повторный запрос использует этот исход и не вызывает Provider снова.
 
 ## Алгоритм и связи
 
 1. Один раз разобрать исходный текст через `parser.Parse`.
 2. Один раз передать результат Parser и пользовательский `context` в `analyzer.Analyze`.
-3. Подготовить `Reports` и последовательно вызвать `reportservice.Build` для каждого индекса `Plan.Entries`, начиная с нуля.
+3. Подготовить `Reports` и кэш Lookup для этого вызова `Analyze`, затем последовательно вызвать `reportservice.Build` для каждого индекса `Plan.Entries`, начиная с нуля. Кэш сохраняет успешные ответы и ошибки по полному `Query`.
 4. При успехе вернуть исходные результаты Parser и Analyzer вместе со всеми отчётами.
 
 Порядок записей Parser не меняется. На каждую запись приходится один отчёт; повторяющиеся пакеты не объединяются. При `nil error` выполняется `len(Reports) == len(Plan.Entries)`, а `Reports[i].Report.EntryIndex == i`. Findings Analyzer ссылаются на записи через `Finding.EntryIndex`; finding по blocker сохраняет `EntryIndex = nil` и `UnresolvedBlockerEvidence.BlockerIndex`.
@@ -47,7 +47,7 @@ type Result struct {
 
 planservice не повторяет проверки допустимости записей и snapshots, не строит metadata Query и не меняет порядок before/after. Он возвращает результаты Parser, Analyzer и reportservice целиком: без фильтрации findings, диагностик, Compare или evidence. Порядок и семантика каждого компонента остаются его собственным контрактом.
 
-Компонент не открывает Provider, не выбирает commit и не выполняет Git-команды, файловый ввод-вывод или сетевые запросы. Он не добавляет retry, fallback, дедупликацию или кэш, не генерирует ID или время, не создаёт approval и не изменяет переданный `Context`.
+Компонент не открывает Provider, не выбирает commit и не выполняет Git-команды, файловый ввод-вывод или сетевые запросы. Он не объединяет записи плана и не добавляет retry или fallback; кэш Lookup действует только в пределах одного вызова `Analyze`. planservice не генерирует ID или время, не создаёт approval и не изменяет переданный `Context`.
 
 Общий статус `successful`, `safe` или `approved` не вводится. Статус Parser, findings Analyzer и доступность metadata остаются независимыми частями результата. Approval не реализуется. Предупреждения о пропущенных обновлениях из-за dependency conflict остаются ограничением Parser и отдельным отложенным этапом. Поддержка blockers принята после review `a38074f`.
 

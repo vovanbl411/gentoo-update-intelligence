@@ -48,6 +48,7 @@ services:
       METADATA_WORKER_TEMP_PATH: /var/tmp/gentoo-update-intelligence
       METADATA_WORKER_PORTAGE_USER: portage
       METADATA_WORKER_PORTAGE_GROUP: portage
+      METADATA_WORKER_GENERATION_LIMIT: ${METADATA_WORKER_GENERATION_LIMIT:-2}
     volumes:
       - type: volume
         source: gentoo-data

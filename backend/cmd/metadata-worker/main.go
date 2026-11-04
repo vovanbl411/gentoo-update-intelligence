@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -12,6 +13,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/ebuildresolver"
@@ -37,7 +39,115 @@ type response struct {
 	SourceCommit string                   `json:"source_commit,omitempty"`
 }
 
+const defaultGenerationLimit = 2
+
+type preparationOutcome struct {
+	result       metadatagenerator.Result
+	cached       bool
+	sourceCommit string
+	err          error
+}
+
+type preparationCall struct {
+	done    chan struct{}
+	outcome preparationOutcome
+	waiters int
+}
+
+type metadataWorker struct {
+	mu      sync.Mutex
+	calls   map[string]*preparationCall
+	prepare func(request) preparationOutcome
+}
+
+func newMetadataWorker(limit int) (*metadataWorker, error) {
+	if limit <= 0 {
+		return nil, errors.New("metadata generation limit must be positive")
+	}
+	limiter := make(chan struct{}, limit)
+	return &metadataWorker{
+		calls: make(map[string]*preparationCall),
+		prepare: func(input request) preparationOutcome {
+			result, cached, sourceCommit, err := prepareMetadata(input, limiter)
+			return preparationOutcome{result: result, cached: cached, sourceCommit: sourceCommit, err: err}
+		},
+	}, nil
+}
+
+func (w *metadataWorker) do(ctx context.Context, input request) preparationOutcome {
+	keyBytes, _ := json.Marshal(input)
+	key := string(keyBytes)
+
+	w.mu.Lock()
+	call := w.calls[key]
+	if call == nil {
+		call = &preparationCall{done: make(chan struct{})}
+		w.calls[key] = call
+		go func() {
+			outcome := w.prepare(input)
+			w.mu.Lock()
+			call.outcome = outcome
+			delete(w.calls, key)
+			close(call.done)
+			w.mu.Unlock()
+		}()
+	}
+	call.waiters++
+	w.mu.Unlock()
+
+	defer func() {
+		w.mu.Lock()
+		call.waiters--
+		w.mu.Unlock()
+	}()
+	select {
+	case <-call.done:
+		return call.outcome
+	case <-ctx.Done():
+		return preparationOutcome{err: ctx.Err()}
+	}
+}
+
+func (w *metadataWorker) servePrepare(wr http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(wr, "POST required", http.StatusMethodNotAllowed)
+		return
+	}
+	r.Body = http.MaxBytesReader(wr, r.Body, 1<<20)
+	var input request
+	decoder := json.NewDecoder(r.Body)
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&input); err != nil {
+		http.Error(wr, err.Error(), http.StatusBadRequest)
+		return
+	}
+	outcome := w.do(r.Context(), input)
+	if outcome.err != nil {
+		if errors.Is(outcome.err, context.Canceled) || errors.Is(outcome.err, context.DeadlineExceeded) {
+			return
+		}
+		http.Error(wr, outcome.err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+	wr.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(wr).Encode(response{Result: outcome.result, Cached: outcome.cached, SourceCommit: outcome.sourceCommit})
+}
+
+func generateWithLimit(slots chan struct{}, generate func() (metadatagenerator.Result, error)) (metadatagenerator.Result, error) {
+	slots <- struct{}{}
+	defer func() { <-slots }()
+	return generate()
+}
+
 func main() {
+	limit, err := generationLimitFromEnv()
+	if err != nil {
+		log.Fatal(err)
+	}
+	worker, err := newMetadataWorker(limit)
+	if err != nil {
+		log.Fatal(err)
+	}
 	if err := dropToPortage(); err != nil {
 		panic(err)
 	}
@@ -48,7 +158,7 @@ func main() {
 		}
 		w.WriteHeader(http.StatusNoContent)
 	})
-	http.HandleFunc("/prepare", prepare)
+	http.HandleFunc("/prepare", worker.servePrepare)
 	address := os.Getenv("METADATA_WORKER_LISTEN_ADDR")
 	if address == "" {
 		address = ":8090"
@@ -56,6 +166,18 @@ func main() {
 	if err := http.ListenAndServe(address, nil); err != nil {
 		panic(err)
 	}
+}
+
+func generationLimitFromEnv() (int, error) {
+	value := os.Getenv("METADATA_WORKER_GENERATION_LIMIT")
+	if value == "" {
+		return defaultGenerationLimit, nil
+	}
+	limit, err := strconv.Atoi(value)
+	if err != nil || limit <= 0 {
+		return 0, fmt.Errorf("METADATA_WORKER_GENERATION_LIMIT must be a positive integer, got %q", value)
+	}
+	return limit, nil
 }
 
 func dropToPortage() error {
@@ -84,29 +206,7 @@ func dropToPortage() error {
 	return syscall.Setuid(uid)
 }
 
-func prepare(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "POST required", http.StatusMethodNotAllowed)
-		return
-	}
-	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
-	var input request
-	decoder := json.NewDecoder(r.Body)
-	decoder.DisallowUnknownFields()
-	if err := decoder.Decode(&input); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	result, cached, sourceCommit, err := prepareMetadata(input)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(response{Result: result, Cached: cached, SourceCommit: sourceCommit})
-}
-
-func prepareMetadata(input request) (metadatagenerator.Result, bool, string, error) {
+func prepareMetadata(input request, generationSlots chan struct{}) (metadatagenerator.Result, bool, string, error) {
 	if input.Repository.Name == "" || input.Repository.Path == "" || input.Repository.Commit == "" || input.Profile == "" {
 		return metadatagenerator.Result{}, false, "", errors.New("repository, pinned commit and profile are required")
 	}
@@ -216,13 +316,15 @@ func prepareMetadata(input request) (metadatagenerator.Result, bool, string, err
 	if err := os.Mkdir(tempDir, 0o700); err != nil {
 		return metadatagenerator.Result{}, false, "", err
 	}
-	generated, err := metadatagenerator.New(metadatagenerator.Config{
-		PortageUserName:  os.Getenv("METADATA_WORKER_PORTAGE_USER"),
-		PortageGroupName: os.Getenv("METADATA_WORKER_PORTAGE_GROUP"),
-	}).Generate(metadatagenerator.Request{
-		Resolution: resolution, Repository: input.Repository.Name, Category: input.Category,
-		Name: input.Name, Version: input.Version, Checkout: mainCheckout, Profile: profile,
-		TempDir: tempDir, Masters: masterCheckouts,
+	generated, err := generateWithLimit(generationSlots, func() (metadatagenerator.Result, error) {
+		return metadatagenerator.New(metadatagenerator.Config{
+			PortageUserName:  os.Getenv("METADATA_WORKER_PORTAGE_USER"),
+			PortageGroupName: os.Getenv("METADATA_WORKER_PORTAGE_GROUP"),
+		}).Generate(metadatagenerator.Request{
+			Resolution: resolution, Repository: input.Repository.Name, Category: input.Category,
+			Name: input.Name, Version: input.Version, Checkout: mainCheckout, Profile: profile,
+			TempDir: tempDir, Masters: masterCheckouts,
+		})
 	})
 	if err != nil {
 		return metadatagenerator.Result{}, false, "", err
