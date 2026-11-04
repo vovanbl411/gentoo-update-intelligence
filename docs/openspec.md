@@ -17,9 +17,14 @@ OpenSpec подключён как пилот для следующих согл
 замени перенесённые требования ссылкой на спецификацию, сохранив полезные пояснения.
 Не поддерживай два независимых описания одного требования. Если область ещё не
 перенесена, не создавай в OpenSpec её частичную копию без явного определения границ.
-Перенесённых областей пока нет. Спецификация новой области frontend находится в
-[`openspec/specs/analysis-frontend/spec.md`](../openspec/specs/analysis-frontend/spec.md).
-Первый функциональный change [`add-analysis-frontend`](../openspec/changes/archive/2026-11-03-add-analysis-frontend/proposal.md) архивирован.
+Перенесённых областей пока нет. Спецификации новых областей находятся в
+[`openspec/specs/analysis-frontend/spec.md`](../openspec/specs/analysis-frontend/spec.md),
+[`openspec/specs/automatic-metadata-preparation/spec.md`](../openspec/specs/automatic-metadata-preparation/spec.md)
+и [`openspec/specs/local-compose/spec.md`](../openspec/specs/local-compose/spec.md).
+Changes `add-analysis-frontend`, `add-automatic-metadata-preparation` и
+`add-local-compose` архивированы: [frontend](../openspec/changes/archive/2026-11-03-add-analysis-frontend/proposal.md),
+[автоматическая подготовка metadata](../openspec/changes/archive/2026-11-05-add-automatic-metadata-preparation/proposal.md)
+и [локальный Compose](../openspec/changes/archive/2026-11-05-add-local-compose/proposal.md).
 
 ## Локальный инструмент
 

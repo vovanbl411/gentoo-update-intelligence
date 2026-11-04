@@ -1,0 +1,22 @@
+# Tasks
+
+## 1. Собрать frontend и настроить proxy
+
+- [x] 1.1 Добавить многоэтапную сборку frontend из lock-файла и статический runtime; production build проверен.
+- [x] 1.2 Настроить SPA fallback и `/api/` proxy со снятием префикса; проверены прямой URL и передача статуса, `Content-Type` и тела ответа.
+
+## 2. Добавить backend и PostgreSQL в Compose
+
+- [x] 2.1 Добавить сборку backend и Git CLI в runtime-образ.
+- [x] 2.2 Настроить Compose для frontend, backend, PostgreSQL, Gentoo runtime и metadata worker; опубликован только loopback-порт frontend, данные хранятся в именованных volumes.
+- [x] 2.3 Проверить зависимости сервисов, сетевые границы, автоматическую публикацию закрепляемых Git revisions и read-only mount `gentoo-data` в backend и worker.
+
+## 3. Документировать локальный запуск
+
+- [x] 3.1 Оставить в `.env.example` только текущие параметры Compose и безопасные placeholders.
+- [x] 3.2 Документировать автоматическую синхронизацию, асинхронные статусы API, запуск и остановку стека.
+
+## 4. Проверить сценарий с сохранением анализа
+
+- [x] 4.1 Приёмка чистых volumes с автоматической синхронизацией и реальным планом из десяти пакетов, включая `dev-libs/libei`, завершена; оба Lookup `libei` и сверка результата описаны в `frontend/acceptance.md`.
+- [ ] 4.2 Подтвердить пересоздание контейнеров без удаления PostgreSQL volume и повторное чтение прежнего UUID через API и UI. `frontend/acceptance.md` подтверждает повторный анализ и cache reuse в том же работающем Compose-проекте, но не пересоздание контейнеров и чтение прежнего UUID после него; нужен отдельный evidence.
