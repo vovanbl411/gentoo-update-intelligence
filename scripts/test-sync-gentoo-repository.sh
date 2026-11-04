@@ -51,6 +51,6 @@ if PATH="$work/bin:$PATH" SYNC_TEST_INTERVAL="$work/interval" sh "$root/scripts/
     echo 'expected the test sleep to stop the scheduler' >&2
     exit 1
 fi
-test "$(cat "$work/interval")" = 18000
+test "$(cat "$work/interval")" = 10800
 test "$(git -C "$work/mirror" rev-parse refs/gentoo/published)" = "$second"
 echo 'repository synchronization tests passed'

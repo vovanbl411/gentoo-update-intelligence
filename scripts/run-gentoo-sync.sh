@@ -9,5 +9,5 @@ while :; do
     if ! sh "$script_dir/sync-gentoo-repository.sh" "$repository" "$source_url"; then
         echo 'Gentoo repository synchronization failed; retaining any previously published commit' >&2
     fi
-    sleep 18000
+    sleep 10800
 done
