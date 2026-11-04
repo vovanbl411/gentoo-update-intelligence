@@ -9,21 +9,54 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/analysishttp"
+	"github.com/vovanbl411/gentoo-update-intelligence/internal/analysisstore"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/metadataprovider"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/parser"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/repositorymanager"
 )
 
-type overlayTestStore struct{}
+type overlayTestStore struct {
+	mu  sync.RWMutex
+	job analysisstore.Job
+}
 
-func (overlayTestStore) Save(_ context.Context, _ []byte) (string, error) {
+func (*overlayTestStore) Save(_ context.Context, _ []byte) (string, error) {
 	return "28b28f31-7e85-4e6a-a839-84658f32cc74", nil
 }
-func (overlayTestStore) Get(_ context.Context, _ string) ([]byte, bool, error) {
+func (*overlayTestStore) Get(_ context.Context, _ string) ([]byte, bool, error) {
 	return nil, false, nil
+}
+func (s *overlayTestStore) CreateJob(_ context.Context, request []byte) (string, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.job = analysisstore.Job{ID: "28b28f31-7e85-4e6a-a839-84658f32cc74", Request: request, Status: "pending", Stage: "queued"}
+	return s.job.ID, nil
+}
+func (s *overlayTestStore) UpdateJob(_ context.Context, update analysisstore.JobUpdate) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.job.Status, s.job.Stage = update.Status, update.Stage
+	s.job.Completed, s.job.Total, s.job.Error = update.Completed, update.Total, update.Error
+	s.job.Result = update.Result
+	if len(update.Revisions) > 0 {
+		s.job.Revisions = update.Revisions
+	}
+	return nil
+}
+func (s *overlayTestStore) GetJob(_ context.Context, _ string) (analysisstore.Job, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	job := s.job
+	job.Result = append([]byte(nil), job.Result...)
+	return job, job.ID != "", nil
+}
+func (*overlayTestStore) UnfinishedJobs(_ context.Context) ([]analysisstore.Job, error) {
+	return nil, nil
 }
 
 type overlayResponse struct {
@@ -52,14 +85,35 @@ func postOverlayPlan(t *testing.T, handler http.Handler, plan string) overlayRes
 	request.Header.Set("Content-Type", "application/json")
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)
-	if response.Code != http.StatusCreated {
+	if response.Code != http.StatusAccepted {
 		t.Fatalf("POST = %d: %s", response.Code, response.Body.String())
 	}
-	var result overlayResponse
-	if err := json.Unmarshal(response.Body.Bytes(), &result); err != nil {
-		t.Fatal(err)
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		response = httptest.NewRecorder()
+		handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/analyses/28b28f31-7e85-4e6a-a839-84658f32cc74", nil))
+		var job struct {
+			Status string          `json:"status"`
+			Result json.RawMessage `json:"result"`
+			Error  string          `json:"error"`
+		}
+		if err := json.Unmarshal(response.Body.Bytes(), &job); err != nil {
+			t.Fatal(err)
+		}
+		if job.Status == "failed" {
+			t.Fatalf("analysis failed: %s", job.Error)
+		}
+		if job.Status == "completed" {
+			var result overlayResponse
+			if err := json.Unmarshal(append(append([]byte(`{"result":`), job.Result...), '}'), &result); err != nil {
+				t.Fatal(err)
+			}
+			return result
+		}
+		time.Sleep(time.Millisecond)
 	}
-	return result
+	t.Fatal("analysis did not complete")
+	return overlayResponse{}
 }
 
 func TestOverlayConfigurationAndRefreshThroughHTTP(t *testing.T) {
@@ -85,7 +139,7 @@ func TestOverlayConfigurationAndRefreshThroughHTTP(t *testing.T) {
 	}
 	config := metadataprovider.Config{Repository: "gentoo", SourceURL: "https://example.invalid/gentoo", LocalPath: gentooPath, Commit: gentooCommit}
 	factory := newProviderFactory(config, manager)
-	handler := analysishttp.NewHandlerWithPlanProviderFactory(overlayTestStore{}, factory)
+	handler := analysishttp.NewHandlerWithPlanProviderFactory(&overlayTestStore{}, factory)
 	plan := "[ebuild U] dev-libs/widget-1::gentoo-zh [1::gentoo-zh]"
 	first := postOverlayPlan(t, handler, plan)
 	if first.Result.Repositories["gentoo-zh"].Commit != firstCommit {
@@ -105,6 +159,25 @@ func TestOverlayConfigurationAndRefreshThroughHTTP(t *testing.T) {
 	second := postOverlayPlan(t, handler, "[ebuild U] dev-libs/widget-2::gentoo-zh [1::gentoo-zh]")
 	if second.Result.Repositories["gentoo-zh"].Commit != secondCommit || second.Result.Reports[0].AfterLookup.Result == nil || second.Result.Reports[0].AfterLookup.Result.Status != metadataprovider.StatusFound {
 		t.Fatalf("updated result = %#v", second.Result)
+	}
+	persistedPins, err := json.Marshal(first.Result.Repositories)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var restoredPins map[string]repositorymanager.Revision
+	if err := json.Unmarshal(persistedPins, &restoredPins); err != nil {
+		t.Fatal(err)
+	}
+	resumeFactory := newResumableProviderFactory(config, manager)
+	restoredProvider, err := resumeFactory(context.Background(), parser.Parse(plan), restoredPins)
+	if err != nil {
+		t.Fatalf("restore provider with persisted revisions: %v", err)
+	}
+	restoredRevision := restoredProvider.(interface {
+		RepositoryRevisions() map[string]repositorymanager.Revision
+	}).RepositoryRevisions()["gentoo-zh"]
+	if restoredRevision.Commit != firstCommit {
+		t.Fatalf("restored overlay commit = %s, want original %s", restoredRevision.Commit, firstCommit)
 	}
 	old, err := pinned.Lookup(metadataprovider.Query{Repository: "gentoo-zh", Category: "dev-libs", Name: "widget", Version: "1"})
 	if err != nil || old.Snapshot == nil || old.Snapshot.Source.Commit != firstCommit {

@@ -24,8 +24,11 @@ type lookupResponse struct {
 }
 
 type analysisLookup struct {
-	provider reportservice.MetadataLookup
-	results  map[metadataprovider.Query]lookupResponse
+	provider  reportservice.MetadataLookup
+	results   map[metadataprovider.Query]lookupResponse
+	completed int
+	total     int
+	progress  func(completed, total int)
 }
 
 func (p *analysisLookup) Lookup(query metadataprovider.Query) (metadataprovider.LookupResult, error) {
@@ -34,6 +37,10 @@ func (p *analysisLookup) Lookup(query metadataprovider.Query) (metadataprovider.
 	}
 	result, err := p.provider.Lookup(query)
 	p.results[query] = lookupResponse{result: result, err: err}
+	p.completed++
+	if p.progress != nil {
+		p.progress(p.completed, p.total)
+	}
 	return result, err
 }
 
@@ -47,7 +54,7 @@ func (p *analysisLookup) RepositoryFailure(name string) error {
 	return source.RepositoryFailure(name)
 }
 
-func memoizeLookups(provider reportservice.MetadataLookup) reportservice.MetadataLookup {
+func memoizeLookups(provider reportservice.MetadataLookup, total int, progress func(completed, total int)) reportservice.MetadataLookup {
 	if provider == nil {
 		return nil
 	}
@@ -58,7 +65,7 @@ func memoizeLookups(provider reportservice.MetadataLookup) reportservice.Metadat
 			return provider
 		}
 	}
-	return &analysisLookup{provider: provider, results: make(map[metadataprovider.Query]lookupResponse)}
+	return &analysisLookup{provider: provider, results: make(map[metadataprovider.Query]lookupResponse), total: total, progress: progress}
 }
 
 // Analyze parses a plan once, analyzes it once, and builds one report for each
@@ -68,9 +75,54 @@ func Analyze(
 	context analyzer.Context,
 	provider reportservice.MetadataLookup,
 ) (Result, error) {
-	plan := parser.Parse(input)
+	return AnalyzeWithProgress(input, context, provider, nil)
+}
+
+// AnalyzeWithProgress reports completed unique metadata queries and their total
+// number. The callback runs in order on the analysis goroutine.
+func AnalyzeWithProgress(
+	input string,
+	context analyzer.Context,
+	provider reportservice.MetadataLookup,
+	progress func(completed, total int),
+) (Result, error) {
+	return AnalyzeParsedWithProgress(input, parser.Parse(input), context, provider, progress)
+}
+
+// LookupUnitCount returns the number of distinct metadata Query values needed
+// to build the plan's reports.
+func LookupUnitCount(plan parser.Result) (int, error) {
+	queries := make(map[metadataprovider.Query]struct{})
+	for index := range plan.Entries {
+		entryQueries, err := reportservice.LookupQueries(plan, index)
+		if err != nil {
+			return 0, fmt.Errorf("plan report lookups for entry %d: %w", index, err)
+		}
+		for _, query := range entryQueries {
+			queries[query] = struct{}{}
+		}
+	}
+	return len(queries), nil
+}
+
+// AnalyzeParsedWithProgress analyzes an already parsed plan and reports the
+// number of completed unique metadata queries.
+func AnalyzeParsedWithProgress(
+	input string,
+	plan parser.Result,
+	context analyzer.Context,
+	provider reportservice.MetadataLookup,
+	progress func(completed, total int),
+) (Result, error) {
 	analysis := analyzer.Analyze(plan, context)
-	provider = memoizeLookups(provider)
+	total, err := LookupUnitCount(plan)
+	if err != nil {
+		return Result{}, err
+	}
+	if progress != nil {
+		progress(0, total)
+	}
+	provider = memoizeLookups(provider, total, progress)
 	reports := make([]reportservice.Result, 0, len(plan.Entries))
 	for index := range plan.Entries {
 		report, err := reportservice.Build(plan, index, provider)

@@ -162,7 +162,16 @@ func (p *pinnedRepositories) RepositoryRevisions() map[string]repositorymanager.
 }
 
 func prepareRepositories(ctx context.Context, plan parser.Result, config metadataprovider.Config, gentoo *metadataprovider.Provider, manager *repositorymanager.Manager) reportservice.MetadataLookup {
+	result, _ := preparePinnedRepositories(ctx, plan, config, gentoo, manager, nil)
+	return result
+}
+
+func preparePinnedRepositories(ctx context.Context, plan parser.Result, config metadataprovider.Config, gentoo *metadataprovider.Provider, manager *repositorymanager.Manager, pinned map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error) {
 	main := repositorymanager.Revision{Name: "gentoo", URL: config.SourceURL, Path: config.LocalPath, Commit: gentoo.Commit()}
+	if saved, ok := pinned["gentoo"]; ok {
+		main = saved
+		main.Path = config.LocalPath
+	}
 	result := &pinnedRepositories{
 		providers: map[string]*metadataprovider.Provider{"gentoo": gentoo},
 		failures:  make(map[string]error),
@@ -180,6 +189,51 @@ func prepareRepositories(ctx context.Context, plan parser.Result, config metadat
 				names[*installed.Repository] = true
 			}
 		}
+	}
+	if len(pinned) > 0 {
+		if manager == nil {
+			if len(pinned) > 1 {
+				return nil, errors.New("overlay manager is unavailable for saved revisions")
+			}
+			for name := range names {
+				if name != "gentoo" {
+					result.failures[name] = fmt.Errorf("overlay preparation is disabled; repository %s cannot be resolved", name)
+				}
+			}
+		} else {
+			restored, err := manager.RestorePinned(ctx, pinnedWithGentoo(pinned, main))
+			if err != nil {
+				return nil, err
+			}
+			for name := range names {
+				if name == "gentoo" {
+					continue
+				}
+				if _, ok := restored[name]; ok {
+					continue
+				}
+				additional, pinErr := manager.PinAdditional(ctx, []string{name}, restored)
+				if pinErr != nil {
+					result.failures[name] = pinErr
+					continue
+				}
+				for repoName, revision := range additional {
+					restored[repoName] = revision
+				}
+			}
+			result.revisions = restored
+			for name, revision := range restored {
+				if name == "gentoo" {
+					continue
+				}
+				provider, err := metadataprovider.Open(metadataprovider.Config{Repository: name, SourceURL: revision.URL, LocalPath: revision.Path, Commit: revision.Commit})
+				if err != nil {
+					return nil, fmt.Errorf("restore provider for %s: %w", name, err)
+				}
+				result.providers[name] = provider
+			}
+		}
+		return result, nil
 	}
 	for name := range names {
 		if name == "gentoo" {
@@ -211,5 +265,14 @@ func prepareRepositories(ctx context.Context, plan parser.Result, config metadat
 			result.revisions[repoName] = revision
 		}
 	}
+	return result, nil
+}
+
+func pinnedWithGentoo(pinned map[string]repositorymanager.Revision, gentoo repositorymanager.Revision) map[string]repositorymanager.Revision {
+	result := make(map[string]repositorymanager.Revision, len(pinned)+1)
+	for name, revision := range pinned {
+		result[name] = revision
+	}
+	result["gentoo"] = gentoo
 	return result
 }

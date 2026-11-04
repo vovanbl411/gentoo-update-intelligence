@@ -56,7 +56,11 @@ func run() error {
 			return err
 		}
 	}
-	providerFactory := newProviderFactory(config, overlays)
+	providerFactory := newResumableProviderFactory(config, overlays)
+	handler := analysishttp.NewHandlerWithPinnedProviderFactory(store, providerFactory)
+	if err := handler.Resume(ctx); err != nil {
+		return fmt.Errorf("resume analysis jobs: %w", err)
+	}
 
 	address := os.Getenv("GENTOO_UPDATE_INTELLIGENCE_LISTEN_ADDR")
 	if address == "" {
@@ -64,7 +68,7 @@ func run() error {
 	}
 	server := &http.Server{
 		Addr:              address,
-		Handler:           analysishttp.NewHandlerWithPlanProviderFactory(store, providerFactory),
+		Handler:           handler,
 		ReadHeaderTimeout: 5 * time.Second,
 		IdleTimeout:       60 * time.Second,
 	}
@@ -75,7 +79,20 @@ func run() error {
 }
 
 func newProviderFactory(config metadataprovider.Config, overlays *repositorymanager.Manager) func(context.Context, parser.Result) (reportservice.MetadataLookup, error) {
+	resumable := newResumableProviderFactory(config, overlays)
 	return func(ctx context.Context, plan parser.Result) (reportservice.MetadataLookup, error) {
+		return resumable(ctx, plan, nil)
+	}
+}
+
+func newResumableProviderFactory(config metadataprovider.Config, overlays *repositorymanager.Manager) func(context.Context, parser.Result, map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error) {
+	return func(ctx context.Context, plan parser.Result, pinned map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error) {
+		if gentoo, ok := pinned["gentoo"]; ok {
+			if gentoo.Name != "gentoo" || gentoo.Commit == "" {
+				return nil, errors.New("saved gentoo revision is invalid")
+			}
+			config.Commit = gentoo.Commit
+		}
 		var provider *metadataprovider.Provider
 		var err error
 		if config.Commit == "" {
@@ -87,13 +104,10 @@ func newProviderFactory(config metadataprovider.Config, overlays *repositorymana
 			log.Printf("Metadata Provider unavailable: %v", err)
 			return nil, err
 		}
-		if overlays == nil && os.Getenv("GENTOO_UPDATE_INTELLIGENCE_METADATA_WORKER_URL") == "" {
-			return provider, nil
-		}
 		if overlays == nil {
-			return prepareRepositories(ctx, plan, config, provider, nil), nil
+			return preparePinnedRepositories(ctx, plan, config, provider, nil, pinned)
 		}
-		return prepareRepositories(ctx, plan, config, provider, overlays), nil
+		return preparePinnedRepositories(ctx, plan, config, provider, overlays, pinned)
 	}
 }
 

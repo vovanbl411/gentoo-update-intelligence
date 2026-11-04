@@ -5,11 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"log"
 	"mime"
 	"net/http"
 	"reflect"
 	"regexp"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/analysisstore"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/analyzer"
@@ -30,7 +33,10 @@ var (
 
 type Handler struct {
 	store           analysisstore.Store
-	providerFactory func(context.Context, parser.Result) (reportservice.MetadataLookup, error)
+	providerFactory func(context.Context, parser.Result, map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error)
+	mux             http.Handler
+	mu              sync.Mutex
+	running         map[string]bool
 }
 
 type createRequest struct {
@@ -38,9 +44,18 @@ type createRequest struct {
 	LocallyPatchedPackages []parser.Package `json:"locally_patched_packages"`
 }
 
-type response struct {
-	ID     string          `json:"id"`
-	Result json.RawMessage `json:"result"`
+type jobResponse struct {
+	ID       string          `json:"id"`
+	Status   string          `json:"status"`
+	Progress progressView    `json:"progress"`
+	Result   json.RawMessage `json:"result,omitempty"`
+	Error    string          `json:"error,omitempty"`
+}
+
+type progressView struct {
+	Stage     string `json:"stage"`
+	Completed int    `json:"completed"`
+	Total     int    `json:"total"`
 }
 
 type resultView struct {
@@ -67,13 +82,13 @@ type errorResponse struct {
 	Error string `json:"error"`
 }
 
-func NewHandler(store analysisstore.Store, provider reportservice.MetadataLookup) http.Handler {
+func NewHandler(store analysisstore.Store, provider reportservice.MetadataLookup) *Handler {
 	return NewHandlerWithProviderFactory(store, func() (reportservice.MetadataLookup, error) { return provider, nil })
 }
 
 // NewHandlerWithProviderFactory obtains one pinned provider per analysis.
-func NewHandlerWithProviderFactory(store analysisstore.Store, factory func() (reportservice.MetadataLookup, error)) http.Handler {
-	return NewHandlerWithPlanProviderFactory(store, func(_ context.Context, _ parser.Result) (reportservice.MetadataLookup, error) {
+func NewHandlerWithProviderFactory(store analysisstore.Store, factory func() (reportservice.MetadataLookup, error)) *Handler {
+	return NewHandlerWithPinnedProviderFactory(store, func(_ context.Context, _ parser.Result, _ map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error) {
 		if factory == nil {
 			return nil, nil
 		}
@@ -82,12 +97,46 @@ func NewHandlerWithProviderFactory(store analysisstore.Store, factory func() (re
 }
 
 // NewHandlerWithPlanProviderFactory pins the repositories needed by the plan.
-func NewHandlerWithPlanProviderFactory(store analysisstore.Store, factory func(context.Context, parser.Result) (reportservice.MetadataLookup, error)) http.Handler {
-	handler := &Handler{store: store, providerFactory: factory}
+func NewHandlerWithPlanProviderFactory(store analysisstore.Store, factory func(context.Context, parser.Result) (reportservice.MetadataLookup, error)) *Handler {
+	return NewHandlerWithPinnedProviderFactory(store, func(ctx context.Context, plan parser.Result, _ map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error) {
+		if factory == nil {
+			return nil, nil
+		}
+		return factory(ctx, plan)
+	})
+}
+
+// NewHandlerWithPinnedProviderFactory restores persisted repository revisions
+// when resuming an interrupted analysis.
+func NewHandlerWithPinnedProviderFactory(store analysisstore.Store, factory func(context.Context, parser.Result, map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error)) *Handler {
+	handler := &Handler{store: store, providerFactory: factory, running: make(map[string]bool)}
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /analyses", handler.create)
 	mux.HandleFunc("GET /analyses/{id}", handler.get)
-	return mux
+	handler.mux = mux
+	return handler
+}
+
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.mux.ServeHTTP(w, r)
+}
+
+// Resume schedules every pending or interrupted job for execution. Call it
+// before serving traffic so previously accepted work survives a restart.
+func (h *Handler) Resume(ctx context.Context) error {
+	jobs, err := h.store.UnfinishedJobs(ctx)
+	if err != nil {
+		return err
+	}
+	for _, job := range jobs {
+		var request createRequest
+		if err := json.Unmarshal(job.Request, &request); err != nil {
+			h.updateEventually(analysisstore.JobUpdate{ID: job.ID, Status: "failed", Stage: "failed", Completed: job.Completed, Total: job.Total, Error: "saved job request is invalid"})
+			continue
+		}
+		h.launch(job.ID, request, job.Revisions)
+	}
+	return nil
 }
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
@@ -121,19 +170,92 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusServiceUnavailable, "analysis storage is unavailable")
 		return
 	}
-	if h.providerFactory == nil {
-		writeError(w, http.StatusServiceUnavailable, "metadata provider is unavailable")
-		return
-	}
-	provider, err := h.providerFactory(r.Context(), parser.Parse(request.Plan))
-	if err != nil || isNilProvider(provider) {
-		writeError(w, http.StatusServiceUnavailable, "metadata provider is unavailable")
-		return
-	}
-
-	result, err := planservice.Analyze(request.Plan, analyzer.Context{LocallyPatchedPackages: request.LocallyPatchedPackages}, provider)
+	serializedRequest, err := json.Marshal(request)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "analysis failed")
+		writeError(w, http.StatusInternalServerError, "request serialization failed")
+		return
+	}
+	id, err := h.store.CreateJob(r.Context(), serializedRequest)
+	if err != nil || !analysisIDPattern.MatchString(id) {
+		writeError(w, http.StatusServiceUnavailable, "analysis could not be saved")
+		return
+	}
+	w.Header().Set("Location", "/analyses/"+id)
+	writeJSON(w, http.StatusAccepted, jobResponse{ID: id, Status: "pending", Progress: progressView{Stage: "queued"}})
+	h.launch(id, request, nil)
+}
+
+func (h *Handler) launch(id string, request createRequest, pinnedJSON []byte) {
+	h.mu.Lock()
+	if h.running[id] {
+		h.mu.Unlock()
+		return
+	}
+	h.running[id] = true
+	h.mu.Unlock()
+	go func() {
+		defer func() {
+			h.mu.Lock()
+			delete(h.running, id)
+			h.mu.Unlock()
+		}()
+		h.execute(id, request, pinnedJSON)
+	}()
+}
+
+func (h *Handler) execute(id string, request createRequest, pinnedJSON []byte) {
+	update := func(status, stage string, completed, total int, result, revisions []byte, message string) {
+		h.updateEventually(analysisstore.JobUpdate{
+			ID: id, Status: status, Stage: stage, Completed: completed, Total: total, Result: result, Revisions: revisions, Error: message,
+		})
+	}
+	var pinned map[string]repositorymanager.Revision
+	if len(pinnedJSON) > 0 {
+		if err := json.Unmarshal(pinnedJSON, &pinned); err != nil || len(pinned) == 0 {
+			update("failed", "failed", 0, 0, nil, nil, "saved repository revisions are invalid")
+			return
+		}
+	}
+	parsed := parser.Parse(request.Plan)
+	total, err := planservice.LookupUnitCount(parsed)
+	if err != nil {
+		update("failed", "failed", 0, 0, nil, nil, "analysis plan could not be prepared")
+		return
+	}
+	update("running", "preparing", 0, total, nil, nil, "")
+	if h.providerFactory == nil {
+		update("failed", "failed", 0, total, nil, nil, "metadata provider is unavailable")
+		return
+	}
+	provider, err := h.providerFactory(context.Background(), parsed, pinned)
+	if err != nil || isNilProvider(provider) {
+		if len(pinned) > 0 {
+			log.Printf("analysis job %s could not restore pinned repositories: %v", id, err)
+			update("failed", "failed", 0, total, nil, nil, "pinned repository revisions could not be restored")
+		} else {
+			update("failed", "failed", 0, total, nil, nil, "metadata provider is unavailable")
+		}
+		return
+	}
+	if source, ok := provider.(interface {
+		RepositoryRevisions() map[string]repositorymanager.Revision
+	}); ok {
+		revisions, marshalErr := json.Marshal(source.RepositoryRevisions())
+		if marshalErr != nil {
+			update("failed", "failed", 0, total, nil, nil, "repository revisions could not be saved")
+			return
+		}
+		if len(source.RepositoryRevisions()) > 0 {
+			update("running", "preparing", 0, total, nil, revisions, "")
+		}
+	}
+	lastCompleted, lastTotal := 0, total
+	result, err := planservice.AnalyzeParsedWithProgress(request.Plan, parsed, analyzer.Context{LocallyPatchedPackages: request.LocallyPatchedPackages}, provider, func(completed, total int) {
+		lastCompleted, lastTotal = completed, total
+		update("running", "analyzing", completed, total, nil, nil, "")
+	})
+	if err != nil {
+		update("failed", "failed", lastCompleted, lastTotal, nil, nil, "analysis failed")
 		return
 	}
 	view := presentResult(result)
@@ -144,15 +266,27 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	}
 	serialized, err := json.Marshal(view)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "analysis serialization failed")
+		update("failed", "failed", lastCompleted, lastTotal, nil, nil, "analysis serialization failed")
 		return
 	}
-	id, err := h.store.Save(r.Context(), serialized)
-	if err != nil || !analysisIDPattern.MatchString(id) {
-		writeError(w, http.StatusServiceUnavailable, "analysis could not be saved")
-		return
+	update("completed", "completed", lastTotal, lastTotal, serialized, nil, "")
+}
+
+func (h *Handler) updateEventually(update analysisstore.JobUpdate) {
+	delay := 100 * time.Millisecond
+	logged := false
+	for {
+		if err := h.store.UpdateJob(context.Background(), update); err == nil {
+			return
+		} else if !logged {
+			log.Printf("analysis job %s state update failed; retrying: %v", update.ID, err)
+			logged = true
+		}
+		time.Sleep(delay)
+		if delay < 5*time.Second {
+			delay *= 2
+		}
 	}
-	writeJSON(w, http.StatusCreated, response{ID: id, Result: serialized})
 }
 
 func isNilProvider(provider reportservice.MetadataLookup) bool {
@@ -178,6 +312,21 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusServiceUnavailable, "analysis storage is unavailable")
 		return
 	}
+	job, found, err := h.store.GetJob(r.Context(), id)
+	if err != nil {
+		writeError(w, http.StatusServiceUnavailable, "analysis storage is unavailable")
+		return
+	}
+	if found {
+		if len(job.Result) > 0 && !json.Valid(job.Result) {
+			writeError(w, http.StatusInternalServerError, "stored analysis is invalid")
+			return
+		}
+		writeJSON(w, http.StatusOK, jobResponse{ID: id, Status: job.Status, Progress: progressView{Stage: job.Stage, Completed: job.Completed, Total: job.Total}, Result: job.Result, Error: job.Error})
+		return
+	}
+	// Rows created by the synchronous API predate analysis_jobs. Keep them
+	// readable through the new endpoint as completed analyses.
 	result, found, err := h.store.Get(r.Context(), id)
 	if err != nil {
 		writeError(w, http.StatusServiceUnavailable, "analysis storage is unavailable")
@@ -191,7 +340,9 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "stored analysis is invalid")
 		return
 	}
-	writeJSON(w, http.StatusOK, response{ID: id, Result: result})
+	writeJSON(w, http.StatusOK, jobResponse{
+		ID: id, Status: "completed", Progress: progressView{Stage: "completed", Completed: 1, Total: 1}, Result: result,
+	})
 }
 
 func presentResult(result planservice.Result) resultView {

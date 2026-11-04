@@ -214,6 +214,64 @@ func (m *Manager) PinAdditional(ctx context.Context, names []string, pinned map[
 	return result, nil
 }
 
+// RestorePinned validates and opens persisted revisions without refreshing
+// their mirrors. The caller supplies the local Gentoo path in its revision.
+func (m *Manager) RestorePinned(ctx context.Context, pinned map[string]Revision) (map[string]Revision, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	result := make(map[string]Revision, len(pinned))
+	for name, revision := range pinned {
+		if name == "gentoo" {
+			if revision.Name != "gentoo" || !validCommit.MatchString(revision.Commit) || revision.Path == "" {
+				return nil, errors.New("invalid pinned gentoo revision")
+			}
+			result[name] = revision
+			continue
+		}
+		if m.ambiguous[name] {
+			return nil, fmt.Errorf("%w: %s", ErrAmbiguousRepository, name)
+		}
+		entry, ok := m.catalog[name]
+		if !ok {
+			return nil, fmt.Errorf("%w: %s", ErrUnknownRepository, name)
+		}
+		if revision.Name != name || revision.URL != entry.URL || !sameNames(revision.Masters, entry.Masters) || !validCommit.MatchString(revision.Commit) {
+			return nil, fmt.Errorf("pinned repository %s does not match configured source", name)
+		}
+		path := filepath.Join(m.root, name+".git")
+		origin, err := runGit(ctx, "-C", path, "config", "--get", "remote.origin.url")
+		if err != nil || strings.TrimSpace(string(origin)) != entry.URL {
+			return nil, fmt.Errorf("pinned repository %s mirror is unavailable or has a different source", name)
+		}
+		commit, err := resolveCommit(ctx, path, revision.Commit+"^{commit}")
+		if err != nil || commit != revision.Commit {
+			return nil, fmt.Errorf("pinned commit %s for repository %s is unavailable", revision.Commit, name)
+		}
+		revision.Path = path
+		result[name] = revision
+	}
+	for name, revision := range result {
+		for _, master := range revision.Masters {
+			if _, ok := result[master]; !ok {
+				return nil, fmt.Errorf("pinned master %s for repository %s is unavailable", master, name)
+			}
+		}
+	}
+	return result, nil
+}
+
+func sameNames(left, right []string) bool {
+	if len(left) != len(right) {
+		return false
+	}
+	for index := range left {
+		if left[index] != right[index] {
+			return false
+		}
+	}
+	return true
+}
+
 func resolveCommit(ctx context.Context, path, ref string) (string, error) {
 	output, err := runGit(ctx, "-C", path, "rev-parse", "--verify", ref)
 	if err != nil {

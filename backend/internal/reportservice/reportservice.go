@@ -53,7 +53,11 @@ func Build(plan parser.Result, entryIndex int, provider MetadataLookup) (Result,
 	if isNilProvider(provider) {
 		return Result{}, fmt.Errorf("%w", ErrProviderRequired)
 	}
-	if !lookupAllowed(preliminary.Gentoo.Diagnostics) {
+	queries, err := queriesForEntry(plan, entryIndex, preliminary)
+	if err != nil {
+		return Result{}, err
+	}
+	if len(queries) == 0 {
 		before := LookupOutcome{SkipReason: SkipBindingRejected}
 		after := LookupOutcome{SkipReason: SkipBindingRejected}
 		if source, ok := provider.(interface{ RepositoryFailure(string) error }); ok {
@@ -70,29 +74,39 @@ func Build(plan parser.Result, entryIndex int, provider MetadataLookup) (Result,
 		return Result{Report: preliminary, BeforeLookup: before, AfterLookup: after}, nil
 	}
 
-	entry := plan.Entries[entryIndex]
-	installed := entry.Installed.Versions[0]
-	beforeQuery := metadataprovider.Query{
-		Repository: *installed.Repository,
-		Category:   entry.Package.Category,
-		Name:       entry.Package.Name,
-		Version:    installed.Version,
-	}
-	afterQuery := metadataprovider.Query{
-		Repository: *entry.Target.Repository,
-		Category:   entry.Package.Category,
-		Name:       entry.Package.Name,
-		Version:    entry.Target.Version,
-	}
-
-	beforeOutcome, before := lookup(provider, beforeQuery)
-	afterOutcome, after := lookup(provider, afterQuery)
+	beforeOutcome, before := lookup(provider, queries[0])
+	afterOutcome, after := lookup(provider, queries[1])
 
 	report, err := changereport.Build(plan, entryIndex, before, after)
 	if err != nil {
 		return Result{}, err
 	}
 	return Result{Report: report, BeforeLookup: beforeOutcome, AfterLookup: afterOutcome}, nil
+}
+
+// LookupQueries returns the metadata lookup candidates Build may request for
+// one entry, in before/after order. Invalid bindings return no queries.
+func LookupQueries(plan parser.Result, entryIndex int) ([]metadataprovider.Query, error) {
+	preliminary, err := changereport.Build(plan, entryIndex, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	return queriesForEntry(plan, entryIndex, preliminary)
+}
+
+func queriesForEntry(plan parser.Result, entryIndex int, preliminary changereport.Report) ([]metadataprovider.Query, error) {
+	if !lookupAllowed(preliminary.Gentoo.Diagnostics) {
+		return nil, nil
+	}
+	entry := plan.Entries[entryIndex]
+	if len(entry.Installed.Versions) == 0 || entry.Installed.Versions[0].Repository == nil || entry.Target.Repository == nil {
+		return nil, errors.New("metadata lookup bindings are incomplete")
+	}
+	installed := entry.Installed.Versions[0]
+	return []metadataprovider.Query{
+		{Repository: *installed.Repository, Category: entry.Package.Category, Name: entry.Package.Name, Version: installed.Version},
+		{Repository: *entry.Target.Repository, Category: entry.Package.Category, Name: entry.Package.Name, Version: entry.Target.Version},
+	}, nil
 }
 
 func isNilProvider(provider MetadataLookup) bool {

@@ -59,6 +59,10 @@ func TestPinReusesMirrorAndRetainsRevisions(t *testing.T) {
 	if old["overlay"].Commit != first {
 		t.Fatalf("previous analysis changed: %#v", old)
 	}
+	restored, err := manager.RestorePinned(context.Background(), old)
+	if err != nil || restored["overlay"].Commit != first || restored["overlay"].Path != old["overlay"].Path {
+		t.Fatalf("restore pinned revision = %#v, %v", restored, err)
+	}
 	if got := gitTest(t, updated["overlay"].Path, "rev-parse", "refs/gentoo/snapshots/"+first); got != first {
 		t.Fatalf("old ref = %s", got)
 	}
