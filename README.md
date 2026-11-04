@@ -1,65 +1,44 @@
 # Gentoo Update Intelligence
 
-Gentoo Update Intelligence — проект сервиса, который анализирует предоставленный план обновления Gentoo и объясняет, какие пакеты изменятся, что известно об изменениях между версиями и какие выводы требуют внимания. Каждый вывод должен опираться на доступные данные и показывать их ограничения.
+Gentoo Update Intelligence принимает текст плана `emerge` и готовит отчёт об изменениях пакетов с основаниями для выводов. Сервис работает в режиме read-only относительно системы пользователя: он не запускает `emerge` и не обновляет установленную систему.
 
-## Сценарий использования
+Чтобы получить первый отчёт, следуйте [инструкции локального запуска через Docker Compose](docs/local-compose.md). В ней описаны команды запуска и отправка плана.
 
-Пользователь передаёт план обновления. Сервис разбирает его в нормализованные данные, применяет правила и дополняет результат сведениями о различиях между версиями, если источники доступны. Пользователь просматривает изменения, findings и их evidence, затем принимает решение по результату анализа.
+## Что делает сервис
 
-Первая версия не выполняет обновление и не запускает `emerge`. Подтверждение результата анализа не запускает команды в системе пользователя.
+Сервис разбирает план, применяет правила анализа и сравнивает доступные Gentoo metadata для установленных и целевых версий. Отчёт сохраняет исходные факты плана, findings и evidence, а также результат сравнения metadata. Он помогает увидеть изменения и понять, на каких данных основан каждый вывод.
 
-## Границы первой версии
+## Что показывает отчёт
 
-- Один backend и отдельный frontend; Gentoo-логика не зависит от HTTP и UI.
-- Parser извлекает факты из поддерживаемого входа, но не назначает severity и не формирует рекомендации.
-- Analyzer применяет детерминированные правила. AI не служит источником истины и не участвует в критическом пути решения.
-- Сведения о Gentoo metadata, пользовательской конфигурации и upstream могут быть неполными. Сервис показывает недоступные данные и не придумывает причины изменений.
-- PostgreSQL хранит состояние сервиса; Redis предназначен для восстанавливаемого кэша.
+Факты из плана emerge и Gentoo metadata — разные источники. План сообщает, какие версии пакетов установлены и какие версии планируются; результаты Parser и Analyzer сохраняются в отчёте вместе с диагностикой и основаниями findings. Gentoo metadata описывают выбранные версии в репозитории. Текущее сравнение охватывает `EAPI`, `SLOT/SUBSLOT` и объявления `IUSE`.
 
-## Parser
+Сервис сначала ищет точный metadata cache в закреплённой Git-ревизии. Если cache отсутствует, он ищет ebuild в истории репозитория и при наличии точного ebuild и необходимых master repositories подготавливает cache для нужной версии. В отчёте доступны provenance использованных данных и ограничения сравнения. Если данных не хватает или снимки нельзя сопоставить, отчёт указывает недоступные стороны и причину; ошибка для одного пакета не мешает обработке остальных.
 
-Реализован Parser v0.1 на Go для поддерживаемого плоского вывода Portage. Он извлекает записи `[ebuild …]` с операциями `U`, `UD` и `NS`, именованные группы флагов, размеры и сводку. Отдельно сохраняются blockers `b/B`, явные удаления и строка `Conflict:`. Поддержка downgrade проверяется синтетическими тестами; реальных downgrade fixtures пока нет. Parser возвращает статус и диагностики для пустого, неполного или неподдерживаемого ввода. Проверки запускаются из `backend/` командой `go test ./...`.
+Сравнение выбранных repository metadata не подтверждает, что они использовались при сборке установленного пакета. Пользовательская конфигурация и upstream пока не сравниваются: эти разделы отчёта имеют статус `unavailable`.
 
-## Analyzer
+## Где читать дальше
 
-Реализован Analyzer v0.1 с детерминированными правилами ручной проверки: запланированный downgrade, локально патченные пакеты из явного контекста, USE-маркеры `*` / `%` и изменение SLOT при однозначном upgrade или downgrade. Неразрешённый blocker создаёт `UNRESOLVED_BLOCKER / BLOCKER` с отдельным evidence; разрешённые ограничения остаются фактами Parser. Сам downgrade требует review, но не означает ошибку, конфликт или уязвимость. Findings содержат типизированные ссылки на основания Parser и сохраняют его статус и диагностики.
+### Запуск и работа с сервисом
 
-## Gentoo metadata diff
+- [Локальный запуск через Docker Compose](docs/local-compose.md) — запуск стека и получение отчёта.
+- [HTTP API](docs/http-api.md) — создание анализа, его статус, прогресс и результат.
+- [Ручной CLI](docs/cli.md) — контракт командной строки.
+- [Frontend](frontend/README.md) — работа с интерфейсом.
+- [Приёмка frontend](frontend/acceptance.md) — история приёмки и её ограничения.
 
-Реализован первый срез сравнения подготовленных cache-снимков: EAPI 8, нормализованные SLOT/SUBSLOT и объявления IUSE. Компонент сохраняет SHA-256 исходного содержимого, диагностики и ссылки на строки evidence; при неполных или несовместимых данных явно ограничивает сравнение. Он не загружает metadata и не подключён к Analyzer.
+### Контракты анализа и metadata
 
-Реализован ограниченный сборщик ChangeReport: он связывает выбранную запись Parser с metadata-снимками, проверяет их соответствие и сохраняет результат существующего metadata diff. Разделы пользовательской конфигурации и upstream пока недоступны, поскольку их сравнение не реализовано.
+- [Модель предметной области](docs/domain-model.md)
+- [Parser](docs/parser.md) и [Analyzer](docs/analyzer.md)
+- [Metadata diff](docs/metadata-diff.md) и [ChangeReport](docs/change-report.md)
+- [Metadata Provider](docs/metadata-provider.md) и [подготовка metadata](docs/metadata-preparation.md)
+- [Внутренний reportservice](docs/report-service.md) и [planservice](docs/plan-service.md)
 
-Реализован внутренний `reportservice`: он запрашивает metadata для одной записи Parser через переданный Provider и собирает ChangeReport. Ошибки и статусы Lookup сохраняются отдельно для установленной и целевой версий; запросы не выполняются, если ChangeReport отклоняет связь записи. Downgrade проходит через тот же ChangeReport и Lookup по установленной и целевой версиям.
+### Архитектура и план проекта
 
-`backend/internal/planservice` объединяет Parser, Analyzer и reportservice для целого текстового плана. Он сохраняет результаты компонентов и последовательно собирает отчёт для каждой записи; общий статус и новые правила анализа не добавляет. Planservice принят после review `013523e`.
-
-Минимальный `backend/cmd/gentoo-update-intelligence` читает план из файла или stdin, открывает Metadata Provider на указанном пользователем commit и выводит результат planservice в JSON. CLI принят после review `a7d794e`; он не выполняет обновление системы.
-
-Локальный Metadata Provider читает точный cache-файл из закреплённого commit локального Git-репозитория и нормализует его через `metadatadiff.Normalize`. Для работы нужен установленный Git CLI. Он не проверяет `SourceURL` по сети; интеграционный тест связывает Provider с reportservice на временном синтетическом репозитории.
-
-HTTP backend предоставляет асинхронные `POST /analyses` и `GET /analyses/{id}`. POST сохраняет задание и возвращает `202 Accepted` с UUID; GET показывает статусы, прогресс и итоговый результат. Backend использует `planservice`, закрепляет Git revisions для задания, читает готовые metadata и запрашивает недостающие у отдельного metadata worker. Задания сохраняются в PostgreSQL и восстанавливаются после перезапуска; контракт API описан в [документе HTTP API](docs/http-api.md).
-
-`backend/internal/ebuildresolver` выбирает точный ebuild по first-parent истории. `backend/internal/metadatagenerator` проверяет выбранный commit, blob и содержимое ebuild, запускает `egencache` в изолированной временной конфигурации и возвращает cache точной версии, SHA-256 и provenance. В локальном Compose metadata worker использует закреплённые Gentoo и master repositories, чтобы подготовить отсутствующие cache; подробности реализации и исторический прогон `libei` описаны в [контракте подготовки metadata](docs/metadata-preparation.md).
-
-## Состояние проекта
-
-Реализованы Parser v0.1, Analyzer v0.1, первый срез metadata diff, ограниченный ChangeReport, локальный Metadata Provider, reportservice, planservice, выбор исторической ревизии ebuild, генератор metadata, асинхронный HTTP API и постоянное PostgreSQL-хранение заданий. Поддержка downgrade, blockers и удалений покрыта синтетическими тестами; реальные текстовые fixtures этих сценариев пока не предоставлены. Blockers приняты после review `a38074f`, planservice — после review `013523e`, CLI — после review `a7d794e`, resolver — после review `6716bdc`, metadatagenerator — после review `666beaa`. Минимальный frontend и локальный Compose приняты с реальным backend, PostgreSQL, автоматической синхронизацией репозиториев и подготовкой metadata через worker. Приёмка и её ограничения описаны в [отчёте](frontend/acceptance.md); инструкция запуска — в [руководстве frontend](frontend/README.md) и [документе локального Compose](docs/local-compose.md). OpenSpec changes `add-analysis-frontend`, `add-automatic-metadata-preparation` и `add-local-compose` архивированы; действуют спецификации [frontend](openspec/specs/analysis-frontend/spec.md), [подготовки metadata](openspec/specs/automatic-metadata-preparation/spec.md) и [локального Compose](openspec/specs/local-compose/spec.md). Redis остаётся отдельным этапом.
-
-## Документы
-
-- [Архитектура v0.1](docs/architecture.md)
-- [Контракт предметной модели](docs/domain-model.md)
-- [Контракт Parser v0.1](docs/parser.md)
-- [Контракт Analyzer v0.1](docs/analyzer.md)
-- [Контракт первого среза Gentoo metadata diff](docs/metadata-diff.md)
-- [Контракт локального Metadata Provider](docs/metadata-provider.md)
-- [Контракт выбора ebuild и подготовки metadata](docs/metadata-preparation.md)
-- [Контракт ограниченного ChangeReport](docs/change-report.md)
-- [Контракт внутреннего reportservice](docs/report-service.md)
-- [Контракт внутреннего planservice](docs/plan-service.md)
-- [Контракт CLI](docs/cli.md)
-- [Контракт HTTP API](docs/http-api.md)
+- [Архитектура](docs/architecture.md)
 - [План разработки](docs/plan.md)
 - [Работа с OpenSpec](docs/openspec.md)
-- [Локальный запуск через Docker Compose](docs/local-compose.md)
+- Действующие спецификации OpenSpec: [frontend](openspec/specs/analysis-frontend/spec.md), [подготовка metadata](openspec/specs/automatic-metadata-preparation/spec.md) и [локальный Compose](openspec/specs/local-compose/spec.md).
+
+Redis относится к будущему этапу; текущий HTTP API хранит задания и результаты в PostgreSQL.
