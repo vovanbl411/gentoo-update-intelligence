@@ -1,69 +1,109 @@
 # Локальный запуск через Docker Compose
 
-Для запуска нужны Docker Engine с Compose plugin и доступ к registry и источникам Gentoo. Gentoo runtime загружает основное дерево в именованный volume `gentoo-data` при запуске и повторяет синхронизацию через три часа после завершения предыдущей попытки. Первая загрузка полной Git-истории может занять продолжительное время и значительное место на диске.
+Нужны Docker Engine с Compose plugin и доступ к registry и источникам Gentoo. Первый запуск загружает полную Git-историю Gentoo: это может занять время и потребовать много места на диске.
 
-## Запуск
+## Первый отчёт
 
-Задайте локальный пароль PostgreSQL из URL-safe символов и запустите стек:
+### 1. Запустите стек
+
+Из корня репозитория задайте локальный пароль PostgreSQL из URL-safe символов, проверьте конфигурацию и запустите сервисы:
 
 ```sh
 export POSTGRES_PASSWORD='<your-local-password>'
 docker compose config -q
 docker compose up --build -d
-docker compose ps
 ```
 
-Команды запускайте из корня репозитория. Для уже созданного `postgres-data` используйте тот же пароль: изменение `POSTGRES_PASSWORD` в окружении не меняет пароль в существующей базе. При запуске из нового shell задайте пароль снова.
+### 2. Дождитесь публикации Gentoo revision
 
-Frontend доступен на `http://127.0.0.1:8081`. При необходимости задайте `FRONTEND_PORT`; только frontend публикует host port. Backend ждёт PostgreSQL и metadata-worker. Backend и worker читают закреплённые Git-зеркала через read-only mounts. Worker не подключён к PostgreSQL; отдельный volume `metadata-cache` хранит сгенерированные результаты. Именованный volume `postgres-data` сохраняет анализы при пересоздании контейнеров.
+Проверьте, что Gentoo runtime опубликовал проверенную ревизию:
 
-`metadata-worker` объединяет одновременно поступившие одинаковые запросы подготовки, включая создание временных checkout. Переменная `METADATA_WORKER_GENERATION_LIMIT` задаёт общий для всех анализов предел одновременных запусков `egencache`; по умолчанию он равен `2`. Значение должно быть положительным целым числом. После его изменения пересоздайте worker командой `docker compose up -d metadata-worker`.
+```sh
+docker compose exec gentoo git -C /metadata/gentoo.git rev-parse --verify refs/gentoo/published
+```
 
-По умолчанию используется `https://anongit.gentoo.org/git/repo/gentoo.git`. При необходимости источник можно задать параметром `GENTOO_REPOSITORY_URL`; он применяется к синхронизации и provenance. Backend сначала читает точный cache из закреплённого commit. Если записи нет, он обращается к `metadata-worker`, который ищет ebuild в закреплённой истории и генерирует cache в общей Gentoo-базе.
+Если команда вывела полный commit SHA и завершилась без ошибки, можно отправлять план. Если ref пока не существует, дождитесь окончания первой синхронизации и проверки, затем повторите команду.
 
-Например, для [зеркала Gentoo на GitHub](https://github.com/gentoo/gentoo) перед запуском задайте:
+### 3. Отправьте план из frontend
+
+Откройте [http://127.0.0.1:8081](http://127.0.0.1:8081), вставьте пример в одну строку и отправьте его:
+
+```text
+[ebuild U] dev-libs/libxml2-2.14.6::gentoo [2.13.9::gentoo]
+```
+
+### 4. Сохраните и откройте отчёт
+
+Дождитесь результата обработки. При принятии плана API возвращает `202 Accepted` и UUID задания; frontend показывает состояние и результат. Сохраните UUID и откройте этот же отчёт напрямую по адресу:
+
+```text
+http://127.0.0.1:8081/analyses/<UUID>
+```
+
+## Настройки
+
+### Порт frontend
+
+Frontend доступен на `http://127.0.0.1:8081`; только он публикует порт хоста и привязан к loopback. При необходимости задайте переменную `FRONTEND_PORT`. Backend, metadata-worker и PostgreSQL не публикуют host ports. Подробнее о переменных окружения см. в [`.env.example`](../.env.example).
+
+### Gentoo mirror
+
+По умолчанию используется `https://anongit.gentoo.org/git/repo/gentoo.git`. Источник можно заменить переменной `GENTOO_REPOSITORY_URL`; она применяется для синхронизации и provenance. Например, для [зеркала Gentoo на GitHub](https://github.com/gentoo/gentoo) задайте перед запуском:
 
 ```sh
 export GENTOO_REPOSITORY_URL='https://github.com/gentoo/gentoo.git'
 ```
 
-Если стек уже запущен, после изменения переменной выполните `docker compose up -d`, чтобы обновить конфигурацию и Gentoo runtime, и backend. Перед последующими командами Compose в новом shell задайте выбранный URL снова; простой `restart` не меняет окружение существующего контейнера.
+Если стек уже запущен, после смены URL выполните `docker compose up -d`, чтобы обновить конфигурацию Gentoo runtime и backend. В новом shell задайте выбранный URL снова перед командами Compose. `restart` не меняет окружение уже созданного контейнера.
 
-Встроенный каталог содержит `guru` с master `gentoo`. При первом запросе backend загружает overlay в именованный volume `overlay-data`. Перед последующим анализом он пытается обновить локальную копию и публикует только проверенный commit. При ошибке обновления используется последняя успешная публикация; уже начатый анализ сохраняет свои ревизии. Источник и master GURU указаны в [каталоге Gentoo](https://raw.githubusercontent.com/gentoo/api-gentoo-org/master/files/overlays/repositories.xml) и [конфигурации GURU](https://raw.githubusercontent.com/gentoo-mirror/guru/master/metadata/layout.conf).
+### Overlays
 
-Для других overlays оператор задаёт доверенный JSON-каталог через `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG`. Например, замените адреса и masters на соответствующие вашим репозиториям:
+Встроенный каталог содержит `guru` с master `gentoo`. При первом запросе backend загружает overlay в именованный volume `overlay-data`. Перед следующим анализом backend пытается обновить локальную копию и публикует только проверенный commit. При ошибке обновления используется последняя успешная публикация; уже начатый анализ продолжает использовать закреплённые ревизии. Источник и master GURU указаны в [каталоге Gentoo](https://raw.githubusercontent.com/gentoo/api-gentoo-org/master/files/overlays/repositories.xml) и [конфигурации GURU](https://raw.githubusercontent.com/gentoo-mirror/guru/master/metadata/layout.conf).
+
+Для других overlays задайте доверенный JSON-каталог через `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG`. Замените URL и masters на значения своих репозиториев:
 
 ```sh
 export GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG='[{"name":"gentoo-zh","url":"https://example.invalid/gentoo-zh.git","masters":["gentoo"]},{"name":"umbriel-overlay","url":"https://example.invalid/umbriel-overlay.git","masters":["gentoo"]}]'
 ```
 
-Compose передаёт переменную backend. Для локального запуска backend задайте её вместе с `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_PATH`. Поддерживаются HTTPS URL без учётных данных и абсолютные локальные пути, доступные backend; локальный путь внутри Compose должен быть смонтирован в контейнер. Адреса из плана не используются. Повторное имя, включая встроенное, считается неоднозначным; неизвестные и неоднозначные имена указываются в ошибке соответствующей стороны отчёта. Неверный каталог или ссылка на неизвестный master препятствуют запуску backend. После изменения каталога пересоздайте backend через `docker compose up -d`. Если URL уже загруженного overlay изменён, backend сообщает о несовпадении источника и не использует прежнюю копию под новым адресом.
+Compose передаёт каталог backend. При локальном запуске backend задайте каталог вместе с `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_PATH`. Поддерживаются HTTPS URL без учётных данных и абсолютные локальные пути, доступные backend; локальный путь в Compose нужно смонтировать в контейнер. URL из плана не используются. Повторное имя, в том числе встроенное, неоднозначно; неизвестные и неоднозначные имена указываются в ошибке соответствующей стороны отчёта. Неверный каталог или неизвестный master мешают запуску backend. После изменения каталога пересоздайте backend командой `docker compose up -d`. Если URL уже загруженного overlay изменён, backend сообщит о несовпадении источника и не станет использовать прежнюю копию под новым адресом.
 
-Первая загрузка overlay выполняется во время обработки задания и может занимать несколько минут. `POST /analyses` быстро сохраняет задание и возвращает `202 Accepted`; получение metadata и анализ продолжаются асинхронно. Frontend proxy ожидает ответ POST не более часа.
+Первая загрузка overlay происходит при обработке задания и может занять несколько минут.
 
-Дождитесь первой успешной публикации перед отправкой плана. Если Gentoo revision ещё недоступна, POST всё равно сохранит задание и вернёт `202 Accepted`, а GET покажет `failed` с причиной недоступности Provider. После публикации отправьте новое задание: перезапуск backend не требуется. Проверить синхронизацию и опубликованный commit можно командами:
+### Metadata worker
+
+Backend сначала ищет точный cache в закреплённом commit Gentoo. Если записи нет, он обращается к `metadata-worker`, который ищет ebuild в закреплённой истории и генерирует cache.
+
+`metadata-worker` объединяет одновременно поступившие одинаковые запросы подготовки, включая создание временных checkout. Переменная `METADATA_WORKER_GENERATION_LIMIT` задаёт общий для всех анализов предел одновременных запусков `egencache`; значение по умолчанию — `2`. Укажите положительное целое число. После изменения пересоздайте worker:
+
+```sh
+docker compose up -d metadata-worker
+```
+
+## Диагностика
+
+Gentoo runtime синхронизирует основное дерево при запуске и повторяет синхронизацию через три часа после завершения предыдущей попытки. Посмотреть журнал и опубликованный commit можно командами:
 
 ```sh
 docker compose logs gentoo
 docker compose exec gentoo git -C /metadata/gentoo.git rev-parse --verify refs/gentoo/published
 ```
 
-Вторая команда выводит полный commit. При сбое следующей синхронизации ссылка остаётся на последней успешно проверенной ревизии. Анализ использует commit, выбранный при его начале. Опубликованные commits сохраняются в Git refs; автоматическая очистка хранилища не предусмотрена.
+Если ref ещё не опубликован, проверьте журнал и дождитесь завершения загрузки и проверки. После успешной синхронизации ref остаётся на последней проверенной ревизии даже при ошибке следующей попытки. Анализ использует commit, выбранный при его начале. Опубликованные commits хранятся в Git refs; автоматической очистки нет.
 
-Если публикации ещё нет, `rev-parse` завершится с ошибкой; проверьте журнал `gentoo` и дождитесь окончания загрузки и проверки. При неудачной попытке runtime повторит её через три часа. Чтобы повторить завершившуюся с ошибкой попытку сразу, перезапустите только этот сервис:
+После завершившейся ошибкой попытки можно сразу запустить повторную синхронизацию, перезапустив только Gentoo runtime:
 
 ```sh
 docker compose restart gentoo
 ```
 
-## Проверка API и сохранения
+Если Gentoo revision пока недоступна, `POST /analyses` всё равно сохранит задание и вернёт `202 Accepted`, а `GET` покажет `failed` и причину недоступности Provider. После публикации отправьте новое задание; перезапуск backend не требуется.
 
-1. Откройте frontend, вставьте текст плана и отправьте его. Ответ `POST /analyses` имеет статус `202 Accepted` и содержит UUID задания со статусом `pending`.
-2. Frontend запрашивает `GET /analyses/<UUID>` и показывает прогресс. Статусы задания: `pending`, `running`, `completed` и `failed`; итоговый `result` доступен при `completed`, а причина ошибки — при `failed`.
-3. Сохраните UUID и откройте `http://127.0.0.1:8081/analyses/<UUID>` напрямую или запросите состояние через `http://127.0.0.1:8081/api/analyses/<UUID>`.
-4. Пересоздайте контейнеры командой `docker compose up --build -d --force-recreate` и снова откройте тот же UUID. Незавершённые задания backend восстанавливает после перезапуска, а завершённые результаты остаются в PostgreSQL volume.
+## Проверка API
 
-Проверить POST без браузера можно после публикации commit:
+`POST /analyses` принимает план, сохраняет задание и возвращает `202 Accepted` с UUID. Обработка идёт асинхронно; frontend proxy ждёт ответ POST не более часа. `GET /analyses/<UUID>` показывает статусы задания `pending`, `running`, `completed` или `failed`. При `completed` ответ содержит `result`; внутри него отдельный metadata lookup может иметь статус `not_found`. При `failed` ответ содержит `error` с причиной сбоя.
+
+Проверить отправку плана через frontend proxy можно командой:
 
 ```sh
 curl -i -H 'Content-Type: application/json' \
@@ -71,12 +111,24 @@ curl -i -H 'Content-Type: application/json' \
   http://127.0.0.1:8081/api/analyses
 ```
 
-При другом `FRONTEND_PORT` замените порт в URL. Успешный ответ имеет статус `202 Accepted` и содержит `id`, `status` и `progress`. Чтобы следить за заданием до статуса `completed` или `failed`, задайте `ANALYSIS_ID` равным UUID из ответа POST:
+Успешный ответ имеет статус `202 Accepted` и содержит `id`, `status` и `progress`. Чтобы проверить состояние, подставьте UUID из поля `id`:
 
 ```sh
-curl -fsS "http://127.0.0.1:8081/api/analyses/${ANALYSIS_ID}"
+curl -fsS 'http://127.0.0.1:8081/api/analyses/<UUID>'
 ```
 
-Итоговый ответ содержит `result`; отдельный Lookup может иметь статус `not_found`, если нужные данные недоступны. Контракт статусов и полей API описан в [документе HTTP API](http-api.md).
+При другом `FRONTEND_PORT` замените порт в URL. Прямую ссылку на отчёт и его API можно открыть по адресам `http://127.0.0.1:8081/analyses/<UUID>` и `http://127.0.0.1:8081/api/analyses/<UUID>`. Подробный контракт приведён в [документе HTTP API](http-api.md).
 
-Остановить Compose без удаления данных можно командой `docker compose down`. Команда `docker compose down -v` удаляет volumes, включая сохранённые анализы и загруженное дерево.
+## Сохранение данных и остановка
+
+Compose использует именованные volumes: `gentoo-data` хранит Gentoo Git-репозиторий, `overlay-data` — загруженные overlays, `metadata-cache` — сгенерированные результаты, а `postgres-data` — задания и анализы. `gentoo-data` доступен backend и metadata-worker только для чтения. В `overlay-data` backend может записывать при синхронизации, а worker имеет доступ только для чтения. Worker не подключён к PostgreSQL.
+
+Пересоздание контейнеров без удаления volumes сохраняет завершённые результаты по UUID. Backend восстанавливает незавершённые задания после перезапуска. Чтобы пересоздать контейнеры и открыть прежний отчёт, выполните:
+
+```sh
+docker compose up --build -d --force-recreate
+```
+
+Для уже созданного `postgres-data` используйте тот же пароль: изменение `POSTGRES_PASSWORD` не меняет пароль в существующей базе. В новом shell задайте пароль снова перед командами Compose. Пример переменных приведён в [`.env.example`](../.env.example).
+
+Команда `docker compose down` останавливает стек и сохраняет volumes. `docker compose down -v` удаляет volumes, включая задания и результаты анализов, Gentoo дерево, overlays и metadata cache.
