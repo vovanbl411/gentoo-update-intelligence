@@ -60,6 +60,10 @@ PostgreSQL — постоянное хранилище этого подэтап
 | `GENTOO_UPDATE_INTELLIGENCE_COMMIT` | Полный commit SHA; если не задан, используется `refs/gentoo/published` |
 | `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_PATH` | Путь для локальных копий известных overlays; если не задан, их загрузка отключена |
 | `GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG` | Необязательный JSON-массив доверенных записей `name`, `url`, `masters`, дополняющий встроенный каталог |
+| `GENTOO_UPDATE_INTELLIGENCE_METADATA_WORKER_URL` | Внутренний URL metadata-worker; Compose задаёт `http://metadata-worker:8090` |
+| `GENTOO_UPDATE_INTELLIGENCE_METADATA_PROFILE` | Профиль Portage для генерации; по умолчанию Gentoo profile `profiles/default/linux/amd64/23.0`, для overlay указывается с префиксом master, например `gentoo:profiles/default/linux/amd64/23.0` |
+
+В Compose backend сначала читает точный cache из закреплённой ревизии. Только при `not_found` он передаёт точный запрос и закреплённые revisions worker. Worker использует постоянный файловый `metadata-cache` для результатов, совместимых по source ebuild, commits masters, профилю и версиям генератора/Portage. Результат и provenance генерации входят в `Lookup.Result`; ошибка подготовки остаётся в Lookup соответствующей стороны.
 
 Секреты и DSN задаются окружением процесса и не сохраняются в результате анализа. Backend по умолчанию слушает только loopback; способы внешней публикации и аутентификация относятся к отдельному этапу.
 

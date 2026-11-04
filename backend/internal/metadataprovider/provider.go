@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/metadatadiff"
+	"github.com/vovanbl411/gentoo-update-intelligence/internal/metadatagenerator"
 )
 
 var (
@@ -45,8 +46,9 @@ const (
 )
 
 type LookupResult struct {
-	Status   LookupStatus
-	Snapshot *metadatadiff.Snapshot
+	Status     LookupStatus
+	Snapshot   *metadatadiff.Snapshot
+	Provenance *metadatagenerator.Provenance `json:"provenance,omitempty"`
 }
 
 type Provider struct {

@@ -15,9 +15,9 @@ docker compose ps
 
 Команды запускайте из корня репозитория. Для уже созданного `postgres-data` используйте тот же пароль: изменение `POSTGRES_PASSWORD` в окружении не меняет пароль в существующей базе. При запуске из нового shell задайте пароль снова.
 
-Frontend доступен на `http://127.0.0.1:8081`. При необходимости задайте `FRONTEND_PORT`; только frontend публикует host port. Backend ждёт PostgreSQL и читает volume Gentoo через mount только для чтения. Именованный volume `postgres-data` сохраняет анализы при пересоздании контейнеров.
+Frontend доступен на `http://127.0.0.1:8081`. При необходимости задайте `FRONTEND_PORT`; только frontend публикует host port. Backend ждёт PostgreSQL и metadata-worker. Backend и worker читают закреплённые Git-зеркала через read-only mounts. Worker не подключён к PostgreSQL; отдельный volume `metadata-cache` хранит сгенерированные результаты. Именованный volume `postgres-data` сохраняет анализы при пересоздании контейнеров.
 
-По умолчанию используется `https://anongit.gentoo.org/git/repo/gentoo.git`. При необходимости источник можно задать параметром `GENTOO_REPOSITORY_URL`; он применяется к синхронизации и provenance. Проверенный commit `e99406921148088a6990e6b921440a2808a223a6` этого Git-источника не содержит `metadata/md5-cache`: текущий backend читает готовый cache и не запускает генерацию metadata, поэтому Lookup в таком снимке возвращает `not_found`.
+По умолчанию используется `https://anongit.gentoo.org/git/repo/gentoo.git`. При необходимости источник можно задать параметром `GENTOO_REPOSITORY_URL`; он применяется к синхронизации и provenance. Backend сначала читает точный cache из закреплённого commit. Если записи нет, он обращается к `metadata-worker`, который ищет ebuild в закреплённой истории и генерирует cache в общей Gentoo-базе.
 
 Например, для [зеркала Gentoo на GitHub](https://github.com/gentoo/gentoo) перед запуском задайте:
 

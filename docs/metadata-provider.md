@@ -107,4 +107,4 @@ go vet ./...
 git diff --check
 ```
 
-Provider реализован отдельно и пока не подключён к `ChangeReport`, `Analyzer` или другим компонентам.
+Metadata Provider читает точную запись cache из закреплённой ревизии. Backend обращается к нему через `MetadataLookup`; при `not_found` запрос передаётся metadata-worker. Возвращённый snapshot участвует в построении `ChangeReport`.

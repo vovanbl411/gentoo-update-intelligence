@@ -39,6 +39,10 @@ func TestPinReusesMirrorAndRetainsRevisions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	info, err := os.Stat(old["overlay"].Path)
+	if err != nil || info.Mode().Perm()&0o005 != 0o005 {
+		t.Fatalf("published mirror mode = %v, %v; worker needs read/traverse access", info, err)
+	}
 	if old["overlay"].Commit != first || old["gentoo"].Commit != gentoo.Commit {
 		t.Fatalf("unexpected revisions: %#v", old)
 	}

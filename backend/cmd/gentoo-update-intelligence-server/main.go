@@ -87,8 +87,11 @@ func newProviderFactory(config metadataprovider.Config, overlays *repositorymana
 			log.Printf("Metadata Provider unavailable: %v", err)
 			return nil, err
 		}
-		if overlays == nil {
+		if overlays == nil && os.Getenv("GENTOO_UPDATE_INTELLIGENCE_METADATA_WORKER_URL") == "" {
 			return provider, nil
+		}
+		if overlays == nil {
+			return prepareRepositories(ctx, plan, config, provider, nil), nil
 		}
 		return prepareRepositories(ctx, plan, config, provider, overlays), nil
 	}

@@ -6,6 +6,7 @@ RUN go mod download
 
 COPY backend/ ./
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/gentoo-update-intelligence-server ./cmd/gentoo-update-intelligence-server
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/metadata-worker ./cmd/metadata-worker
 
 FROM alpine:3.22
 RUN apk add --no-cache ca-certificates git \

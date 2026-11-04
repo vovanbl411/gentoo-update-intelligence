@@ -15,6 +15,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      metadata-worker:
+        condition: service_healthy
     environment:
       GENTOO_UPDATE_INTELLIGENCE_LISTEN_ADDR: 0.0.0.0:8080
       GENTOO_UPDATE_INTELLIGENCE_DATABASE_URL: postgres://guit:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/guit?sslmode=disable
@@ -23,12 +25,54 @@ services:
       GENTOO_UPDATE_INTELLIGENCE_REPOSITORY_PATH: /metadata/gentoo.git
       GENTOO_UPDATE_INTELLIGENCE_OVERLAY_PATH: /overlays
       GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG: ${GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG:-}
+      GENTOO_UPDATE_INTELLIGENCE_METADATA_WORKER_URL: http://metadata-worker:8090
+      GENTOO_UPDATE_INTELLIGENCE_METADATA_PROFILE: ${GENTOO_UPDATE_INTELLIGENCE_METADATA_PROFILE:-}
     volumes:
       - type: volume
         source: gentoo-data
         target: /metadata
         read_only: true
       - overlay-data:/overlays
+    networks:
+      - default
+      - metadata-network
+
+  metadata-worker:
+    build:
+      context: .
+      dockerfile: gentoo/Dockerfile
+    entrypoint: ["/usr/local/bin/metadata-worker"]
+    environment:
+      METADATA_WORKER_LISTEN_ADDR: :8090
+      METADATA_WORKER_CACHE_PATH: /metadata-cache
+      METADATA_WORKER_TEMP_PATH: /var/tmp/gentoo-update-intelligence
+      METADATA_WORKER_PORTAGE_USER: portage
+      METADATA_WORKER_PORTAGE_GROUP: portage
+    volumes:
+      - type: volume
+        source: gentoo-data
+        target: /metadata
+        read_only: true
+      - type: volume
+        source: overlay-data
+        target: /overlays
+        read_only: true
+      - metadata-cache:/metadata-cache
+    networks:
+      - metadata-network
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8090/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
   gentoo:
     build:
@@ -62,3 +106,8 @@ volumes:
   postgres-data:
   gentoo-data:
   overlay-data:
+  metadata-cache:
+
+networks:
+  metadata-network:
+    internal: true

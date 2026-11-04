@@ -99,7 +99,13 @@ func validateResult(input Inputs, result metadatagenerator.Result) error {
 		provenance.EbuildPath != input.Category+"/"+input.Name+"/"+input.Name+"-"+input.Version+".ebuild" ||
 		provenance.CachePath != "metadata/md5-cache/"+input.Category+"/"+input.Name+"-"+input.Version ||
 		len(provenance.MasterRevisions) != len(input.Masters) {
-		return errors.New("generated metadata provenance does not match cache inputs")
+		return fmt.Errorf("generated metadata provenance does not match cache inputs (digest=%t reference=%t source=%t blob=%t profile=%q/%q portage=%q/%q ebuild=%q cache=%q masters=%d/%d)",
+			result.SHA256 == sha && provenance.CacheSHA256 == sha,
+			provenance.ReferenceCommit == input.ReferenceCommit,
+			provenance.SelectedCommit == input.SourceCommit,
+			provenance.EbuildBlobID == input.EbuildBlob,
+			input.Profile, provenance.Profile, input.PortageVersion, provenance.PortageVersion,
+			provenance.EbuildPath, provenance.CachePath, len(provenance.MasterRevisions), len(input.Masters))
 	}
 	for i, master := range input.Masters {
 		if provenance.MasterRevisions[i].Name != master.Name || provenance.MasterRevisions[i].Commit != master.Commit {

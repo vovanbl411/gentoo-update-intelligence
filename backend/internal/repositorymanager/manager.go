@@ -150,6 +150,9 @@ func (m *Manager) PinAdditional(ctx context.Context, names []string, pinned map[
 			if err = publish(ctx, staging, id); err != nil {
 				return fmt.Errorf("publish %s: %w", name, err)
 			}
+			if err = os.Chmod(staging, 0o755); err != nil {
+				return fmt.Errorf("make %s mirror readable: %w", name, err)
+			}
 			if err = os.Rename(staging, path); err != nil {
 				return fmt.Errorf("publish %s: %w", name, err)
 			}
@@ -176,6 +179,9 @@ func (m *Manager) PinAdditional(ctx context.Context, names []string, pinned map[
 			}
 			if _, err := resolveCommit(ctx, path, "refs/gentoo/published^{commit}"); err != nil {
 				return fmt.Errorf("invalid publication %s: %w", name, err)
+			}
+			if err := os.Chmod(path, 0o755); err != nil {
+				return fmt.Errorf("make %s mirror readable: %w", name, err)
 			}
 			_, fetchErr := runGit(ctx, "-C", path, "fetch", "--no-tags", "--no-write-fetch-head", "--refmap=", "--force", "--", entry.URL, "+HEAD:refs/gentoo/candidate")
 			if fetchErr == nil {

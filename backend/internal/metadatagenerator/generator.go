@@ -262,7 +262,9 @@ func (g *Generator) Generate(request Request) (Result, error) {
 	info, err := os.Lstat(cachePath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return Result{}, fmt.Errorf("%w: %s", ErrCacheMissing, filepath.ToSlash(filepath.Join("metadata/md5-cache", request.Category, request.Name+"-"+request.Version)))
+			return Result{}, fmt.Errorf("%w: %s (egencache stdout: %q; stderr: %q)", ErrCacheMissing,
+				filepath.ToSlash(filepath.Join("metadata/md5-cache", request.Category, request.Name+"-"+request.Version)),
+				strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()))
 		}
 		return Result{}, fmt.Errorf("%w: read %s: %v", ErrCacheMissing, cachePath, err)
 	}
