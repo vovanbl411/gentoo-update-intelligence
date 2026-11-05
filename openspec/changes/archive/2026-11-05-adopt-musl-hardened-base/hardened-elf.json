@@ -1,0 +1,102 @@
+{
+  "bash": {
+    "bind_now": true,
+    "cet_ibt": false,
+    "cet_shstk": false,
+    "nonexec_stack": true,
+    "path": "/usr/bin/bash",
+    "pie": true,
+    "relro": true,
+    "stack_protector_symbol": true
+  },
+  "cp": {
+    "bind_now": true,
+    "cet_ibt": false,
+    "cet_shstk": false,
+    "nonexec_stack": true,
+    "path": "/usr/bin/cp",
+    "pie": true,
+    "relro": true,
+    "stack_protector_symbol": true
+  },
+  "find": {
+    "bind_now": true,
+    "cet_ibt": false,
+    "cet_shstk": false,
+    "nonexec_stack": true,
+    "path": "/usr/bin/gfind",
+    "pie": true,
+    "relro": true,
+    "stack_protector_symbol": true
+  },
+  "gawk": {
+    "bind_now": true,
+    "cet_ibt": false,
+    "cet_shstk": false,
+    "nonexec_stack": true,
+    "path": "/usr/bin/gawk",
+    "pie": true,
+    "relro": true,
+    "stack_protector_symbol": true
+  },
+  "git": {
+    "bind_now": true,
+    "cet_ibt": false,
+    "cet_shstk": false,
+    "nonexec_stack": true,
+    "path": "/usr/libexec/git-core/git",
+    "pie": true,
+    "relro": true,
+    "stack_protector_symbol": true
+  },
+  "grep": {
+    "bind_now": true,
+    "cet_ibt": false,
+    "cet_shstk": false,
+    "nonexec_stack": true,
+    "path": "/usr/bin/grep",
+    "pie": true,
+    "relro": true,
+    "stack_protector_symbol": true
+  },
+  "python": {
+    "bind_now": true,
+    "cet_ibt": false,
+    "cet_shstk": false,
+    "nonexec_stack": true,
+    "path": "/usr/bin/python3.14",
+    "pie": true,
+    "relro": true,
+    "stack_protector_symbol": false
+  },
+  "sed": {
+    "bind_now": true,
+    "cet_ibt": false,
+    "cet_shstk": false,
+    "nonexec_stack": true,
+    "path": "/usr/bin/gsed",
+    "pie": true,
+    "relro": true,
+    "stack_protector_symbol": true
+  },
+  "tar": {
+    "bind_now": true,
+    "cet_ibt": false,
+    "cet_shstk": false,
+    "nonexec_stack": true,
+    "path": "/usr/bin/gtar",
+    "pie": true,
+    "relro": true,
+    "stack_protector_symbol": true
+  },
+  "wget": {
+    "bind_now": true,
+    "cet_ibt": false,
+    "cet_shstk": false,
+    "nonexec_stack": true,
+    "path": "/usr/bin/wget",
+    "pie": true,
+    "relro": true,
+    "stack_protector_symbol": true
+  }
+}

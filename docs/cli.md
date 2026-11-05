@@ -6,7 +6,7 @@
 
 ## Требования
 
-Для запуска нужны Go, Git CLI и локальный Git-репозиторий, содержащий выбранный commit и нужные объекты `metadata/md5-cache`. CLI не клонирует и не синхронизирует repository. Пользователь сам выбирает полный commit SHA; CLI передаёт его существующему Metadata Provider для проверки. Provider читает закреплённые объекты и не использует рабочее дерево как fallback.
+Для запуска нужны Go не ниже версии из [go.mod](../backend/go.mod), Git CLI с поддержкой `--no-lazy-fetch` и локальный Git-репозиторий, содержащий выбранный commit и нужные объекты `metadata/md5-cache`. CLI не клонирует и не синхронизирует repository. Пользователь сам выбирает полный commit SHA; CLI передаёт его существующему Metadata Provider для проверки. Provider читает закреплённые объекты и не использует рабочее дерево как fallback.
 
 Для provenance CLI задаёт `SourceURL` как `local://<repo>`. Локальный путь передаётся отдельно через `LocalPath` и не выдаётся за upstream URL.
 
@@ -70,5 +70,3 @@ cat /tmp/emerge-plan.txt | go run ./cmd/gentoo-update-intelligence \
 Парсер поддерживает только входной формат и строки, описанные в [контракте Parser](parser.md). Неполный и неподдерживаемый вход остаются данными результата и не меняют код завершения `0`. Предупреждения о пропущенных обновлениях из-за dependency conflict пока остаются отложенным этапом Parser.
 
 CLI не запускает `emerge`, не меняет систему или metadata repository, не выполняет Git fetch/clone/pull/sync и не выбирает commit автоматически. Он не повторяет правила анализа или проверки ChangeReport, не ищет настройки Portage, не добавляет retry, кэш, approval, БД или другой формат вывода. Git-чтение выполняет только существующий Metadata Provider.
-
-`planservice` принят после review `013523e`. CLI подготовлен и ожидает review.

@@ -129,3 +129,13 @@ git diff --check
 Все Go-пакеты с тестами прошли `go test -count=1 ./...`; `internal/analysisstore` сообщил `[no test files]`. `go vet ./...` и сборка CLI прошли. Go-файлы в этой приёмке не менялись, поэтому `gofmt` для изменённых Go-файлов не требовался. Frontend typecheck, 10 unit-тестов, production build и browser suite прошли: 30 browser-тестов успешно, 1 пропущен. Пропущен opt-in тест `frontend/tests/live.spec.ts`: он требует `LIVE_ACCEPTANCE=1` и локальный backend с закреплённой metadata и PostgreSQL; этот флаг не включали в общий browser suite. Строгая OpenSpec-валидация и `git diff --check` прошли.
 
 Первый запуск Go без отдельного `GOCACHE` остановился до компиляции, потому что стандартный `/home/vladimir/.cache/go-build` недоступен для записи в sandbox; повтор с кэшем в `/tmp` прошёл. Первый запуск browser suite также не смог открыть localhost-порт из sandbox; повтор с разрешённым локальным bind прошёл.
+
+## Сохранность анализа после пересоздания контейнеров
+
+5 ноября 2026 года пользователь проверил существующий Compose-проект `gentoo-update-intelligence`. Анализ `d9ca585e-2396-4122-82a3-c10294fdd905` для `dev-libs/libei` (`1.6.0` → `1.6.0-r1`) прочитан через API и открыт в UI до и после команды:
+
+```sh
+docker compose -p gentoo-update-intelligence up -d --no-deps --no-build --pull never --force-recreate --wait postgres backend frontend
+```
+
+ID контейнера PostgreSQL изменился с `06f78079ccd5…` на `94dad2d46699…`, volume остался `gentoo-update-intelligence_postgres-data`. GET прежнего UUID через `/api/analyses/` вернул `200` до и после пересоздания. Сохранённые JSON-ответы побайтово совпали: SHA-256 обоих — `95a2844de2ce5893c08bebec2c45f7e5a21cb74f479a341f23d3fc197a19cf6a`. Пользователь подтвердил отображение результата после обновления страницы в браузере. Проверка относится к сохранности завершённого анализа; восстановление незавершённых заданий в этом прогоне не проверялось.

@@ -1,3 +1,11 @@
+x-gentoo-runtime: &gentoo-runtime
+  image: gentoo-update-intelligence/gentoo-runtime:local
+  build:
+    context: .
+    dockerfile: gentoo/Dockerfile
+    args:
+      GENTOO_BASE_IMAGE: ${GENTOO_BASE_IMAGE:-gentoo-update-intelligence/gentoo-base:local}
+
 services:
   frontend:
     build:
@@ -38,9 +46,7 @@ services:
       - metadata-network
 
   metadata-worker:
-    build:
-      context: .
-      dockerfile: gentoo/Dockerfile
+    <<: *gentoo-runtime
     entrypoint: ["/usr/local/bin/metadata-worker"]
     environment:
       METADATA_WORKER_LISTEN_ADDR: :8090
@@ -76,9 +82,7 @@ services:
       retries: 12
 
   gentoo:
-    build:
-      context: .
-      dockerfile: gentoo/Dockerfile
+    <<: *gentoo-runtime
     environment:
       GENTOO_REPOSITORY_URL: ${GENTOO_REPOSITORY_URL:-https://anongit.gentoo.org/git/repo/gentoo.git}
     volumes:

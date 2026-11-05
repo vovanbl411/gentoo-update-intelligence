@@ -1,0 +1,1 @@
+dev-vcs/git curl safe-directory -cgi -cvs -doc -gpg -highlight -iconv -keyring -nls -pcre -perforce -perl -rust -subversion -test -tk -webdav -xinetd

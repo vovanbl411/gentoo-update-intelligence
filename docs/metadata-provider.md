@@ -100,10 +100,9 @@ Provider запускает Git CLI через `os/exec` с отдельными
 
 Покрываются обычные файлы mode `100644` и `100755`, точное содержимое, SHA-256 и provenance, `not_found`, `repository_unavailable`, приоритет валидации, Gentoo имена и версии, ошибки конфигурации и commit, закреплённый commit при изменённом `HEAD`, игнорирование рабочих изменений и untracked-файлов, symlink/каталог/submodule, диагностики повреждённых metadata, ошибка blob-чтения и отсутствие изменений репозитория при повторном чтении.
 
-Validation gates (из каталога `backend/`):
+Перед проверками выполните `gofmt` для изменённых Go-файлов. Затем из каталога `backend/`:
 
-```text
-gofmt -w internal/metadataprovider/*.go
+```sh
 go test -count=1 ./...
 go vet ./...
 git diff --check

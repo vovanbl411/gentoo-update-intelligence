@@ -62,6 +62,9 @@ sh scripts/openspec.sh instructions proposal --change <имя-изменения
 поведения или архитектуры согласуются до реализации; существующее поручение
 на конкретную согласованную задачу не требует повторного разрешения.
 
+Если требования не меняются, например при правке только сборки или документации,
+укажи `skip_specs: true` в `.openspec.yaml`; delta specs тогда не нужны.
+
 Для новой области добавь в delta spec содержательный раздел `## Purpose`:
 он задаст назначение итоговой спецификации при archive. Иначе CLI создаст
 placeholder, который не проходит итоговую проверку `--strict`.
@@ -83,7 +86,11 @@ OpenSpec не доказывает соответствие кода требо�
 ```sh
 sh scripts/openspec.sh archive <имя-изменения>
 sh scripts/openspec.sh validate --all --strict
+sh scripts/openspec.sh validate --archived --strict
 ```
+
+`--all` проверяет действующие спецификации и активные changes, а `--archived` —
+завершённость задач в архиве.
 
 Archive переносит change в архив и применяет delta specs к `openspec/specs/`.
 Не обходи проверки archive и не отмечай неподтверждённое поведение реализованным.

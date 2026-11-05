@@ -1,0 +1,23 @@
+FROM gentoo/stage3:musl-hardened@sha256:44605d8ddaa109d6f60c737713fefe10fa97ea44d50f27fd17c8e25a9c678cf4 AS build
+
+# The dated snapshot must match this checksum; there is no fallback to latest.
+ADD --checksum=sha256:8e4d7ed9fe4b3b256631101e9be043d6a555c66245b085d22afef2316320ce74 https://distfiles.gentoo.org/snapshots/gentoo-20261104.tar.xz /tmp/gentoo.tar.xz
+ADD https://distfiles.gentoo.org/snapshots/gentoo-20261104.tar.xz.gpgsig /tmp/gentoo.tar.xz.gpgsig
+RUN gemato openpgp-verify-detached --no-refresh-keys \
+      --openpgp-key /usr/share/openpgp-keys/gentoo-release.asc \
+      /tmp/gentoo.tar.xz.gpgsig /tmp/gentoo.tar.xz \
+    && mkdir -p /var/db/repos/gentoo \
+    && tar -xJf /tmp/gentoo.tar.xz --strip-components=1 -C /var/db/repos/gentoo
+
+COPY gentoo/portage/package.use/git /etc/portage/package.use/guit-git
+RUN MAKEOPTS="-j2" emerge --usepkg=n --getbinpkg=n --oneshot =dev-vcs/git-2.56.0-r1
+
+COPY gentoo/export-runtime.py /usr/local/lib/guit-export-runtime.py
+COPY gentoo/runtime-packages /usr/local/lib/guit-runtime-packages
+RUN python3 /usr/local/lib/guit-export-runtime.py /runtime --libc musl
+
+FROM scratch
+COPY --from=build /runtime/ /
+ENV PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
+    LANG=C
+CMD ["/bin/sh"]

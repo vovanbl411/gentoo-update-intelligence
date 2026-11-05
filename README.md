@@ -1,12 +1,14 @@
 # Gentoo Update Intelligence
 
-Gentoo Update Intelligence принимает текст плана `emerge` и готовит отчёт об изменениях пакетов с основаниями для выводов. Сервис работает в режиме read-only относительно системы пользователя: он не запускает `emerge` и не обновляет установленную систему.
+Gentoo Update Intelligence принимает текст плана `emerge` и готовит отчёт об изменениях пакетов с основаниями для выводов. Сервис не устанавливает пакеты и не обновляет систему пользователя.
 
 Чтобы получить первый отчёт, следуйте [инструкции локального запуска через Docker Compose](docs/local-compose.md). В ней описаны команды запуска и отправка плана.
 
 ## Что делает сервис
 
 Сервис разбирает план, применяет правила анализа и сравнивает доступные Gentoo metadata для установленных и целевых версий. Отчёт сохраняет исходные факты плана, findings (выводы правил), evidence (основания этих выводов) и результат сравнения metadata. Он помогает увидеть изменения и понять, на каких данных основан каждый вывод.
+
+HTTP API сохраняет задание в PostgreSQL и возвращает UUID. Анализ выполняется в фоне; по UUID можно следить за обработкой и повторно открыть готовый отчёт.
 
 ## Что показывает отчёт
 
@@ -37,6 +39,7 @@ Gentoo Update Intelligence принимает текст плана `emerge` и 
 ### Запуск и работа с сервисом
 
 - [Локальный запуск через Docker Compose](docs/local-compose.md) — запуск стека и получение отчёта.
+- [Gentoo-образы worker и sync](gentoo/README.md) — сборка, отдельный запуск и проверки Gentoo runtime.
 - [HTTP API](docs/http-api.md) — создание анализа, его статус, прогресс и результат.
 - [Ручной CLI](docs/cli.md) — контракт командной строки.
 - [Frontend](frontend/README.md) — работа с интерфейсом.
@@ -56,5 +59,3 @@ Gentoo Update Intelligence принимает текст плана `emerge` и 
 - [План разработки](docs/plan.md)
 - [Работа с OpenSpec](docs/openspec.md)
 - Действующие спецификации OpenSpec: [frontend](openspec/specs/analysis-frontend/spec.md), [подготовка metadata](openspec/specs/automatic-metadata-preparation/spec.md) и [локальный Compose](openspec/specs/local-compose/spec.md).
-
-Redis относится к будущему этапу; текущий HTTP API хранит задания и результаты в PostgreSQL.

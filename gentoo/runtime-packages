@@ -1,0 +1,16 @@
+# Explicit tools used by worker, Portage metadata evaluation and sync.
+sys-apps/portage
+dev-vcs/git
+app-misc/ca-certificates
+net-misc/wget
+app-shells/bash
+sys-apps/coreutils
+sys-apps/findutils
+sys-apps/grep
+sys-apps/sed
+sys-apps/gawk
+sys-apps/diffutils
+app-arch/tar
+app-arch/gzip
+app-arch/bzip2
+app-arch/xz-utils
