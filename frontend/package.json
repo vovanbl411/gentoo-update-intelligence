@@ -7,6 +7,7 @@
     "dev": "vite --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "test": "vitest run tests/unit",
+    "test:proxy": "node tests/proxy.test.mjs",
     "test:browser": "playwright test",
     "build": "vite build"
   },

@@ -1,171 +1,173 @@
-# HTTP API сохранённого анализа
+# HTTP API v1
 
-API принимает текст emerge plan, сохраняет задание в PostgreSQL и возвращает UUID до начала фонового анализа. Клиент использует этот UUID для проверки состояния и получения результата или причины сбоя. API не запускает `emerge` напрямую.
+API принимает план, сохраняет задание и возвращает UUID для наблюдения за обработкой и повторного чтения результата. Основной источник требований к маршрутам, DTO, ошибкам и совместимости — [спецификация HTTP API](../openspec/specs/http-api/spec.md). Этот документ поясняет контракт, хранение и использование.
 
-| Точка входа | Отправка задания | Проверка задания |
+## Адреса
+
+| Назначение | Создание | Чтение |
 |---|---|---|
-| Backend напрямую | `POST /analyses` | `GET /analyses/{id}` |
-| API через Compose frontend proxy | `POST /api/analyses` | `GET /api/analyses/{id}` |
-| Страница frontend | — | `/analyses/{id}` — страница приложения, не API |
+| Backend напрямую | `POST /api/v1/analyses` | `GET /api/v1/analyses/{id}` |
+| Через Compose frontend proxy | `POST /api/v1/analyses` | `GET /api/v1/analyses/{id}` |
+| Страница frontend | — | `/analyses/{id}` |
 
-Compose frontend удаляет префикс `/api` при проксировании в backend и передаёт клиенту HTTP-код, `Content-Type` и тело ответа.
-
-## Путь задания
+Nginx и Vite передают полный API-путь без снятия `/api`. Proxy сохраняет HTTP-код, `Content-Type`, `Location` и тело ответа. Неизвестный API-путь возвращает JSON-ошибку, а не HTML приложения. Прежние `/analyses` в backend и `/api/analyses` через proxy больше не обслуживаются; перенаправлений POST нет. Прямые ссылки на страницы отчётов сохраняются.
 
 ```mermaid
 sequenceDiagram
-    participant Client as Клиент
+    participant Client as Frontend / HTTP-клиент
     participant API as Backend
     participant DB as PostgreSQL
-    Client->>API: POST /analyses
-    API->>DB: Сохранить задание
-    DB-->>API: UUID
-    API-->>Client: 202 Accepted, UUID
-    Note over API,DB: Фоновая обработка: закрепление ревизий, анализ, сохранение прогресса
-    loop До завершения задания
-        Client->>API: GET /analyses/{id}
-        API->>DB: Прочитать состояние
-        DB-->>API: Статус, прогресс, результат или ошибка
-        API-->>Client: Состояние задания
-    end
+    participant Worker as Metadata worker
+    Client->>API: POST /api/v1/analyses
+    API->>DB: Сохранить задание pending
+    API-->>Client: 202, UUID, Location
+    API->>DB: Выбрать задание при свободном слоте
+    API->>Worker: Подготовить отсутствующие metadata
+    API->>DB: Сохранить прогресс и результат
+    Client->>API: GET /api/v1/analyses/{id}
+    API->>DB: Прочитать состояние
+    API-->>Client: Envelope v1
 ```
-
-Схема показывает успешное принятие запроса. Если задание не удалось сохранить, API возвращает ошибку без UUID. Повторное открытие по UUID читает сохранённое состояние и не запускает анализ заново.
 
 ## Отправка задания
 
-### `POST /analyses`
-
-Запрос должен иметь `Content-Type: application/json` и содержать один JSON-объект:
+`POST /api/v1/analyses` принимает один JSON-объект с `Content-Type: application/json`:
 
 ```json
 {
-  "plan": "[ebuild U ] dev-libs/libei-1.6.0-r1",
+  "plan": "[ebuild U] dev-libs/libxml2-2.14.6::gentoo [2.13.9::gentoo]",
   "locally_patched_packages": [
-    {"category": "dev-libs", "name": "libei"}
+    {"category": "dev-libs", "name": "libxml2"}
   ]
 }
 ```
 
-`plan` — обязательная непустая строка с исходным текстом плана. Поле `locally_patched_packages` необязательно; это список точных Gentoo `category` и `name`. Пропущенный или пустой список означает пустой Analyzer context.
+`plan` — обязательная непустая строка. `locally_patched_packages` — необязательный список точных `category/name` без версий. Пропущенный или пустой список означает пустой Analyzer context. Он сообщает пользовательское знание о локальных патчах; сервис сам их не обнаруживает.
 
-Размер тела ограничен 4 MiB. Запрос должен содержать корректный JSON без неизвестных полей или дополнительных JSON-значений. Каждый элемент `locally_patched_packages` должен содержать допустимую пару `category`/`name`: `category` и `name` — отдельные имена без версии; допустимы только буквы ASCII, цифры и разделители Gentoo (`category`: `+_.-`, `name`: `+_-`). `category` не может начинаться с `+`, `.` или `-`; `name` не может начинаться с `+` или `-` и не должен включать суффикс версии. Строка плана длиннее 2 MiB добавляет Parser diagnostic `MALFORMED_ENTRY`, но сама по себе не отклоняет POST. Статусы Parser `partial` и `unsupported` также не отклоняют запрос.
+Размер тела ограничен 4 MiB. Неизвестные поля, дополнительные JSON-значения и неправильные типы отклоняются. В именах допустимы только ASCII-буквы, цифры и разделители Gentoo: для category — `+_.-`, для name — `+_-`. Category не начинается с `+`, `.` или `-`; name — с `+` или `-` и не содержит суффикса версии. Строка плана длиннее 2 MiB добавляет Parser diagnostic `MALFORMED_ENTRY`, но сама по себе не отклоняет POST. Parser `partial` и `unsupported` также не отклоняют корректный запрос.
 
-При успешном сохранении backend отвечает `202 Accepted`, выдаёт UUID и устанавливает `Location` с адресом GET:
+UUID выдаётся только после сохранения задания:
 
 ```http
 HTTP/1.1 202 Accepted
 Content-Type: application/json; charset=utf-8
-Location: /analyses/28b28f31-7e85-4e6a-a839-84658f32cc74
+Location: /api/v1/analyses/5908ca14-ae9f-43d6-bb64-d7038775d94d
 ```
 
 ```json
 {
-  "id": "28b28f31-7e85-4e6a-a839-84658f32cc74",
+  "id": "5908ca14-ae9f-43d6-bb64-d7038775d94d",
   "status": "pending",
-  "progress": {
-    "stage": "queued",
-    "completed": 0,
-    "total": 0
-  }
+  "progress": {"stage": "queued", "completed": 0, "total": 0},
+  "result": null,
+  "error": null
 }
 ```
 
-UUID возвращается только после сохранения задания. Ошибка открытия Provider или выполнения анализа после этого отражается в состоянии задания, а не в ответе POST. Повторный POST, даже с тем же телом, создаёт новое задание и новый UUID.
+`Location` теперь ведёт на API как напрямую, так и через proxy. Для страницы отчёта используйте `/analyses/{id}`. Повторный POST с тем же телом создаёт новое задание; автоматического повторения после сетевой ошибки нет, поскольку сохранение могло состояться.
 
-В Compose используйте `id` для опроса `GET /api/analyses/{id}`. Заголовок `Location` содержит backend-путь `/analyses/{id}`; через Compose frontend этот путь открывает страницу приложения.
+## Состояние и очередь
 
-Ошибки POST возвращаются JSON-объектом `{"error":"..."}` без UUID:
+`GET /api/v1/analyses/{id}` возвращает `200` и envelope с пятью полями: `id`, `status`, `progress`, `result`, `error`.
 
-| HTTP-код | Причина |
-|---|---|
-| `400 Bad Request` | Некорректный JSON, несколько JSON-значений, неизвестное поле, неверный тип или недопустимое значение поля, пустой `plan`; сюда же обработчик относит ошибку чтения тела, в том числе превышение 4 MiB. |
-| `415 Unsupported Media Type` | Обработчик разбирает `Content-Type` и проверяет media type: он должен быть `application/json`. Параметры разрешены, например `application/json; charset=utf-8`. |
-| `500 Internal Server Error` | Не удалось сериализовать запрос для сохранения. |
-| `503 Service Unavailable` | Хранилище недоступно или не удалось сохранить задание. |
+| Статус | Значение | `result` | `error` |
+|---|---|---|---|
+| `pending` | Задание сохранено и ждёт выполнения. | `null` | `null` |
+| `running` | Подготовка репозиториев или анализ. | `null` | `null` |
+| `completed` | Обработка завершена. | DTO результата | `null` |
+| `failed` | Задание целиком завершилось ошибкой. | `null` | Объект с `code` и `message` |
 
-## Проверка состояния
-
-### `GET /analyses/{id}`
-
-Подставьте UUID из `id` ответа POST или используйте путь из заголовка `Location`:
-
-```http
-GET /analyses/28b28f31-7e85-4e6a-a839-84658f32cc74
-```
-
-Для задания с таким UUID ответ `200 OK` содержит `id`, `status` и `progress`. По завершении в ответ добавляется `result`, а при сбое задания — `error`:
+Например, недоступность Provider после принятия запроса видна в GET:
 
 ```json
 {
-  "id": "28b28f31-7e85-4e6a-a839-84658f32cc74",
-  "status": "completed",
-  "progress": {
-    "stage": "completed",
-    "completed": 2,
-    "total": 2
-  },
-  "result": {
-    "Plan": {},
-    "Analysis": {},
-    "Reports": []
-  }
+  "id": "5908ca14-ae9f-43d6-bb64-d7038775d94d",
+  "status": "failed",
+  "progress": {"stage": "failed", "completed": 0, "total": 2},
+  "result": null,
+  "error": {"code": "ANALYSIS_FAILED", "message": "metadata provider is unavailable"}
 }
 ```
 
-Возможны четыре состояния:
+По умолчанию один backend выполняет один анализ. Остальные задания хранятся в PostgreSQL как `pending/queued`, без Parser, подготовки репозиториев и отдельной ожидающей goroutine. Выбор идёт по `created_at, id`; ревизии нового задания закрепляются при начале обработки. После сохранения `completed` или `failed` слот освобождается. Временные ошибки чтения очереди повторяются автоматически.
 
-| `status` | Значение | Доступные поля |
+`GENTOO_UPDATE_INTELLIGENCE_ANALYSIS_CONCURRENCY_LIMIT` задаёт предел: `1` по умолчанию, положительное целое ограничивает активные анализы, `0` отключает его. Положительный лимит генераций worker независим (`2` по умолчанию). Очередь рассчитана на один backend, не ограничивает число принятых заданий и размер хранения. Контракт очереди — в [спецификации подготовки metadata](../openspec/specs/automatic-metadata-preparation/spec.md), команды — в [руководстве Compose](local-compose.md#число-активных-анализов).
+
+`progress` содержит `stage`, `completed`, `total`. До разбора `total` равен `0`, затем — числу уникальных metadata Query. Каждый Query учитывается один раз; `completed` увеличивается после Lookup, включая Lookup с ошибкой. Запросы, пропущенные из-за отклонённой привязки, в это число не входят. Этапы: `queued`, `preparing`, `analyzing`, `completed`, `failed`. После восстановления задания обработка начинается заново, поэтому прогресс может сброситься.
+
+## DTO результата
+
+JSON v1 не зависит от регистра Go-имён. Все имена полей — `snake_case`; значения `EAPI`, `SLOT`, `IUSE`, коды правил и диагностик сохраняют регистр. Списки всегда массивы, включая `[]`; словари — объекты, включая `{}`. Отсутствующие объекты и необязательные значения представлены `null`. Известная пустая строка и индекс `0` сохраняют свой смысл.
+
+| Поле | Содержимое |
+|---|---|
+| `result.plan` | Статус Parser, entries, blockers, removals, summary, conflict_summary и diagnostics. |
+| `result.analysis` | Статус Analyzer, diagnostics и findings. |
+| `result.reports` | Отчёты по разобранным записям: report, before_lookup, after_lookup. |
+| `result.repositories` | Словарь закреплённых ревизий по именам repository; пустой словарь, если они отсутствуют в старом результате. |
+
+Parser `partial` или `unsupported` не делает задание `failed`. `completed` означает завершение обработки, а не безопасность обновления.
+
+В `reports[].report` находятся `entry_index`, `source_lines`, `parser_status`, `parser_diagnostics`, `gentoo`, `effective_config`, `upstream` и `interpretation_limitation`. Gentoo содержит статус, comparison или diagnostics привязки. Comparison сохраняет `compared_fields`, изменения `eapi`, `slot`, `subslot`, `iuse`, limitations и ссылки before/after с источниками и SHA-256.
+
+Каждый `before_lookup` и `after_lookup` содержит:
+
+- `query`: точный запрос metadata или `null`, если Lookup не выполнялся;
+- `result`: status, snapshot и provenance либо `null`;
+- `error`: `null` или `{ "code": "METADATA_LOOKUP_FAILED", "message": "..." }`;
+- `skip_reason`: строку с причиной пропуска, если он был.
+
+Snapshot сохраняет `source`, точные `content` и `sha256`, нормализованные `eapi`, `slot`, `iuse`, diagnostics. Provenance подготовленных metadata сохраняет ebuild и blob, reference/selected commits, профиль, версию Portage, cache SHA-256, аргументы, stdout/stderr и окружение генерации, masters. Строковое содержимое metadata и provenance не переименовывается. Локальный Path закреплённого repository не сериализуется; диагностические пути внутри provenance сохраняются.
+
+Findings содержат `rule_id`, `category`, `message`, nullable `entry_index` и evidence:
+
+| Правило | Поля evidence |
+|---|---|
+| `LOCAL_PATCHED_PACKAGE` | `context_index` |
+| `USE_CHANGED` | `tokens[]`: `group_index`, `value_index` |
+| `SLOT_CHANGED` | `installed_version_index` |
+| `DOWNGRADE_PLANNED` | `entry_index`, `operation`, `installed_versions`, `target_version` |
+| `UNRESOLVED_BLOCKER` | `blocker_index` |
+
+Индексы нулевые, номера исходных строк — с единицы. Finding без привязки к записи сохраняет `entry_index: null`; отсутствие evidence в прежнем результате передаётся как `null`.
+
+Полные типы DTO находятся в [HTTP-слое](../backend/internal/analysishttp/dto_v1.go), TypeScript-типы — в [api-types.ts](../frontend/src/api-types.ts), пример полного ответа — в [fixture v1](../backend/internal/analysishttp/testdata/v1-found.json).
+
+## Ошибки
+
+HTTP-ошибка возвращает объект без UUID:
+
+```json
+{"error":{"code":"INVALID_REQUEST","message":"plan must be a non-empty string"}}
+```
+
+| HTTP | Код | Причина |
 |---|---|---|
-| `pending` | Задание сохранено и ожидает обработки. | `progress`; `result` и `error` отсутствуют. |
-| `running` | Идёт подготовка или анализ. | `progress`; `result` и `error` отсутствуют. |
-| `completed` | Анализ завершён. | `result`; `error` отсутствует. |
-| `failed` | Задание целиком завершилось ошибкой. | `error` с причиной; `result` отсутствует. |
+| `400` | `INVALID_REQUEST` | Некорректное тело или поля, включая превышение 4 MiB. |
+| `415` | `UNSUPPORTED_MEDIA_TYPE` | Content-Type не application/json; корректные параметры media type допускаются. |
+| `404` | `ANALYSIS_NOT_FOUND` | Неизвестный или некорректный UUID известного endpoint. |
+| `404` | `NOT_FOUND` | Неизвестный путь или версия API, в том числе прежний адрес. |
+| `405` | `METHOD_NOT_ALLOWED` | Неподдерживаемый метод известного endpoint; `Allow` перечисляет допустимые. |
+| `503` | `STORAGE_UNAVAILABLE` | Ошибка чтения или сохранения в БД. |
+| `500` | `INVALID_STORED_RESULT` | Сохранённый JSON повреждён или не может быть преобразован в DTO v1. |
+| `500` | `INTERNAL_ERROR` | Другая внутренняя ошибка обработчика. |
 
-`progress` содержит `stage`, `completed` и `total`. До разбора плана `total` равен `0`; затем `total` равен числу уникальных metadata `Query`, необходимых для отчётов. Каждый уникальный `Query` учитывается один раз, а `completed` увеличивается после его Lookup, в том числе если Lookup вернул ошибку. Запросы, которые не выполнялись из-за отклонённой привязки, в это число не входят. При восстановлении незавершённого задания обработка начинается заново, поэтому прогресс текущего запуска может сброситься.
+Ошибка всего задания (`ANALYSIS_FAILED`) и отдельного Lookup (`METADATA_LOOKUP_FAILED`) имеют разные уровни. Lookup со статусом `not_found` или `repository_unavailable` не является ошибкой всего задания: он остаётся частью completed отчёта. Другие записи продолжают обрабатываться. Frontend показывает message как текст, в том числе для неизвестного code.
 
-GET не запускает анализ повторно. Ошибки самого GET также возвращаются JSON-объектом `{"error":"..."}`:
+## Хранение и совместимость
 
-| HTTP-код | Причина |
-|---|---|
-| `404 Not Found` | `id` имеет неверный формат UUID или задание с таким UUID не найдено. |
-| `500 Internal Server Error` | Сохранённый результат содержит некорректный JSON. |
-| `503 Service Unavailable` | Хранилище недоступно. |
+PostgreSQL хранит задания, запросы, прогресс, закреплённые ревизии и результаты в `analysis_jobs`. Прежние результаты из `analyses` также читаются по UUID с completed envelope. Backend применяет встроенные идемпотентные миграции.
 
-## Результат анализа
+Формат JSON в базе остаётся прежним. GET читает его через типизированный адаптер и отдаёт DTO v1, не вызывает Provider, не запускает анализ и не перезаписывает результат. Доменные модели, CLI и внутренний протокол metadata worker не переводятся на публичный JSON v1.
 
-JSON-поля результата сохраняют регистр имён Go-структур: `Plan`, `Analysis`, `Reports` и, если доступны закреплённые репозитории, `Repositories`. `Plan` содержит результат Parser: статус `parsed`, `partial` или `unsupported`, разобранные записи, blockers, removals, сводку и diagnostics. `Analysis` содержит статус Analyzer, diagnostics и findings с их evidence. Неуспешная или частичная обработка Parser не делает задание `failed`.
+При запуске единственного backend прерванные `running` возвращаются в очередь вместе с `pending`. Закреплённые commits сохраняются и используются при повторном выполнении. Если они недоступны, задание получает failed с причиной. Если commits ещё не закреплены, обработка заново выбирает ревизии.
 
-`Reports` содержит отдельный отчёт для каждой разобранной записи. Элемент включает `Report`, `BeforeLookup` и `AfterLookup`. Вложенные поля сохраняют исходные имена: например, `Report`, `EntryIndex`, `SourceLines`, `Gentoo`, `EffectiveConfig`, `Upstream`, `Query`, `Result`, `Err` и `SkipReason`. Сами отчёты сохраняют diagnostics привязки, результаты сравнения metadata и ограничения неподдерживаемых секций.
+Backend сначала ищет точный repository cache. При not_found и настроенном worker он запрашивает подготовку metadata. Файловый metadata-cache сохраняет подготовленные данные, PostgreSQL — задания и отчёты; это разные хранилища.
 
-В каждом исходе Lookup:
+Удаление, переименование, изменение типа или смысла поля требует новой major-версии. Клиенты допускают дополнительные поля. Несовместимое расширение состояний не вводится в v1. Внутренние версии приложения, схема БД и версия HTTP API не обязаны совпадать.
 
-- `Query` описывает точный запрос metadata и может быть `null`, если Lookup не выполнялся;
-- `Result` содержит `Status`, `Snapshot` и, для подготовленных metadata, поле `provenance`;
-- `Err` содержит строку из `error.Error()`, если Lookup завершился ошибкой;
-- `SkipReason` объясняет, почему Lookup был пропущен.
+## Применение и конфигурация
 
-`Snapshot` содержит нормализованные Gentoo metadata и источник. Вложенное поле `Result.provenance` подготовленной metadata сохраняет источник и ревизии репозиториев, выбранный ebuild и его blob, профиль, версию Portage, параметры и результат `egencache`, а также контрольную сумму cache. `Repositories` в результате перечисляет закреплённые ревизии с именами, URL, commit и masters; локальные пути не сериализуются.
+Backend и frontend нужно пересобрать и пересоздать вместе; прежний frontend не совместим с новыми маршрутами и DTO. Миграция БД и пересборка Gentoo runtime для этого перехода не нужны. После обновления проверьте прежний UUID и создание нового анализа. При откате прежний формат результатов в базе остаётся совместимым со старой парой backend/frontend.
 
-Ошибка всего задания и ошибка одного Lookup имеют разный смысл:
-
-| Где указана | Значение |
-|---|---|
-| `status: "failed"` и верхнеуровневое `error` | Обработка задания целиком не завершилась, например Provider недоступен, закреплённую ревизию нельзя восстановить или анализ не удалось сериализовать. Итогового `result` нет. |
-| `Reports[].BeforeLookup.Err` или `Reports[].AfterLookup.Err` | Не удался отдельный Lookup или подготовка metadata для одной стороны. Само задание может иметь `status: "completed"`; остальные записи продолжают обрабатываться и включаются в `Reports`. |
-
-Результат Lookup со статусом `not_found` или `repository_unavailable` сам по себе не является ошибкой всего задания: это значение находится в `Result.Status`. Если сравнение невозможно, отчёт сохраняет доступные diagnostics или причину для соответствующей стороны.
-
-## Хранение и восстановление
-
-PostgreSQL — постоянное хранилище заданий и анализов. Backend применяет встроенные идемпотентные миграции: таблица `analysis_jobs` хранит запрос, статус, прогресс, ошибку, закреплённые ревизии и результат; прежняя таблица `analyses` сохраняет ранее созданные результаты. Старый UUID из `analyses` по-прежнему читается через GET со статусом `completed` и прежним `result`.
-
-При старте backend восстанавливает задания `pending` и `running`, повторяя обработку с начала. Если ревизии репозиториев уже сохранены, Provider открывается на тех же commits; если ревизии ещё не записаны, backend заново выбирает их. Если закреплённые commits или нужные Git-объекты недоступны либо восстановление невозможно по другой причине, задание получает `failed` с причиной. UUID остаётся доступным для GET. Перезапуск не меняет результат уже завершённого задания, сохранённый в PostgreSQL.
-
-Backend ищет точный cache в закреплённой Git-ревизии. Если Lookup возвращает `not_found` и настроен `GENTOO_UPDATE_INTELLIGENCE_METADATA_WORKER_URL`, backend передаёт worker точный запрос и закреплённые ревизии. Worker может подготовить metadata по точной версии и сохранить их в файловом `metadata-cache`; результат и provenance подготовки попадают в `Reports[].BeforeLookup.Result` или `Reports[].AfterLookup.Result`. `metadata-cache` хранит подготовленные metadata, а PostgreSQL — задания и результаты анализа.
-
-Backend по умолчанию слушает `127.0.0.1:8080`; в Compose он слушает `0.0.0.0:8080` во внутренней сети, а на host публикуется только frontend на loopback.
-
-## Конфигурация
-
-Настройки Compose и параметры окружения backend описаны в разделе [«Настройки» инструкции Compose](local-compose.md#настройки). В этом документе приведён только контракт API.
+Backend по умолчанию слушает `127.0.0.1:8080`, в Compose — `0.0.0.0:8080` во внутренней сети. На хост публикуется только frontend на loopback. Настройки YAML/env описаны в [руководстве backend](backend-configuration.md), команды полного стека — в [руководстве Compose](local-compose.md).

@@ -28,7 +28,8 @@ type Store interface {
 	CreateJob(context.Context, []byte) (string, error)
 	UpdateJob(context.Context, JobUpdate) error
 	GetJob(context.Context, string) (Job, bool, error)
-	UnfinishedJobs(context.Context) ([]Job, error)
+	RequeueInterruptedJobs(context.Context) error
+	ClaimNextJob(context.Context) (Job, bool, error)
 }
 
 type Job struct {
@@ -144,29 +145,35 @@ func (p *Postgres) GetJob(ctx context.Context, id string) (Job, bool, error) {
 	return job, true, nil
 }
 
-func (p *Postgres) UnfinishedJobs(ctx context.Context) ([]Job, error) {
-	rows, err := p.db.QueryContext(ctx, `
-		SELECT id::text, request::text, status, stage, completed, total, COALESCE(revisions::text, ''),
-		       COALESCE(result::text, ''), COALESCE(error, '')
-	FROM analysis_jobs WHERE status IN ('pending', 'running') ORDER BY created_at`)
+// RequeueInterruptedJobs is only safe before a single backend starts serving.
+// Keep revisions so interrupted analyses restore their pinned repositories.
+func (p *Postgres) RequeueInterruptedJobs(ctx context.Context) error {
+	_, err := p.db.ExecContext(ctx, `UPDATE analysis_jobs
+		SET status = 'pending', stage = 'queued', completed = 0, total = 0, updated_at = now()
+		WHERE status = 'running'`)
 	if err != nil {
-		return nil, fmt.Errorf("list unfinished analysis jobs: %w", err)
+		return fmt.Errorf("requeue interrupted analysis jobs: %w", err)
 	}
-	defer rows.Close()
-	var jobs []Job
-	for rows.Next() {
-		var job Job
-		var request, result []byte
-		if err := rows.Scan(&job.ID, &request, &job.Status, &job.Stage, &job.Completed, &job.Total, &job.Revisions, &result, &job.Error); err != nil {
-			return nil, fmt.Errorf("scan unfinished analysis job: %w", err)
-		}
-		job.Request, job.Result = request, result
-		jobs = append(jobs, job)
+	return nil
+}
+
+func (p *Postgres) ClaimNextJob(ctx context.Context) (Job, bool, error) {
+	var job Job
+	err := p.db.QueryRowContext(ctx, `UPDATE analysis_jobs
+		SET status = 'running', stage = 'preparing', updated_at = now()
+		WHERE id = (SELECT id FROM analysis_jobs WHERE status = 'pending'
+		    ORDER BY created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED)
+		RETURNING id::text, request::text, status, stage, completed, total,
+		    COALESCE(revisions::text, ''), COALESCE(result::text, ''), COALESCE(error, '')`).
+		Scan(&job.ID, &job.Request, &job.Status, &job.Stage, &job.Completed, &job.Total,
+			&job.Revisions, &job.Result, &job.Error)
+	if err == sql.ErrNoRows {
+		return Job{}, false, nil
 	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate unfinished analysis jobs: %w", err)
+	if err != nil {
+		return Job{}, false, fmt.Errorf("claim next analysis job: %w", err)
 	}
-	return jobs, nil
+	return job, true, nil
 }
 
 func (p *Postgres) Save(ctx context.Context, result []byte) (string, error) {

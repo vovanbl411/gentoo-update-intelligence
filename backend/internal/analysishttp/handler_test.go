@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sort"
 	"strings"
 	"sync"
 	"testing"
@@ -38,7 +40,7 @@ func TestProviderFactoryOncePerAnalysisAndRecovers(t *testing.T) {
 		t.Fatalf("POST status = %d: %s", post.Code, post.Body.String())
 	}
 	got := waitJob(t, handler, testID)
-	if got.Status != "failed" || got.Error != "metadata provider is unavailable" {
+	if got.Status != "failed" || (got.Error == nil || got.Error.Message != "metadata provider is unavailable") {
 		t.Fatalf("first job = %#v, want provider failure", got)
 	}
 	secondStore := &memoryStore{id: "18b28f31-7e85-4e6a-a839-84658f32cc74"}
@@ -61,7 +63,7 @@ func TestPostPersistsFullResultAndGetReturnsIt(t *testing.T) {
 	handler := NewHandler(store, provider)
 	body := `{"plan":"[ebuild U] dev-libs/widget-2::gentoo [1::gentoo]\n[ebuild U] dev-libs/gadget-2::gentoo [1::gentoo]"}`
 
-	post := httptest.NewRequest(http.MethodPost, "/analyses", strings.NewReader(body))
+	post := httptest.NewRequest(http.MethodPost, "/api/v1/analyses", strings.NewReader(body))
 	post.Header.Set("Content-Type", "application/json")
 	created := httptest.NewRecorder()
 	handler.ServeHTTP(created, post)
@@ -79,27 +81,27 @@ func TestPostPersistsFullResultAndGetReturnsIt(t *testing.T) {
 	if completed.Status != "completed" || len(completed.Result) == 0 {
 		t.Fatalf("GET job = %#v, want completed persisted result", completed)
 	}
-	var saved resultView
+	var saved resultDTO
 	if err := json.Unmarshal(completed.Result, &saved); err != nil {
 		t.Fatal(err)
 	}
 	if len(saved.Reports) != 2 {
 		t.Fatalf("saved report count = %d, want 2", len(saved.Reports))
 	}
-	if got := saved.Reports[0].BeforeLookup.Result.Status; got != metadataprovider.StatusNotFound {
+	if got := saved.Reports[0].BeforeLookup.Result.Status; got != "not_found" {
 		t.Fatalf("before lookup status = %q, want not_found", got)
 	}
-	if got := saved.Reports[0].AfterLookup.Result.Status; got != metadataprovider.StatusRepositoryUnavailable {
+	if got := saved.Reports[0].AfterLookup.Result.Status; got != "repository_unavailable" {
 		t.Fatalf("after lookup status = %q, want repository_unavailable", got)
 	}
-	if got := saved.Reports[1].BeforeLookup.Err; got == nil || *got != "fixture lookup error" {
+	if got := saved.Reports[1].BeforeLookup.Error; got == nil || got.Message != "fixture lookup error" {
 		t.Fatalf("saved Lookup error = %v, want fixture lookup error", got)
 	}
-	if saved.Reports[1].AfterLookup.Result == nil || saved.Reports[1].AfterLookup.Result.Status != metadataprovider.StatusFound || saved.Reports[1].AfterLookup.Result.Snapshot == nil {
+	if saved.Reports[1].AfterLookup.Result == nil || saved.Reports[1].AfterLookup.Result.Status != "found" || saved.Reports[1].AfterLookup.Result.Snapshot == nil {
 		t.Fatalf("second report did not preserve found Lookup result and snapshot: %#v", saved.Reports[1].AfterLookup)
 	}
 
-	get := httptest.NewRequest(http.MethodGet, "/analyses/"+testID, nil)
+	get := httptest.NewRequest(http.MethodGet, "/api/v1/analyses/"+testID, nil)
 	loaded := httptest.NewRecorder()
 	handler.ServeHTTP(loaded, get)
 	if loaded.Code != http.StatusOK {
@@ -128,7 +130,7 @@ func TestGetReportsProgressWhileAnalysisIsRunning(t *testing.T) {
 		t.Fatal("analysis did not reach metadata lookup")
 	}
 	response := httptest.NewRecorder()
-	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/analyses/"+testID, nil))
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/v1/analyses/"+testID, nil))
 	var job jobResponse
 	if err := json.Unmarshal(response.Body.Bytes(), &job); err != nil {
 		t.Fatal(err)
@@ -145,7 +147,7 @@ func TestGetReportsProgressWhileAnalysisIsRunning(t *testing.T) {
 func TestPostStorageFailureDoesNotReturnCreatedOrID(t *testing.T) {
 	store := &memoryStore{id: testID, saveErr: errors.New("database unavailable")}
 	handler := NewHandler(store, &sequenceProvider{})
-	request := httptest.NewRequest(http.MethodPost, "/analyses", strings.NewReader(`{"plan":"unsupported input"}`))
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/analyses", strings.NewReader(`{"plan":"unsupported input"}`))
 	request.Header.Set("Content-Type", "application/json")
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)
@@ -163,7 +165,7 @@ func TestUnavailableProviderOnlyBlocksPost(t *testing.T) {
 	var unavailable *metadataprovider.Provider
 	handler := NewHandler(store, unavailable)
 
-	post := httptest.NewRequest(http.MethodPost, "/analyses", strings.NewReader(`{"plan":"[ebuild U] dev-libs/libei-1.6.0-r1::gentoo [1.6.0::gentoo]"}`))
+	post := httptest.NewRequest(http.MethodPost, "/api/v1/analyses", strings.NewReader(`{"plan":"[ebuild U] dev-libs/libei-1.6.0-r1::gentoo [1.6.0::gentoo]"}`))
 	post.Header.Set("Content-Type", "application/json")
 	postResponse := httptest.NewRecorder()
 	handler.ServeHTTP(postResponse, post)
@@ -178,7 +180,7 @@ func TestUnavailableProviderOnlyBlocksPost(t *testing.T) {
 	}
 
 	legacyHandler := NewHandler(&memoryStore{id: testID, result: savedResult}, unavailable)
-	get := httptest.NewRequest(http.MethodGet, "/analyses/"+testID, nil)
+	get := httptest.NewRequest(http.MethodGet, "/api/v1/analyses/"+testID, nil)
 	getResponse := httptest.NewRecorder()
 	legacyHandler.ServeHTTP(getResponse, get)
 	if getResponse.Code != http.StatusOK {
@@ -188,7 +190,7 @@ func TestUnavailableProviderOnlyBlocksPost(t *testing.T) {
 	if err := json.Unmarshal(getResponse.Body.Bytes(), &got); err != nil {
 		t.Fatal(err)
 	}
-	if got.ID != testID || got.Status != "completed" || !jsonEqual(got.Result, savedResult) {
+	if got.ID != testID || got.Status != "completed" || !jsonEqual(got.Result, mustV1Result(t, savedResult)) {
 		t.Fatalf("GET changed saved analysis: ID=%q result=%s", got.ID, got.Result)
 	}
 }
@@ -244,7 +246,7 @@ func TestGetUnknownAndInvalidIDsReturnNotFound(t *testing.T) {
 	handler := NewHandler(&memoryStore{}, &sequenceProvider{})
 	for _, id := range []string{"28b28f31-7e85-4e6a-a839-84658f32cc74", "not-a-uuid"} {
 		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/analyses/"+id, nil))
+		handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/v1/analyses/"+id, nil))
 		if response.Code != http.StatusNotFound {
 			t.Errorf("GET %q status = %d, want 404", id, response.Code)
 		}
@@ -267,7 +269,7 @@ func TestPostRejectsInvalidRequests(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			request := httptest.NewRequest(http.MethodPost, "/analyses", strings.NewReader(test.body))
+			request := httptest.NewRequest(http.MethodPost, "/api/v1/analyses", strings.NewReader(test.body))
 			request.Header.Set("Content-Type", test.contentType)
 			response := httptest.NewRecorder()
 			handler.ServeHTTP(response, request)
@@ -286,6 +288,7 @@ type memoryStore struct {
 	saveCalls     int
 	createCalls   int
 	failCompleted int
+	autoIDs       bool
 	jobs          map[string]analysisstore.Job
 }
 
@@ -315,6 +318,9 @@ func (s *memoryStore) CreateJob(_ context.Context, request []byte) (string, erro
 	}
 	if s.jobs == nil {
 		s.jobs = make(map[string]analysisstore.Job)
+	}
+	if s.autoIDs {
+		s.id = fmt.Sprintf("00000000-0000-4000-8000-%012d", s.createCalls)
 	}
 	s.jobs[s.id] = analysisstore.Job{ID: s.id, Request: append([]byte(nil), request...), Status: "pending", Stage: "queued"}
 	return s.id, nil
@@ -351,23 +357,39 @@ func (s *memoryStore) GetJob(_ context.Context, id string) (analysisstore.Job, b
 	return job, ok, nil
 }
 
-func (s *memoryStore) UnfinishedJobs(_ context.Context) ([]analysisstore.Job, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	var jobs []analysisstore.Job
-	for _, job := range s.jobs {
-		if job.Status == "pending" || job.Status == "running" {
-			job.Request = append([]byte(nil), job.Request...)
-			job.Result = append([]byte(nil), job.Result...)
-			job.Revisions = append([]byte(nil), job.Revisions...)
-			jobs = append(jobs, job)
+func (s *memoryStore) RequeueInterruptedJobs(_ context.Context) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for id, job := range s.jobs {
+		if job.Status == "running" {
+			job.Status, job.Stage, job.Completed, job.Total = "pending", "queued", 0, 0
+			s.jobs[id] = job
 		}
 	}
-	return jobs, nil
+	return nil
+}
+
+func (s *memoryStore) ClaimNextJob(_ context.Context) (analysisstore.Job, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	var ids []string
+	for id, job := range s.jobs {
+		if job.Status == "pending" {
+			ids = append(ids, id)
+		}
+	}
+	sort.Strings(ids)
+	if len(ids) == 0 {
+		return analysisstore.Job{}, false, nil
+	}
+	job := s.jobs[ids[0]]
+	job.Status, job.Stage = "running", "preparing"
+	s.jobs[job.ID] = job
+	return job, true, nil
 }
 
 func newPost(handler http.Handler, body string) *httptest.ResponseRecorder {
-	request := httptest.NewRequest(http.MethodPost, "/analyses", strings.NewReader(body))
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/analyses", strings.NewReader(body))
 	request.Header.Set("Content-Type", "application/json")
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)
@@ -379,7 +401,7 @@ func waitJob(t *testing.T, handler http.Handler, id string) jobResponse {
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
 		response := httptest.NewRecorder()
-		handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/analyses/"+id, nil))
+		handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/v1/analyses/"+id, nil))
 		var job jobResponse
 		if err := json.Unmarshal(response.Body.Bytes(), &job); err != nil {
 			t.Fatal(err)

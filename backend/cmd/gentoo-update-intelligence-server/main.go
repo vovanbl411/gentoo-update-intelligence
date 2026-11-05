@@ -2,18 +2,18 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/analysishttp"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/analysisstore"
+	"github.com/vovanbl411/gentoo-update-intelligence/internal/backendconfig"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/metadataprovider"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/parser"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/reportservice"
@@ -21,19 +21,23 @@ import (
 )
 
 func main() {
-	if err := run(); err != nil {
+	if err := run(os.Args[1:]); err != nil {
 		log.Printf("backend stopped: %v", err)
 		os.Exit(1)
 	}
 }
 
-func run() error {
-	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-	defer cancel()
-
-	store, err := analysisstore.Open(ctx, os.Getenv("GENTOO_UPDATE_INTELLIGENCE_DATABASE_URL"))
+func run(args []string) error {
+	settings, err := loadServerConfig(args, os.Getenv)
 	if err != nil {
 		return err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(settings.StartupTimeout))
+	defer cancel()
+
+	store, err := analysisstore.Open(ctx, settings.DatabaseURL)
+	if err != nil {
+		return errors.New("PostgreSQL connection failed; check DATABASE_URL and database availability")
 	}
 	defer store.Close()
 	if err := store.Migrate(ctx); err != nil {
@@ -41,36 +45,35 @@ func run() error {
 	}
 
 	config := metadataprovider.Config{
-		Repository: os.Getenv("GENTOO_UPDATE_INTELLIGENCE_REPOSITORY"),
-		SourceURL:  os.Getenv("GENTOO_UPDATE_INTELLIGENCE_SOURCE_URL"),
-		LocalPath:  os.Getenv("GENTOO_UPDATE_INTELLIGENCE_REPOSITORY_PATH"),
-		Commit:     os.Getenv("GENTOO_UPDATE_INTELLIGENCE_COMMIT"),
+		Repository: settings.Repository.Name,
+		SourceURL:  settings.Repository.SourceURL,
+		LocalPath:  settings.Repository.Path,
+		Commit:     settings.Repository.Commit,
 	}
 	var overlays *repositorymanager.Manager
-	if path := os.Getenv("GENTOO_UPDATE_INTELLIGENCE_OVERLAY_PATH"); path != "" {
+	if settings.Overlays.Path != "" {
 		if config.Repository != "gentoo" {
 			return errors.New("overlay preparation requires the gentoo repository")
 		}
-		overlays, err = overlayManager(path, os.Getenv("GENTOO_UPDATE_INTELLIGENCE_OVERLAY_CATALOG"))
+		overlays, err = settings.OverlayManager()
 		if err != nil {
 			return err
 		}
 	}
-	providerFactory := newResumableProviderFactory(config, overlays)
-	handler := analysishttp.NewHandlerWithPinnedProviderFactory(store, providerFactory)
+	providerFactory := newResumableProviderFactory(config, overlays, workerSettingsFromConfig(settings.Metadata))
+	handler, err := analysishttp.NewHandlerWithConcurrencyLimit(store, providerFactory, int(settings.Analysis.ConcurrencyLimit))
+	if err != nil {
+		return err
+	}
 	if err := handler.Resume(ctx); err != nil {
 		return fmt.Errorf("resume analysis jobs: %w", err)
 	}
 
-	address := os.Getenv("GENTOO_UPDATE_INTELLIGENCE_LISTEN_ADDR")
-	if address == "" {
-		address = "127.0.0.1:8080"
-	}
 	server := &http.Server{
-		Addr:              address,
+		Addr:              settings.HTTP.ListenAddress,
 		Handler:           handler,
-		ReadHeaderTimeout: 5 * time.Second,
-		IdleTimeout:       60 * time.Second,
+		ReadHeaderTimeout: time.Duration(settings.HTTP.ReadHeaderTimeout),
+		IdleTimeout:       time.Duration(settings.HTTP.IdleTimeout),
 	}
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
@@ -78,14 +81,40 @@ func run() error {
 	return nil
 }
 
-func newProviderFactory(config metadataprovider.Config, overlays *repositorymanager.Manager) func(context.Context, parser.Result) (reportservice.MetadataLookup, error) {
-	resumable := newResumableProviderFactory(config, overlays)
+func loadServerConfig(args []string, getenv func(string) string) (backendconfig.Config, error) {
+	flags := flag.NewFlagSet("backend", flag.ContinueOnError)
+	flags.SetOutput(io.Discard)
+	filename := flags.String("config", "", "YAML configuration file")
+	if err := flags.Parse(args); err != nil {
+		return backendconfig.Config{}, errors.New("invalid command line; use --config <path>")
+	}
+	if flags.NArg() != 0 {
+		return backendconfig.Config{}, errors.New("unexpected positional arguments")
+	}
+	provided := false
+	flags.Visit(func(f *flag.Flag) {
+		if f.Name == "config" {
+			provided = true
+		}
+	})
+	if provided && *filename == "" {
+		return backendconfig.Config{}, errors.New("--config requires a nonempty file path")
+	}
+	return backendconfig.Load(*filename, getenv)
+}
+
+func workerSettingsFromConfig(config backendconfig.Metadata) workerSettings {
+	return workerSettings{URL: config.WorkerURL, Profile: config.Profile, Client: &http.Client{Timeout: time.Duration(config.WorkerTimeout)}}
+}
+
+func newProviderFactory(config metadataprovider.Config, overlays *repositorymanager.Manager, worker workerSettings) func(context.Context, parser.Result) (reportservice.MetadataLookup, error) {
+	resumable := newResumableProviderFactory(config, overlays, worker)
 	return func(ctx context.Context, plan parser.Result) (reportservice.MetadataLookup, error) {
 		return resumable(ctx, plan, nil)
 	}
 }
 
-func newResumableProviderFactory(config metadataprovider.Config, overlays *repositorymanager.Manager) func(context.Context, parser.Result, map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error) {
+func newResumableProviderFactory(config metadataprovider.Config, overlays *repositorymanager.Manager, worker workerSettings) func(context.Context, parser.Result, map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error) {
 	return func(ctx context.Context, plan parser.Result, pinned map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error) {
 		analysisConfig := config
 		if gentoo, ok := pinned["gentoo"]; ok {
@@ -106,30 +135,8 @@ func newResumableProviderFactory(config metadataprovider.Config, overlays *repos
 			return nil, err
 		}
 		if overlays == nil {
-			return preparePinnedRepositories(ctx, plan, analysisConfig, provider, nil, pinned)
+			return preparePinnedRepositories(ctx, plan, analysisConfig, provider, nil, pinned, worker)
 		}
-		return preparePinnedRepositories(ctx, plan, analysisConfig, provider, overlays, pinned)
+		return preparePinnedRepositories(ctx, plan, analysisConfig, provider, overlays, pinned, worker)
 	}
-}
-
-// overlayManager accepts only operator-provided catalog configuration.
-func overlayManager(path, catalogJSON string) (*repositorymanager.Manager, error) {
-	catalog := repositorymanager.KnownOverlays()
-	if catalogJSON != "" {
-		decoder := json.NewDecoder(strings.NewReader(catalogJSON))
-		decoder.DisallowUnknownFields()
-		var configured []repositorymanager.Repository
-		if err := decoder.Decode(&configured); err != nil {
-			return nil, fmt.Errorf("invalid overlay catalog: %w", err)
-		}
-		if configured == nil {
-			return nil, errors.New("overlay catalog must be a JSON array")
-		}
-		var extra any
-		if err := decoder.Decode(&extra); err != io.EOF {
-			return nil, errors.New("overlay catalog must contain one JSON array")
-		}
-		catalog = append(catalog, configured...)
-	}
-	return repositorymanager.New(path, catalog)
 }

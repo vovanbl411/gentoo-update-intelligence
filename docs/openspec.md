@@ -17,7 +17,7 @@ OpenSpec подключён как пилот для следующих согл
 замени перенесённые требования ссылкой на спецификацию, сохранив полезные пояснения.
 Не поддерживай два независимых описания одного требования. Если область ещё не
 перенесена, не создавай в OpenSpec её частичную копию без явного определения границ.
-Перенесённых областей пока нет. Спецификации новых областей находятся в
+Транспортный контракт HTTP API v1 перенесён в [`openspec/specs/http-api/spec.md`](../openspec/specs/http-api/spec.md); `docs/http-api.md` сохраняет пояснения, примеры и описание хранения. Другие контракты `docs/` не перенесены. Контракт конфигурации backend находится в [`openspec/specs/backend-configuration/spec.md`](../openspec/specs/backend-configuration/spec.md). Спецификации остальных новых областей находятся в
 [`openspec/specs/analysis-frontend/spec.md`](../openspec/specs/analysis-frontend/spec.md),
 [`openspec/specs/automatic-metadata-preparation/spec.md`](../openspec/specs/automatic-metadata-preparation/spec.md)
 и [`openspec/specs/local-compose/spec.md`](../openspec/specs/local-compose/spec.md).

@@ -7,9 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
-	"time"
 
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/metadatadiff"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/metadatagenerator"
@@ -18,6 +16,12 @@ import (
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/reportservice"
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/repositorymanager"
 )
+
+type workerSettings struct {
+	URL     string
+	Profile string
+	Client  *http.Client
+}
 
 type pinnedRepositories struct {
 	providers    map[string]*metadataprovider.Provider
@@ -58,9 +62,6 @@ func (p *pinnedRepositories) Lookup(query metadataprovider.Query) (metadataprovi
 		return metadataprovider.LookupResult{}, err
 	}
 	profile := p.profile
-	if profile == "" {
-		profile = "profiles/default/linux/amd64/23.0"
-	}
 	if query.Repository != "gentoo" && !strings.Contains(profile, ":") {
 		profile = "gentoo:" + profile
 	}
@@ -138,7 +139,7 @@ func callMetadataWorker(endpoint string, query metadataprovider.Query, source re
 	}
 	request.Header.Set("Content-Type", "application/json")
 	if client == nil {
-		client = &http.Client{Timeout: 20 * time.Minute}
+		return preparedMetadata{}, errors.New("metadata worker client is not configured")
 	}
 	response, err := client.Do(request)
 	if err != nil {
@@ -161,23 +162,19 @@ func (p *pinnedRepositories) RepositoryRevisions() map[string]repositorymanager.
 	return p.revisions
 }
 
-func prepareRepositories(ctx context.Context, plan parser.Result, config metadataprovider.Config, gentoo *metadataprovider.Provider, manager *repositorymanager.Manager) reportservice.MetadataLookup {
-	result, _ := preparePinnedRepositories(ctx, plan, config, gentoo, manager, nil)
-	return result
-}
-
-func preparePinnedRepositories(ctx context.Context, plan parser.Result, config metadataprovider.Config, gentoo *metadataprovider.Provider, manager *repositorymanager.Manager, pinned map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error) {
+func preparePinnedRepositories(ctx context.Context, plan parser.Result, config metadataprovider.Config, gentoo *metadataprovider.Provider, manager *repositorymanager.Manager, pinned map[string]repositorymanager.Revision, worker workerSettings) (reportservice.MetadataLookup, error) {
 	main := repositorymanager.Revision{Name: "gentoo", URL: config.SourceURL, Path: config.LocalPath, Commit: gentoo.Commit()}
 	if saved, ok := pinned["gentoo"]; ok {
 		main = saved
 		main.Path = config.LocalPath
 	}
 	result := &pinnedRepositories{
-		providers: map[string]*metadataprovider.Provider{"gentoo": gentoo},
-		failures:  make(map[string]error),
-		revisions: map[string]repositorymanager.Revision{"gentoo": main},
-		workerURL: os.Getenv("GENTOO_UPDATE_INTELLIGENCE_METADATA_WORKER_URL"),
-		profile:   os.Getenv("GENTOO_UPDATE_INTELLIGENCE_METADATA_PROFILE"),
+		providers:    map[string]*metadataprovider.Provider{"gentoo": gentoo},
+		failures:     make(map[string]error),
+		revisions:    map[string]repositorymanager.Revision{"gentoo": main},
+		workerURL:    worker.URL,
+		profile:      worker.Profile,
+		workerClient: worker.Client,
 	}
 	names := make(map[string]bool)
 	for _, entry := range plan.Entries {

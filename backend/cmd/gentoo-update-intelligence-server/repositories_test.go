@@ -175,7 +175,7 @@ func TestResumableProviderFactoryDoesNotReusePinnedCommit(t *testing.T) {
 	oldCommit := fixtureRepo(t, gentooPath, "EAPI=8\nSLOT=0\nIUSE=old\n")
 	fixtureGit(t, gentooPath, "update-ref", "refs/gentoo/published", oldCommit)
 	config := metadataprovider.Config{Repository: "gentoo", SourceURL: "https://example.invalid/gentoo", LocalPath: gentooPath}
-	factory := newResumableProviderFactory(config, nil)
+	factory := newResumableProviderFactory(config, nil, workerSettings{})
 	plan := parser.Parse("[ebuild U] dev-libs/widget-1::gentoo")
 	pinned, err := factory(context.Background(), plan, map[string]repositorymanager.Revision{
 		"gentoo": {Name: "gentoo", URL: config.SourceURL, Commit: oldCommit},
@@ -236,7 +236,6 @@ func TestOverlayFailureDoesNotBlockGentooLookup(t *testing.T) {
 }
 
 func TestNilOverlayManagerReportsUnavailableSideAndKeepsGentooLookup(t *testing.T) {
-	t.Setenv("GENTOO_UPDATE_INTELLIGENCE_METADATA_WORKER_URL", "")
 	root := t.TempDir()
 	path := filepath.Join(root, "gentoo")
 	commit := fixtureRepo(t, path, "EAPI=8\nSLOT=0\nIUSE=gentoo\n")
@@ -257,4 +256,10 @@ func TestNilOverlayManagerReportsUnavailableSideAndKeepsGentooLookup(t *testing.
 	if report.AfterLookup.Err == nil || !strings.Contains(report.AfterLookup.Err.Error(), "overlay preparation is disabled") {
 		t.Fatalf("unconfigured overlay error = %v", report.AfterLookup.Err)
 	}
+}
+
+// Fixture-only convenience for tests that do not enable the metadata worker.
+func prepareRepositories(ctx context.Context, plan parser.Result, config metadataprovider.Config, gentoo *metadataprovider.Provider, manager *repositorymanager.Manager) reportservice.MetadataLookup {
+	result, _ := preparePinnedRepositories(ctx, plan, config, gentoo, manager, nil, workerSettings{})
+	return result
 }

@@ -1,0 +1,2235 @@
+{
+  "id": "12345678-1234-1234-1234-123456789abc",
+  "result": {
+    "Plan": {
+      "Status": "parsed",
+      "Entries": [
+        {
+          "Package": {
+            "Category": "dev-libs",
+            "Name": "libei"
+          },
+          "Operation": "upgrade",
+          "NewSlot": false,
+          "UnstableMarker": false,
+          "Target": {
+            "Version": "1.6.0-r1",
+            "Repository": "gentoo",
+            "Slot": null,
+            "Subslot": null
+          },
+          "Installed": {
+            "Versions": [
+              {
+                "Version": "1.6.0",
+                "Repository": "gentoo",
+                "Slot": null,
+                "Subslot": null
+              }
+            ]
+          },
+          "FlagGroups": [
+            {
+              "Name": "USE",
+              "Values": [
+                {
+                  "Name": "systemd",
+                  "State": "enabled",
+                  "RawToken": "(systemd)",
+                  "Markers": [
+                    "(",
+                    ")"
+                  ]
+                },
+                {
+                  "Name": "elogind",
+                  "State": "disabled",
+                  "RawToken": "(-elogind)",
+                  "Markers": [
+                    "(",
+                    ")",
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "test",
+                  "State": "disabled",
+                  "RawToken": "-test",
+                  "Markers": [
+                    "-"
+                  ]
+                }
+              ]
+            }
+          ],
+          "Download": {
+            "Value": 0,
+            "Unit": "KiB"
+          },
+          "SourceLines": [
+            6
+          ]
+        },
+        {
+          "Package": {
+            "Category": "app-admin",
+            "Name": "chezmoi"
+          },
+          "Operation": "upgrade",
+          "NewSlot": false,
+          "UnstableMarker": true,
+          "Target": {
+            "Version": "2.74.0",
+            "Repository": "gentoo-zh",
+            "Slot": null,
+            "Subslot": null
+          },
+          "Installed": {
+            "Versions": [
+              {
+                "Version": "2.73.3",
+                "Repository": "gentoo-zh",
+                "Slot": null,
+                "Subslot": null
+              }
+            ]
+          },
+          "FlagGroups": null,
+          "Download": {
+            "Value": 11897,
+            "Unit": "KiB"
+          },
+          "SourceLines": [
+            7
+          ]
+        },
+        {
+          "Package": {
+            "Category": "app-emulation",
+            "Name": "qemu"
+          },
+          "Operation": "upgrade",
+          "NewSlot": false,
+          "UnstableMarker": false,
+          "Target": {
+            "Version": "10.2.3-r4",
+            "Repository": "gentoo",
+            "Slot": null,
+            "Subslot": null
+          },
+          "Installed": {
+            "Versions": [
+              {
+                "Version": "10.2.3-r3",
+                "Repository": "gentoo",
+                "Slot": null,
+                "Subslot": null
+              }
+            ]
+          },
+          "FlagGroups": [
+            {
+              "Name": "USE",
+              "Values": [
+                {
+                  "Name": "X",
+                  "State": "enabled",
+                  "RawToken": "(X)",
+                  "Markers": [
+                    "(",
+                    ")"
+                  ]
+                },
+                {
+                  "Name": "aio",
+                  "State": "enabled",
+                  "RawToken": "aio",
+                  "Markers": null
+                },
+                {
+                  "Name": "bpf",
+                  "State": "enabled",
+                  "RawToken": "bpf",
+                  "Markers": null
+                },
+                {
+                  "Name": "bzip2",
+                  "State": "enabled",
+                  "RawToken": "bzip2",
+                  "Markers": null
+                },
+                {
+                  "Name": "capstone",
+                  "State": "enabled",
+                  "RawToken": "capstone",
+                  "Markers": null
+                },
+                {
+                  "Name": "curl",
+                  "State": "enabled",
+                  "RawToken": "curl",
+                  "Markers": null
+                },
+                {
+                  "Name": "fdt",
+                  "State": "enabled",
+                  "RawToken": "fdt",
+                  "Markers": null
+                },
+                {
+                  "Name": "filecaps",
+                  "State": "enabled",
+                  "RawToken": "filecaps",
+                  "Markers": null
+                },
+                {
+                  "Name": "gnutls",
+                  "State": "enabled",
+                  "RawToken": "gnutls",
+                  "Markers": null
+                },
+                {
+                  "Name": "io-uring",
+                  "State": "enabled",
+                  "RawToken": "io-uring",
+                  "Markers": null
+                },
+                {
+                  "Name": "jpeg",
+                  "State": "enabled",
+                  "RawToken": "jpeg",
+                  "Markers": null
+                },
+                {
+                  "Name": "ncurses",
+                  "State": "enabled",
+                  "RawToken": "ncurses",
+                  "Markers": null
+                },
+                {
+                  "Name": "nls",
+                  "State": "enabled",
+                  "RawToken": "nls",
+                  "Markers": null
+                },
+                {
+                  "Name": "opengl",
+                  "State": "enabled",
+                  "RawToken": "opengl",
+                  "Markers": null
+                },
+                {
+                  "Name": "pam",
+                  "State": "enabled",
+                  "RawToken": "pam",
+                  "Markers": null
+                },
+                {
+                  "Name": "passt",
+                  "State": "enabled",
+                  "RawToken": "passt",
+                  "Markers": null
+                },
+                {
+                  "Name": "pin-upstream-blobs",
+                  "State": "enabled",
+                  "RawToken": "pin-upstream-blobs",
+                  "Markers": null
+                },
+                {
+                  "Name": "pipewire",
+                  "State": "enabled",
+                  "RawToken": "pipewire",
+                  "Markers": null
+                },
+                {
+                  "Name": "png",
+                  "State": "enabled",
+                  "RawToken": "png",
+                  "Markers": null
+                },
+                {
+                  "Name": "python",
+                  "State": "enabled",
+                  "RawToken": "python",
+                  "Markers": null
+                },
+                {
+                  "Name": "seccomp",
+                  "State": "enabled",
+                  "RawToken": "seccomp",
+                  "Markers": null
+                },
+                {
+                  "Name": "slirp",
+                  "State": "enabled",
+                  "RawToken": "slirp",
+                  "Markers": null
+                },
+                {
+                  "Name": "spice",
+                  "State": "enabled",
+                  "RawToken": "spice",
+                  "Markers": null
+                },
+                {
+                  "Name": "udev",
+                  "State": "enabled",
+                  "RawToken": "udev",
+                  "Markers": null
+                },
+                {
+                  "Name": "usb",
+                  "State": "enabled",
+                  "RawToken": "usb",
+                  "Markers": null
+                },
+                {
+                  "Name": "usbredir",
+                  "State": "enabled",
+                  "RawToken": "usbredir",
+                  "Markers": null
+                },
+                {
+                  "Name": "verify-sig",
+                  "State": "enabled",
+                  "RawToken": "verify-sig",
+                  "Markers": null
+                },
+                {
+                  "Name": "vhost-net",
+                  "State": "enabled",
+                  "RawToken": "vhost-net",
+                  "Markers": null
+                },
+                {
+                  "Name": "virgl",
+                  "State": "enabled",
+                  "RawToken": "virgl",
+                  "Markers": null
+                },
+                {
+                  "Name": "virtfs",
+                  "State": "enabled",
+                  "RawToken": "virtfs",
+                  "Markers": null
+                },
+                {
+                  "Name": "vnc",
+                  "State": "enabled",
+                  "RawToken": "vnc",
+                  "Markers": null
+                },
+                {
+                  "Name": "wayland",
+                  "State": "enabled",
+                  "RawToken": "wayland",
+                  "Markers": null
+                },
+                {
+                  "Name": "xattr",
+                  "State": "enabled",
+                  "RawToken": "xattr",
+                  "Markers": null
+                },
+                {
+                  "Name": "zstd",
+                  "State": "enabled",
+                  "RawToken": "zstd",
+                  "Markers": null
+                },
+                {
+                  "Name": "accessibility",
+                  "State": "disabled",
+                  "RawToken": "-accessibility",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "alsa",
+                  "State": "disabled",
+                  "RawToken": "-alsa",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "debug",
+                  "State": "disabled",
+                  "RawToken": "-debug",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "doc",
+                  "State": "disabled",
+                  "RawToken": "-doc",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "fuse",
+                  "State": "disabled",
+                  "RawToken": "-fuse",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "glusterfs",
+                  "State": "disabled",
+                  "RawToken": "-glusterfs",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "gtk",
+                  "State": "disabled",
+                  "RawToken": "-gtk",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "infiniband",
+                  "State": "disabled",
+                  "RawToken": "-infiniband",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "iscsi",
+                  "State": "disabled",
+                  "RawToken": "-iscsi",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "jack",
+                  "State": "disabled",
+                  "RawToken": "-jack",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "keyutils",
+                  "State": "disabled",
+                  "RawToken": "-keyutils",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "lzo",
+                  "State": "disabled",
+                  "RawToken": "-lzo",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "multipath",
+                  "State": "disabled",
+                  "RawToken": "-multipath",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "nfs",
+                  "State": "disabled",
+                  "RawToken": "-nfs",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "numa",
+                  "State": "disabled",
+                  "RawToken": "-numa",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "oss",
+                  "State": "disabled",
+                  "RawToken": "-oss",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "plugins",
+                  "State": "disabled",
+                  "RawToken": "-plugins",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "pulseaudio",
+                  "State": "disabled",
+                  "RawToken": "-pulseaudio",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "rbd",
+                  "State": "disabled",
+                  "RawToken": "-rbd",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "sasl",
+                  "State": "disabled",
+                  "RawToken": "-sasl",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "sdl",
+                  "State": "disabled",
+                  "RawToken": "-sdl",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "sdl-image",
+                  "State": "disabled",
+                  "RawToken": "-sdl-image",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "selinux",
+                  "State": "disabled",
+                  "RawToken": "(-selinux)",
+                  "Markers": [
+                    "(",
+                    ")",
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "smartcard",
+                  "State": "disabled",
+                  "RawToken": "-smartcard",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "snappy",
+                  "State": "disabled",
+                  "RawToken": "-snappy",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "ssh",
+                  "State": "disabled",
+                  "RawToken": "-ssh",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "static-user",
+                  "State": "disabled",
+                  "RawToken": "-static-user",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "systemtap",
+                  "State": "disabled",
+                  "RawToken": "-systemtap",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "test",
+                  "State": "disabled",
+                  "RawToken": "-test",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "valgrind",
+                  "State": "disabled",
+                  "RawToken": "-valgrind",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "vde",
+                  "State": "disabled",
+                  "RawToken": "-vde",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "vte",
+                  "State": "disabled",
+                  "RawToken": "-vte",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "xdp",
+                  "State": "disabled",
+                  "RawToken": "-xdp",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "xen",
+                  "State": "disabled",
+                  "RawToken": "-xen",
+                  "Markers": [
+                    "-"
+                  ]
+                }
+              ]
+            },
+            {
+              "Name": "PYTHON_TARGETS",
+              "Values": [
+                {
+                  "Name": "python3_14",
+                  "State": "enabled",
+                  "RawToken": "python3_14",
+                  "Markers": null
+                },
+                {
+                  "Name": "python3_13",
+                  "State": "disabled",
+                  "RawToken": "-python3_13",
+                  "Markers": [
+                    "-"
+                  ]
+                }
+              ]
+            },
+            {
+              "Name": "QEMU_SOFTMMU_TARGETS",
+              "Values": [
+                {
+                  "Name": "x86_64",
+                  "State": "enabled",
+                  "RawToken": "x86_64",
+                  "Markers": null
+                },
+                {
+                  "Name": "aarch64",
+                  "State": "disabled",
+                  "RawToken": "-aarch64",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "alpha",
+                  "State": "disabled",
+                  "RawToken": "-alpha",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "arm",
+                  "State": "disabled",
+                  "RawToken": "-arm",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "avr",
+                  "State": "disabled",
+                  "RawToken": "-avr",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "hppa",
+                  "State": "disabled",
+                  "RawToken": "-hppa",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "i386",
+                  "State": "disabled",
+                  "RawToken": "-i386",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "loongarch64",
+                  "State": "disabled",
+                  "RawToken": "-loongarch64",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "m68k",
+                  "State": "disabled",
+                  "RawToken": "-m68k",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "microblaze",
+                  "State": "disabled",
+                  "RawToken": "-microblaze",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "microblazeel",
+                  "State": "disabled",
+                  "RawToken": "-microblazeel",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "mips",
+                  "State": "disabled",
+                  "RawToken": "-mips",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "mips64",
+                  "State": "disabled",
+                  "RawToken": "-mips64",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "mips64el",
+                  "State": "disabled",
+                  "RawToken": "-mips64el",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "mipsel",
+                  "State": "disabled",
+                  "RawToken": "-mipsel",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "or1k",
+                  "State": "disabled",
+                  "RawToken": "-or1k",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "ppc",
+                  "State": "disabled",
+                  "RawToken": "-ppc",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "ppc64",
+                  "State": "disabled",
+                  "RawToken": "-ppc64",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "riscv32",
+                  "State": "disabled",
+                  "RawToken": "-riscv32",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "riscv64",
+                  "State": "disabled",
+                  "RawToken": "-riscv64",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "rx",
+                  "State": "disabled",
+                  "RawToken": "-rx",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "s390x",
+                  "State": "disabled",
+                  "RawToken": "-s390x",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "sh4",
+                  "State": "disabled",
+                  "RawToken": "-sh4",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "sh4eb",
+                  "State": "disabled",
+                  "RawToken": "-sh4eb",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "sparc",
+                  "State": "disabled",
+                  "RawToken": "-sparc",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "sparc64",
+                  "State": "disabled",
+                  "RawToken": "-sparc64",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "tricore",
+                  "State": "disabled",
+                  "RawToken": "-tricore",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "xtensa",
+                  "State": "disabled",
+                  "RawToken": "-xtensa",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "xtensaeb",
+                  "State": "disabled",
+                  "RawToken": "-xtensaeb",
+                  "Markers": [
+                    "-"
+                  ]
+                }
+              ]
+            },
+            {
+              "Name": "QEMU_USER_TARGETS",
+              "Values": [
+                {
+                  "Name": "aarch64",
+                  "State": "disabled",
+                  "RawToken": "-aarch64",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "aarch64_be",
+                  "State": "disabled",
+                  "RawToken": "-aarch64_be",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "alpha",
+                  "State": "disabled",
+                  "RawToken": "-alpha",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "arm",
+                  "State": "disabled",
+                  "RawToken": "-arm",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "armeb",
+                  "State": "disabled",
+                  "RawToken": "-armeb",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "hexagon",
+                  "State": "disabled",
+                  "RawToken": "-hexagon",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "hppa",
+                  "State": "disabled",
+                  "RawToken": "-hppa",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "i386",
+                  "State": "disabled",
+                  "RawToken": "-i386",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "loongarch64",
+                  "State": "disabled",
+                  "RawToken": "-loongarch64",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "m68k",
+                  "State": "disabled",
+                  "RawToken": "-m68k",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "microblaze",
+                  "State": "disabled",
+                  "RawToken": "-microblaze",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "microblazeel",
+                  "State": "disabled",
+                  "RawToken": "-microblazeel",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "mips",
+                  "State": "disabled",
+                  "RawToken": "-mips",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "mips64",
+                  "State": "disabled",
+                  "RawToken": "-mips64",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "mips64el",
+                  "State": "disabled",
+                  "RawToken": "-mips64el",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "mipsel",
+                  "State": "disabled",
+                  "RawToken": "-mipsel",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "mipsn32",
+                  "State": "disabled",
+                  "RawToken": "-mipsn32",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "mipsn32el",
+                  "State": "disabled",
+                  "RawToken": "-mipsn32el",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "or1k",
+                  "State": "disabled",
+                  "RawToken": "-or1k",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "ppc",
+                  "State": "disabled",
+                  "RawToken": "-ppc",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "ppc64",
+                  "State": "disabled",
+                  "RawToken": "-ppc64",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "ppc64le",
+                  "State": "disabled",
+                  "RawToken": "-ppc64le",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "riscv32",
+                  "State": "disabled",
+                  "RawToken": "-riscv32",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "riscv64",
+                  "State": "disabled",
+                  "RawToken": "-riscv64",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "s390x",
+                  "State": "disabled",
+                  "RawToken": "-s390x",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "sh4",
+                  "State": "disabled",
+                  "RawToken": "-sh4",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "sh4eb",
+                  "State": "disabled",
+                  "RawToken": "-sh4eb",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "sparc",
+                  "State": "disabled",
+                  "RawToken": "-sparc",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "sparc32plus",
+                  "State": "disabled",
+                  "RawToken": "-sparc32plus",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "sparc64",
+                  "State": "disabled",
+                  "RawToken": "-sparc64",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "x86_64",
+                  "State": "disabled",
+                  "RawToken": "-x86_64",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "xtensa",
+                  "State": "disabled",
+                  "RawToken": "-xtensa",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "xtensaeb",
+                  "State": "disabled",
+                  "RawToken": "-xtensaeb",
+                  "Markers": [
+                    "-"
+                  ]
+                }
+              ]
+            }
+          ],
+          "Download": {
+            "Value": 0,
+            "Unit": "KiB"
+          },
+          "SourceLines": [
+            8
+          ]
+        },
+        {
+          "Package": {
+            "Category": "app-editors",
+            "Name": "vscode"
+          },
+          "Operation": "upgrade",
+          "NewSlot": false,
+          "UnstableMarker": false,
+          "Target": {
+            "Version": "1.144.0-r1",
+            "Repository": "gentoo",
+            "Slot": null,
+            "Subslot": null
+          },
+          "Installed": {
+            "Versions": [
+              {
+                "Version": "1.144.0",
+                "Repository": "gentoo",
+                "Slot": null,
+                "Subslot": null
+              }
+            ]
+          },
+          "FlagGroups": [
+            {
+              "Name": "USE",
+              "Values": [
+                {
+                  "Name": "egl",
+                  "State": "enabled",
+                  "RawToken": "egl",
+                  "Markers": null
+                },
+                {
+                  "Name": "wayland",
+                  "State": "enabled",
+                  "RawToken": "wayland",
+                  "Markers": null
+                },
+                {
+                  "Name": "webkit",
+                  "State": "disabled",
+                  "RawToken": "-webkit",
+                  "Markers": [
+                    "-"
+                  ]
+                }
+              ]
+            },
+            {
+              "Name": "L10N",
+              "Values": [
+                {
+                  "Name": "af",
+                  "State": "enabled",
+                  "RawToken": "af",
+                  "Markers": null
+                },
+                {
+                  "Name": "am",
+                  "State": "enabled",
+                  "RawToken": "am",
+                  "Markers": null
+                },
+                {
+                  "Name": "ar",
+                  "State": "enabled",
+                  "RawToken": "ar",
+                  "Markers": null
+                },
+                {
+                  "Name": "bg",
+                  "State": "enabled",
+                  "RawToken": "bg",
+                  "Markers": null
+                },
+                {
+                  "Name": "bn",
+                  "State": "enabled",
+                  "RawToken": "bn",
+                  "Markers": null
+                },
+                {
+                  "Name": "ca",
+                  "State": "enabled",
+                  "RawToken": "ca",
+                  "Markers": null
+                },
+                {
+                  "Name": "cs",
+                  "State": "enabled",
+                  "RawToken": "cs",
+                  "Markers": null
+                },
+                {
+                  "Name": "da",
+                  "State": "enabled",
+                  "RawToken": "da",
+                  "Markers": null
+                },
+                {
+                  "Name": "de",
+                  "State": "enabled",
+                  "RawToken": "de",
+                  "Markers": null
+                },
+                {
+                  "Name": "el",
+                  "State": "enabled",
+                  "RawToken": "el",
+                  "Markers": null
+                },
+                {
+                  "Name": "en-GB",
+                  "State": "enabled",
+                  "RawToken": "en-GB",
+                  "Markers": null
+                },
+                {
+                  "Name": "es",
+                  "State": "enabled",
+                  "RawToken": "es",
+                  "Markers": null
+                },
+                {
+                  "Name": "es-419",
+                  "State": "enabled",
+                  "RawToken": "es-419",
+                  "Markers": null
+                },
+                {
+                  "Name": "et",
+                  "State": "enabled",
+                  "RawToken": "et",
+                  "Markers": null
+                },
+                {
+                  "Name": "fa",
+                  "State": "enabled",
+                  "RawToken": "fa",
+                  "Markers": null
+                },
+                {
+                  "Name": "fi",
+                  "State": "enabled",
+                  "RawToken": "fi",
+                  "Markers": null
+                },
+                {
+                  "Name": "fil",
+                  "State": "enabled",
+                  "RawToken": "fil",
+                  "Markers": null
+                },
+                {
+                  "Name": "fr",
+                  "State": "enabled",
+                  "RawToken": "fr",
+                  "Markers": null
+                },
+                {
+                  "Name": "gu",
+                  "State": "enabled",
+                  "RawToken": "gu",
+                  "Markers": null
+                },
+                {
+                  "Name": "he",
+                  "State": "enabled",
+                  "RawToken": "he",
+                  "Markers": null
+                },
+                {
+                  "Name": "hi",
+                  "State": "enabled",
+                  "RawToken": "hi",
+                  "Markers": null
+                },
+                {
+                  "Name": "hr",
+                  "State": "enabled",
+                  "RawToken": "hr",
+                  "Markers": null
+                },
+                {
+                  "Name": "hu",
+                  "State": "enabled",
+                  "RawToken": "hu",
+                  "Markers": null
+                },
+                {
+                  "Name": "id",
+                  "State": "enabled",
+                  "RawToken": "id",
+                  "Markers": null
+                },
+                {
+                  "Name": "it",
+                  "State": "enabled",
+                  "RawToken": "it",
+                  "Markers": null
+                },
+                {
+                  "Name": "ja",
+                  "State": "enabled",
+                  "RawToken": "ja",
+                  "Markers": null
+                },
+                {
+                  "Name": "kn",
+                  "State": "enabled",
+                  "RawToken": "kn",
+                  "Markers": null
+                },
+                {
+                  "Name": "ko",
+                  "State": "enabled",
+                  "RawToken": "ko",
+                  "Markers": null
+                },
+                {
+                  "Name": "lt",
+                  "State": "enabled",
+                  "RawToken": "lt",
+                  "Markers": null
+                },
+                {
+                  "Name": "lv",
+                  "State": "enabled",
+                  "RawToken": "lv",
+                  "Markers": null
+                },
+                {
+                  "Name": "ml",
+                  "State": "enabled",
+                  "RawToken": "ml",
+                  "Markers": null
+                },
+                {
+                  "Name": "mr",
+                  "State": "enabled",
+                  "RawToken": "mr",
+                  "Markers": null
+                },
+                {
+                  "Name": "ms",
+                  "State": "enabled",
+                  "RawToken": "ms",
+                  "Markers": null
+                },
+                {
+                  "Name": "nb",
+                  "State": "enabled",
+                  "RawToken": "nb",
+                  "Markers": null
+                },
+                {
+                  "Name": "nl",
+                  "State": "enabled",
+                  "RawToken": "nl",
+                  "Markers": null
+                },
+                {
+                  "Name": "pl",
+                  "State": "enabled",
+                  "RawToken": "pl",
+                  "Markers": null
+                },
+                {
+                  "Name": "pt-BR",
+                  "State": "enabled",
+                  "RawToken": "pt-BR",
+                  "Markers": null
+                },
+                {
+                  "Name": "pt-PT",
+                  "State": "enabled",
+                  "RawToken": "pt-PT",
+                  "Markers": null
+                },
+                {
+                  "Name": "ro",
+                  "State": "enabled",
+                  "RawToken": "ro",
+                  "Markers": null
+                },
+                {
+                  "Name": "ru",
+                  "State": "enabled",
+                  "RawToken": "ru",
+                  "Markers": null
+                },
+                {
+                  "Name": "sk",
+                  "State": "enabled",
+                  "RawToken": "sk",
+                  "Markers": null
+                },
+                {
+                  "Name": "sl",
+                  "State": "enabled",
+                  "RawToken": "sl",
+                  "Markers": null
+                },
+                {
+                  "Name": "sr",
+                  "State": "enabled",
+                  "RawToken": "sr",
+                  "Markers": null
+                },
+                {
+                  "Name": "sv",
+                  "State": "enabled",
+                  "RawToken": "sv",
+                  "Markers": null
+                },
+                {
+                  "Name": "sw",
+                  "State": "enabled",
+                  "RawToken": "sw",
+                  "Markers": null
+                },
+                {
+                  "Name": "ta",
+                  "State": "enabled",
+                  "RawToken": "ta",
+                  "Markers": null
+                },
+                {
+                  "Name": "te",
+                  "State": "enabled",
+                  "RawToken": "te",
+                  "Markers": null
+                },
+                {
+                  "Name": "th",
+                  "State": "enabled",
+                  "RawToken": "th",
+                  "Markers": null
+                },
+                {
+                  "Name": "tr",
+                  "State": "enabled",
+                  "RawToken": "tr",
+                  "Markers": null
+                },
+                {
+                  "Name": "uk",
+                  "State": "enabled",
+                  "RawToken": "uk",
+                  "Markers": null
+                },
+                {
+                  "Name": "ur",
+                  "State": "enabled",
+                  "RawToken": "ur",
+                  "Markers": null
+                },
+                {
+                  "Name": "vi",
+                  "State": "enabled",
+                  "RawToken": "vi",
+                  "Markers": null
+                },
+                {
+                  "Name": "zh-CN",
+                  "State": "enabled",
+                  "RawToken": "zh-CN",
+                  "Markers": null
+                },
+                {
+                  "Name": "zh-TW",
+                  "State": "enabled",
+                  "RawToken": "zh-TW",
+                  "Markers": null
+                }
+              ]
+            }
+          ],
+          "Download": {
+            "Value": 0,
+            "Unit": "KiB"
+          },
+          "SourceLines": [
+            9
+          ]
+        },
+        {
+          "Package": {
+            "Category": "sys-kernel",
+            "Name": "gentoo-kernel-bin"
+          },
+          "Operation": "install",
+          "NewSlot": true,
+          "UnstableMarker": false,
+          "Target": {
+            "Version": "6.18.60",
+            "Repository": "gentoo",
+            "Slot": "6.18.60",
+            "Subslot": null
+          },
+          "Installed": {
+            "Versions": [
+              {
+                "Version": "6.18.57",
+                "Repository": "gentoo",
+                "Slot": "6.18.57",
+                "Subslot": null
+              }
+            ]
+          },
+          "FlagGroups": [
+            {
+              "Name": "USE",
+              "Values": [
+                {
+                  "Name": "initramfs",
+                  "State": "enabled",
+                  "RawToken": "initramfs",
+                  "Markers": null
+                },
+                {
+                  "Name": "verify-sig",
+                  "State": "enabled",
+                  "RawToken": "verify-sig",
+                  "Markers": null
+                },
+                {
+                  "Name": "debug",
+                  "State": "disabled",
+                  "RawToken": "-debug",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "generic-uki",
+                  "State": "disabled",
+                  "RawToken": "(-generic-uki)",
+                  "Markers": [
+                    "(",
+                    ")",
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "modules-compress",
+                  "State": "disabled",
+                  "RawToken": "-modules-compress",
+                  "Markers": [
+                    "-"
+                  ]
+                },
+                {
+                  "Name": "test",
+                  "State": "disabled",
+                  "RawToken": "-test",
+                  "Markers": [
+                    "-"
+                  ]
+                }
+              ]
+            }
+          ],
+          "Download": {
+            "Value": 469316,
+            "Unit": "KiB"
+          },
+          "SourceLines": [
+            10
+          ]
+        },
+        {
+          "Package": {
+            "Category": "virtual",
+            "Name": "dist-kernel"
+          },
+          "Operation": "upgrade",
+          "NewSlot": false,
+          "UnstableMarker": false,
+          "Target": {
+            "Version": "6.18.60",
+            "Repository": "gentoo",
+            "Slot": "0",
+            "Subslot": "6.18.60"
+          },
+          "Installed": {
+            "Versions": [
+              {
+                "Version": "6.18.57",
+                "Repository": "gentoo",
+                "Slot": "0",
+                "Subslot": "6.18.57"
+              }
+            ]
+          },
+          "FlagGroups": null,
+          "Download": {
+            "Value": 0,
+            "Unit": "KiB"
+          },
+          "SourceLines": [
+            11
+          ]
+        }
+      ],
+      "Blockers": null,
+      "Removals": null,
+      "ConflictSummary": null,
+      "Summary": {
+        "Packages": 6,
+        "Upgrades": 5,
+        "Downgrades": 0,
+        "Uninstalls": 0,
+        "NewSlots": 1,
+        "Download": {
+          "Value": 481212,
+          "Unit": "KiB"
+        },
+        "SourceLine": 13
+      },
+      "Diagnostics": null
+    },
+    "Analysis": {
+      "Status": "parsed",
+      "Diagnostics": null,
+      "Findings": [
+        {
+          "RuleID": "LOCAL_PATCHED_PACKAGE",
+          "Category": "REVIEW",
+          "Message": "Проверьте применимость локальных патчей для dev-libs/libei.",
+          "EntryIndex": 0,
+          "Evidence": {
+            "ContextIndex": 0
+          }
+        }
+      ]
+    },
+    "Reports": [
+      {
+        "Report": {
+          "EntryIndex": 0,
+          "SourceLines": [
+            6
+          ],
+          "ParserStatus": "parsed",
+          "ParserDiagnostics": null,
+          "Gentoo": {
+            "Status": "available",
+            "Comparison": {
+              "Status": "available",
+              "ComparedFields": [
+                "EAPI",
+                "SLOT",
+                "IUSE"
+              ],
+              "Changes": {
+                "EAPI": null,
+                "Slot": null,
+                "Subslot": null,
+                "IUSE": {
+                  "Added": [],
+                  "Removed": [],
+                  "DefaultChanges": []
+                }
+              },
+              "Limitations": null,
+              "Before": {
+                "Source": {
+                  "Category": "dev-libs",
+                  "Name": "libei",
+                  "Version": "1.6.0",
+                  "Repository": "gentoo",
+                  "SourceURL": "local://gentoo",
+                  "Commit": "1d1580515aeae5bf0c3d33a9d7d099bdc4a2aed3",
+                  "CachePath": "metadata/md5-cache/dev-libs/libei-1.6.0"
+                },
+                "SHA256": "0168526a96c712e1fad72f920ba5fbf3af34ddbcca1fd69db5c211448ffa0002"
+              },
+              "After": {
+                "Source": {
+                  "Category": "dev-libs",
+                  "Name": "libei",
+                  "Version": "1.6.0-r1",
+                  "Repository": "gentoo",
+                  "SourceURL": "local://gentoo",
+                  "Commit": "1d1580515aeae5bf0c3d33a9d7d099bdc4a2aed3",
+                  "CachePath": "metadata/md5-cache/dev-libs/libei-1.6.0-r1"
+                },
+                "SHA256": "e0d82b81a0e872e19cefc32a1f0229a23628726acf8a2ecd2ad53e965f4337e8"
+              }
+            },
+            "Diagnostics": []
+          },
+          "EffectiveConfig": {
+            "Status": "unavailable",
+            "Reason": "NOT_IMPLEMENTED"
+          },
+          "Upstream": {
+            "Status": "unavailable",
+            "Reason": "NOT_IMPLEMENTED"
+          },
+          "InterpretationLimitation": "Сравниваются выбранные repository metadata; соответствие metadata установленной сборке не подтверждено."
+        },
+        "BeforeLookup": {
+          "Query": {
+            "Repository": "gentoo",
+            "Category": "dev-libs",
+            "Name": "libei",
+            "Version": "1.6.0"
+          },
+          "Result": {
+            "Status": "found",
+            "Snapshot": {
+              "Source": {
+                "Category": "dev-libs",
+                "Name": "libei",
+                "Version": "1.6.0",
+                "Repository": "gentoo",
+                "SourceURL": "local://gentoo",
+                "Commit": "1d1580515aeae5bf0c3d33a9d7d099bdc4a2aed3",
+                "CachePath": "metadata/md5-cache/dev-libs/libei-1.6.0"
+              },
+              "Content": "BDEPEND=virtual/pkgconfig || ( ( dev-lang/python:3.14 dev-python/jinja2[python_targets_python3_14(-)] ) ( dev-lang/python:3.13 dev-python/jinja2[python_targets_python3_13(-)] ) ( dev-lang/python:3.12 dev-python/jinja2[python_targets_python3_12(-)] ) ) test? ( || ( ( dev-lang/python:3.14 dev-python/pytest[python_targets_python3_14(-)] dev-python/python-dbusmock[python_targets_python3_14(-)] dev-python/pyyaml[python_targets_python3_14(-)] dev-python/structlog[python_targets_python3_14(-)] ) ( dev-lang/python:3.13 dev-python/pytest[python_targets_python3_13(-)] dev-python/python-dbusmock[python_targets_python3_13(-)] dev-python/pyyaml[python_targets_python3_13(-)] dev-python/structlog[python_targets_python3_13(-)] ) ( dev-lang/python:3.12 dev-python/pytest[python_targets_python3_12(-)] dev-python/python-dbusmock[python_targets_python3_12(-)] dev-python/pyyaml[python_targets_python3_12(-)] dev-python/structlog[python_targets_python3_12(-)] ) ) ) >=dev-build/meson-1.2.3 app-alternatives/ninja dev-build/meson-format-array\nDEFINED_PHASES=compile configure install prepare setup test unpack\nDEPEND=>=dev-libs/libevdev-1.9.902 || ( systemd? ( >=sys-apps/systemd-237 ) elogind? ( >=sys-auth/elogind-237 ) sys-libs/basu )\nDESCRIPTION=Library for Emulated Input, primarily aimed at the Wayland stack\nEAPI=8\nHOMEPAGE=https://gitlab.freedesktop.org/libinput/libei\nINHERIT=meson python-any-r1\nIUSE=elogind systemd test\nKEYWORDS=~alpha amd64 arm arm64 ~hppa ~loong ppc ppc64 ~riscv ~s390 ~sparc x86\nLICENSE=MIT\nRDEPEND=>=dev-libs/libevdev-1.9.902 || ( systemd? ( >=sys-apps/systemd-237 ) elogind? ( >=sys-auth/elogind-237 ) sys-libs/basu )\nRESTRICT=!test? ( test )\nSLOT=0\nSRC_URI=https://gitlab.freedesktop.org/libinput/libei/-/archive/1.6.0/libei-1.6.0.tar.bz2 https://github.com/nemequ/munit/archive/fbbdf1467eb0d04a6ee465def2e529e4c87f2118.tar.gz -> munit-fbbdf1467eb0d04a6ee465def2e529e4c87f2118.tar.gz\n_eclasses_=eapi9-pipestatus\td2c134036ac31c3085aebc9147f572bd\tflag-o-matic\tfd3558f73f6503093adee69adf41020d\tmeson\t4d3a148e5931f2930e970884bcb4c77d\tmultiprocessing\t45d0620f25c2f063ad6276ecd9ed9399\tninja-utils\td063ea1900a793f93eb095010d6d9156\tpython-any-r1\t891415dfe39ad9b41b461f2b86354af0\tpython-utils-r1\t025367880f07ae6444e6035a49db0dab\trust-toolchain\t76468983281b0a7fc167ca224f84ecfd\tsysroot\t4c36abaf94ebd3ab32f8abea9a444121\ttoolchain-funcs\t58a918e3a42d0156f010dcfd43725be5\n_md5_=cff3b6ef719ba40e68f0da4bcc1ae655\n",
+              "SHA256": "0168526a96c712e1fad72f920ba5fbf3af34ddbcca1fd69db5c211448ffa0002",
+              "EAPI": {
+                "State": "valid",
+                "Value": "8",
+                "Supported": true,
+                "Lines": [
+                  5
+                ]
+              },
+              "Slot": {
+                "State": "valid",
+                "Raw": "0",
+                "Name": "0",
+                "Subslot": "0",
+                "ExplicitSubslot": false,
+                "Lines": [
+                  13
+                ]
+              },
+              "IUSE": {
+                "State": "valid",
+                "Flags": [
+                  {
+                    "Name": "elogind",
+                    "Default": "unspecified",
+                    "Declarations": [
+                      {
+                        "Token": "elogind",
+                        "Line": 8
+                      }
+                    ]
+                  },
+                  {
+                    "Name": "systemd",
+                    "Default": "unspecified",
+                    "Declarations": [
+                      {
+                        "Token": "systemd",
+                        "Line": 8
+                      }
+                    ]
+                  },
+                  {
+                    "Name": "test",
+                    "Default": "unspecified",
+                    "Declarations": [
+                      {
+                        "Token": "test",
+                        "Line": 8
+                      }
+                    ]
+                  }
+                ],
+                "Lines": [
+                  8
+                ]
+              },
+              "Diagnostics": null
+            }
+          },
+          "Err": null,
+          "SkipReason": ""
+        },
+        "AfterLookup": {
+          "Query": {
+            "Repository": "gentoo",
+            "Category": "dev-libs",
+            "Name": "libei",
+            "Version": "1.6.0-r1"
+          },
+          "Result": {
+            "Status": "found",
+            "Snapshot": {
+              "Source": {
+                "Category": "dev-libs",
+                "Name": "libei",
+                "Version": "1.6.0-r1",
+                "Repository": "gentoo",
+                "SourceURL": "local://gentoo",
+                "Commit": "1d1580515aeae5bf0c3d33a9d7d099bdc4a2aed3",
+                "CachePath": "metadata/md5-cache/dev-libs/libei-1.6.0-r1"
+              },
+              "Content": "BDEPEND=virtual/pkgconfig || ( ( dev-lang/python:3.14 dev-python/jinja2[python_targets_python3_14(-)] ) ( dev-lang/python:3.13 dev-python/jinja2[python_targets_python3_13(-)] ) ( dev-lang/python:3.12 dev-python/jinja2[python_targets_python3_12(-)] ) ) test? ( || ( ( dev-lang/python:3.14 dev-python/pytest[python_targets_python3_14(-)] dev-python/python-dbusmock[python_targets_python3_14(-)] dev-python/pyyaml[python_targets_python3_14(-)] dev-python/structlog[python_targets_python3_14(-)] ) ( dev-lang/python:3.13 dev-python/pytest[python_targets_python3_13(-)] dev-python/python-dbusmock[python_targets_python3_13(-)] dev-python/pyyaml[python_targets_python3_13(-)] dev-python/structlog[python_targets_python3_13(-)] ) ( dev-lang/python:3.12 dev-python/pytest[python_targets_python3_12(-)] dev-python/python-dbusmock[python_targets_python3_12(-)] dev-python/pyyaml[python_targets_python3_12(-)] dev-python/structlog[python_targets_python3_12(-)] ) ) ) >=dev-build/meson-1.2.3 app-alternatives/ninja dev-build/meson-format-array\nDEFINED_PHASES=compile configure install prepare setup test unpack\nDEPEND=>=dev-libs/libevdev-1.9.902 systemd? ( >=sys-apps/systemd-237 ) elogind? ( >=sys-auth/elogind-237 ) !systemd? ( !elogind? ( sys-libs/basu ) )\nDESCRIPTION=Library for Emulated Input, primarily aimed at the Wayland stack\nEAPI=8\nHOMEPAGE=https://gitlab.freedesktop.org/libinput/libei\nINHERIT=meson python-any-r1\nIUSE=elogind systemd test\nKEYWORDS=~alpha amd64 arm arm64 ~hppa ~loong ppc ppc64 ~riscv ~s390 ~sparc x86\nLICENSE=MIT\nRDEPEND=>=dev-libs/libevdev-1.9.902 systemd? ( >=sys-apps/systemd-237 ) elogind? ( >=sys-auth/elogind-237 ) !systemd? ( !elogind? ( sys-libs/basu ) )\nRESTRICT=!test? ( test )\nSLOT=0\nSRC_URI=https://gitlab.freedesktop.org/libinput/libei/-/archive/1.6.0/libei-1.6.0.tar.bz2 https://github.com/nemequ/munit/archive/fbbdf1467eb0d04a6ee465def2e529e4c87f2118.tar.gz -> munit-fbbdf1467eb0d04a6ee465def2e529e4c87f2118.tar.gz\n_eclasses_=eapi9-pipestatus\td2c134036ac31c3085aebc9147f572bd\tflag-o-matic\tfd3558f73f6503093adee69adf41020d\tmeson\t4d3a148e5931f2930e970884bcb4c77d\tmultiprocessing\t45d0620f25c2f063ad6276ecd9ed9399\tninja-utils\td063ea1900a793f93eb095010d6d9156\tpython-any-r1\t891415dfe39ad9b41b461f2b86354af0\tpython-utils-r1\t025367880f07ae6444e6035a49db0dab\trust-toolchain\t76468983281b0a7fc167ca224f84ecfd\tsysroot\t4c36abaf94ebd3ab32f8abea9a444121\ttoolchain-funcs\t58a918e3a42d0156f010dcfd43725be5\n_md5_=067c37836323906b880ce7acfd721c09\n",
+              "SHA256": "e0d82b81a0e872e19cefc32a1f0229a23628726acf8a2ecd2ad53e965f4337e8",
+              "EAPI": {
+                "State": "valid",
+                "Value": "8",
+                "Supported": true,
+                "Lines": [
+                  5
+                ]
+              },
+              "Slot": {
+                "State": "valid",
+                "Raw": "0",
+                "Name": "0",
+                "Subslot": "0",
+                "ExplicitSubslot": false,
+                "Lines": [
+                  13
+                ]
+              },
+              "IUSE": {
+                "State": "valid",
+                "Flags": [
+                  {
+                    "Name": "elogind",
+                    "Default": "unspecified",
+                    "Declarations": [
+                      {
+                        "Token": "elogind",
+                        "Line": 8
+                      }
+                    ]
+                  },
+                  {
+                    "Name": "systemd",
+                    "Default": "unspecified",
+                    "Declarations": [
+                      {
+                        "Token": "systemd",
+                        "Line": 8
+                      }
+                    ]
+                  },
+                  {
+                    "Name": "test",
+                    "Default": "unspecified",
+                    "Declarations": [
+                      {
+                        "Token": "test",
+                        "Line": 8
+                      }
+                    ]
+                  }
+                ],
+                "Lines": [
+                  8
+                ]
+              },
+              "Diagnostics": null
+            }
+          },
+          "Err": null,
+          "SkipReason": ""
+        }
+      },
+      {
+        "Report": {
+          "EntryIndex": 1,
+          "SourceLines": [
+            7
+          ],
+          "ParserStatus": "parsed",
+          "ParserDiagnostics": null,
+          "Gentoo": {
+            "Status": "unavailable",
+            "Comparison": null,
+            "Diagnostics": [
+              {
+                "Code": "SNAPSHOT_MISSING",
+                "Side": "before",
+                "Field": "snapshot",
+                "Expected": null,
+                "Actual": null
+              },
+              {
+                "Code": "SNAPSHOT_MISSING",
+                "Side": "after",
+                "Field": "snapshot",
+                "Expected": null,
+                "Actual": null
+              }
+            ]
+          },
+          "EffectiveConfig": {
+            "Status": "unavailable",
+            "Reason": "NOT_IMPLEMENTED"
+          },
+          "Upstream": {
+            "Status": "unavailable",
+            "Reason": "NOT_IMPLEMENTED"
+          },
+          "InterpretationLimitation": "Сравниваются выбранные repository metadata; соответствие metadata установленной сборке не подтверждено."
+        },
+        "BeforeLookup": {
+          "Query": {
+            "Repository": "gentoo-zh",
+            "Category": "app-admin",
+            "Name": "chezmoi",
+            "Version": "2.73.3"
+          },
+          "Result": {
+            "Status": "repository_unavailable",
+            "Snapshot": null
+          },
+          "Err": null,
+          "SkipReason": ""
+        },
+        "AfterLookup": {
+          "Query": {
+            "Repository": "gentoo-zh",
+            "Category": "app-admin",
+            "Name": "chezmoi",
+            "Version": "2.74.0"
+          },
+          "Result": {
+            "Status": "repository_unavailable",
+            "Snapshot": null
+          },
+          "Err": null,
+          "SkipReason": ""
+        }
+      },
+      {
+        "Report": {
+          "EntryIndex": 2,
+          "SourceLines": [
+            8
+          ],
+          "ParserStatus": "parsed",
+          "ParserDiagnostics": null,
+          "Gentoo": {
+            "Status": "unavailable",
+            "Comparison": null,
+            "Diagnostics": [
+              {
+                "Code": "SNAPSHOT_MISSING",
+                "Side": "before",
+                "Field": "snapshot",
+                "Expected": null,
+                "Actual": null
+              },
+              {
+                "Code": "SNAPSHOT_MISSING",
+                "Side": "after",
+                "Field": "snapshot",
+                "Expected": null,
+                "Actual": null
+              }
+            ]
+          },
+          "EffectiveConfig": {
+            "Status": "unavailable",
+            "Reason": "NOT_IMPLEMENTED"
+          },
+          "Upstream": {
+            "Status": "unavailable",
+            "Reason": "NOT_IMPLEMENTED"
+          },
+          "InterpretationLimitation": "Сравниваются выбранные repository metadata; соответствие metadata установленной сборке не подтверждено."
+        },
+        "BeforeLookup": {
+          "Query": {
+            "Repository": "gentoo",
+            "Category": "app-emulation",
+            "Name": "qemu",
+            "Version": "10.2.3-r3"
+          },
+          "Result": {
+            "Status": "not_found",
+            "Snapshot": null
+          },
+          "Err": null,
+          "SkipReason": ""
+        },
+        "AfterLookup": {
+          "Query": {
+            "Repository": "gentoo",
+            "Category": "app-emulation",
+            "Name": "qemu",
+            "Version": "10.2.3-r4"
+          },
+          "Result": {
+            "Status": "not_found",
+            "Snapshot": null
+          },
+          "Err": null,
+          "SkipReason": ""
+        }
+      },
+      {
+        "Report": {
+          "EntryIndex": 3,
+          "SourceLines": [
+            9
+          ],
+          "ParserStatus": "parsed",
+          "ParserDiagnostics": null,
+          "Gentoo": {
+            "Status": "unavailable",
+            "Comparison": null,
+            "Diagnostics": [
+              {
+                "Code": "SNAPSHOT_MISSING",
+                "Side": "before",
+                "Field": "snapshot",
+                "Expected": null,
+                "Actual": null
+              },
+              {
+                "Code": "SNAPSHOT_MISSING",
+                "Side": "after",
+                "Field": "snapshot",
+                "Expected": null,
+                "Actual": null
+              }
+            ]
+          },
+          "EffectiveConfig": {
+            "Status": "unavailable",
+            "Reason": "NOT_IMPLEMENTED"
+          },
+          "Upstream": {
+            "Status": "unavailable",
+            "Reason": "NOT_IMPLEMENTED"
+          },
+          "InterpretationLimitation": "Сравниваются выбранные repository metadata; соответствие metadata установленной сборке не подтверждено."
+        },
+        "BeforeLookup": {
+          "Query": {
+            "Repository": "gentoo",
+            "Category": "app-editors",
+            "Name": "vscode",
+            "Version": "1.144.0"
+          },
+          "Result": {
+            "Status": "not_found",
+            "Snapshot": null
+          },
+          "Err": null,
+          "SkipReason": ""
+        },
+        "AfterLookup": {
+          "Query": {
+            "Repository": "gentoo",
+            "Category": "app-editors",
+            "Name": "vscode",
+            "Version": "1.144.0-r1"
+          },
+          "Result": {
+            "Status": "not_found",
+            "Snapshot": null
+          },
+          "Err": null,
+          "SkipReason": ""
+        }
+      },
+      {
+        "Report": {
+          "EntryIndex": 4,
+          "SourceLines": [
+            10
+          ],
+          "ParserStatus": "parsed",
+          "ParserDiagnostics": null,
+          "Gentoo": {
+            "Status": "unavailable",
+            "Comparison": null,
+            "Diagnostics": [
+              {
+                "Code": "OPERATION_UNSUPPORTED",
+                "Side": null,
+                "Field": "operation",
+                "Expected": "upgrade or downgrade",
+                "Actual": "install"
+              }
+            ]
+          },
+          "EffectiveConfig": {
+            "Status": "unavailable",
+            "Reason": "NOT_IMPLEMENTED"
+          },
+          "Upstream": {
+            "Status": "unavailable",
+            "Reason": "NOT_IMPLEMENTED"
+          },
+          "InterpretationLimitation": "Сравниваются выбранные repository metadata; соответствие metadata установленной сборке не подтверждено."
+        },
+        "BeforeLookup": {
+          "Query": null,
+          "Result": null,
+          "Err": null,
+          "SkipReason": "BINDING_REJECTED"
+        },
+        "AfterLookup": {
+          "Query": null,
+          "Result": null,
+          "Err": null,
+          "SkipReason": "BINDING_REJECTED"
+        }
+      },
+      {
+        "Report": {
+          "EntryIndex": 5,
+          "SourceLines": [
+            11
+          ],
+          "ParserStatus": "parsed",
+          "ParserDiagnostics": null,
+          "Gentoo": {
+            "Status": "unavailable",
+            "Comparison": null,
+            "Diagnostics": [
+              {
+                "Code": "SNAPSHOT_MISSING",
+                "Side": "before",
+                "Field": "snapshot",
+                "Expected": null,
+                "Actual": null
+              },
+              {
+                "Code": "SNAPSHOT_MISSING",
+                "Side": "after",
+                "Field": "snapshot",
+                "Expected": null,
+                "Actual": null
+              }
+            ]
+          },
+          "EffectiveConfig": {
+            "Status": "unavailable",
+            "Reason": "NOT_IMPLEMENTED"
+          },
+          "Upstream": {
+            "Status": "unavailable",
+            "Reason": "NOT_IMPLEMENTED"
+          },
+          "InterpretationLimitation": "Сравниваются выбранные repository metadata; соответствие metadata установленной сборке не подтверждено."
+        },
+        "BeforeLookup": {
+          "Query": {
+            "Repository": "gentoo",
+            "Category": "virtual",
+            "Name": "dist-kernel",
+            "Version": "6.18.57"
+          },
+          "Result": {
+            "Status": "not_found",
+            "Snapshot": null
+          },
+          "Err": null,
+          "SkipReason": ""
+        },
+        "AfterLookup": {
+          "Query": {
+            "Repository": "gentoo",
+            "Category": "virtual",
+            "Name": "dist-kernel",
+            "Version": "6.18.60"
+          },
+          "Result": {
+            "Status": "not_found",
+            "Snapshot": null
+          },
+          "Err": null,
+          "SkipReason": ""
+        }
+      }
+    ]
+  }
+}

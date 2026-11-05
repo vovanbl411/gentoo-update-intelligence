@@ -4,6 +4,7 @@ package analysishttp
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"log"
 	"mime"
@@ -32,11 +33,14 @@ var (
 )
 
 type Handler struct {
-	store           analysisstore.Store
-	providerFactory func(context.Context, parser.Result, map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error)
-	mux             http.Handler
-	mu              sync.Mutex
-	running         map[string]bool
+	store            analysisstore.Store
+	providerFactory  func(context.Context, parser.Result, map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error)
+	mux              http.Handler
+	mu               sync.Mutex
+	running          map[string]bool
+	concurrencyLimit int
+	dispatching      bool
+	wakeRequested    bool
 }
 
 type createRequest struct {
@@ -48,8 +52,8 @@ type jobResponse struct {
 	ID       string          `json:"id"`
 	Status   string          `json:"status"`
 	Progress progressView    `json:"progress"`
-	Result   json.RawMessage `json:"result,omitempty"`
-	Error    string          `json:"error,omitempty"`
+	Result   json.RawMessage `json:"result"`
+	Error    *apiErrorDTO    `json:"error"`
 }
 
 type progressView struct {
@@ -79,7 +83,7 @@ type lookupView struct {
 }
 
 type errorResponse struct {
-	Error string `json:"error"`
+	Error *apiErrorDTO `json:"error"`
 }
 
 func NewHandler(store analysisstore.Store, provider reportservice.MetadataLookup) *Handler {
@@ -109,12 +113,27 @@ func NewHandlerWithPlanProviderFactory(store analysisstore.Store, factory func(c
 // NewHandlerWithPinnedProviderFactory restores persisted repository revisions
 // when resuming an interrupted analysis.
 func NewHandlerWithPinnedProviderFactory(store analysisstore.Store, factory func(context.Context, parser.Result, map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error)) *Handler {
-	handler := &Handler{store: store, providerFactory: factory, running: make(map[string]bool)}
-	mux := http.NewServeMux()
-	mux.HandleFunc("POST /analyses", handler.create)
-	mux.HandleFunc("GET /analyses/{id}", handler.get)
-	handler.mux = mux
+	handler, _ := NewHandlerWithConcurrencyLimit(store, factory, 1)
 	return handler
+}
+
+// NewHandlerWithConcurrencyLimit bounds active analyses in this backend.
+// Zero disables the bound; negative limits are invalid.
+func NewHandlerWithConcurrencyLimit(store analysisstore.Store, factory func(context.Context, parser.Result, map[string]repositorymanager.Revision) (reportservice.MetadataLookup, error), limit int) (*Handler, error) {
+	if limit < 0 {
+		return nil, errors.New("analysis concurrency limit must be non-negative")
+	}
+	handler := &Handler{store: store, providerFactory: factory, running: make(map[string]bool), concurrencyLimit: limit}
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /api/v1/analyses", handler.create)
+	mux.HandleFunc("GET /api/v1/analyses/{id}", handler.get)
+	mux.HandleFunc("/api/v1/analyses", methodNotAllowed("POST"))
+	mux.HandleFunc("/api/v1/analyses/{id}", methodNotAllowed("GET, HEAD"))
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		writeError(w, http.StatusNotFound, "NOT_FOUND", "API endpoint not found")
+	})
+	handler.mux = mux
+	return handler, nil
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -124,82 +143,126 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Resume schedules every pending or interrupted job for execution. Call it
 // before serving traffic so previously accepted work survives a restart.
 func (h *Handler) Resume(ctx context.Context) error {
-	jobs, err := h.store.UnfinishedJobs(ctx)
-	if err != nil {
+	if err := h.store.RequeueInterruptedJobs(ctx); err != nil {
 		return err
 	}
-	for _, job := range jobs {
-		var request createRequest
-		if err := json.Unmarshal(job.Request, &request); err != nil {
-			h.updateEventually(analysisstore.JobUpdate{ID: job.ID, Status: "failed", Stage: "failed", Completed: job.Completed, Total: job.Total, Error: "saved job request is invalid"})
-			continue
-		}
-		h.launch(job.ID, request, job.Revisions)
-	}
+	h.schedule()
 	return nil
 }
 
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	if !isJSONContentType(r.Header.Get("Content-Type")) {
-		writeError(w, http.StatusUnsupportedMediaType, "Content-Type must be application/json")
+		writeError(w, http.StatusUnsupportedMediaType, "UNSUPPORTED_MEDIA_TYPE", "Content-Type must be application/json")
 		return
 	}
 	decoder := json.NewDecoder(http.MaxBytesReader(w, r.Body, maxRequestBody))
 	decoder.DisallowUnknownFields()
-	var request createRequest
-	if err := decoder.Decode(&request); err != nil {
-		writeError(w, http.StatusBadRequest, "invalid request body")
+	var input createRequestDTO
+	if err := decoder.Decode(&input); err != nil {
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "invalid request body")
 		return
 	}
 	var extra any
 	if err := decoder.Decode(&extra); err != io.EOF {
-		writeError(w, http.StatusBadRequest, "request body must contain one JSON object")
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "request body must contain one JSON object")
 		return
 	}
+	request := createRequest{Plan: input.Plan, LocallyPatchedPackages: make([]parser.Package, len(input.LocallyPatchedPackages))}
+	for i, pkg := range input.LocallyPatchedPackages {
+		request.LocallyPatchedPackages[i] = parser.Package{Category: pkg.Category, Name: pkg.Name}
+	}
 	if strings.TrimSpace(request.Plan) == "" {
-		writeError(w, http.StatusBadRequest, "plan must be a non-empty string")
+		writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "plan must be a non-empty string")
 		return
 	}
 	for _, pkg := range request.LocallyPatchedPackages {
 		if !validPackage(pkg) {
-			writeError(w, http.StatusBadRequest, "locally_patched_packages must contain exact Gentoo category/name pairs")
+			writeError(w, http.StatusBadRequest, "INVALID_REQUEST", "locally_patched_packages must contain exact Gentoo category/name pairs")
 			return
 		}
 	}
 	if h.store == nil {
-		writeError(w, http.StatusServiceUnavailable, "analysis storage is unavailable")
+		writeError(w, http.StatusServiceUnavailable, "STORAGE_UNAVAILABLE", "analysis storage is unavailable")
 		return
 	}
 	serializedRequest, err := json.Marshal(request)
 	if err != nil {
-		writeError(w, http.StatusInternalServerError, "request serialization failed")
+		writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "request serialization failed")
 		return
 	}
 	id, err := h.store.CreateJob(r.Context(), serializedRequest)
 	if err != nil || !analysisIDPattern.MatchString(id) {
-		writeError(w, http.StatusServiceUnavailable, "analysis could not be saved")
+		writeError(w, http.StatusServiceUnavailable, "STORAGE_UNAVAILABLE", "analysis could not be saved")
 		return
 	}
-	w.Header().Set("Location", "/analyses/"+id)
+	w.Header().Set("Location", "/api/v1/analyses/"+id)
 	writeJSON(w, http.StatusAccepted, jobResponse{ID: id, Status: "pending", Progress: progressView{Stage: "queued"}})
-	h.launch(id, request, nil)
+	h.schedule()
 }
 
-func (h *Handler) launch(id string, request createRequest, pinnedJSON []byte) {
+// schedule coalesces notifications into one dispatcher. Waiting requests remain
+// in PostgreSQL; no goroutine or in-memory request queue is allocated per job.
+func (h *Handler) schedule() {
 	h.mu.Lock()
-	if h.running[id] {
-		h.mu.Unlock()
+	defer h.mu.Unlock()
+	h.wakeRequested = true
+	if h.dispatching {
 		return
 	}
-	h.running[id] = true
-	h.mu.Unlock()
+	h.dispatching = true
+	go h.dispatch()
+}
+
+func (h *Handler) dispatch() {
+	for {
+		h.mu.Lock()
+		h.wakeRequested = false
+		if h.concurrencyLimit > 0 && len(h.running) >= h.concurrencyLimit {
+			h.dispatching = false
+			h.mu.Unlock()
+			return
+		}
+		h.mu.Unlock()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		job, found, err := h.store.ClaimNextJob(ctx)
+		cancel()
+		if err != nil {
+			log.Printf("analysis queue read failed; retrying: %v", err)
+			time.Sleep(time.Second)
+			continue
+		}
+		if !found {
+			h.mu.Lock()
+			if h.wakeRequested {
+				h.mu.Unlock()
+				continue
+			}
+			h.dispatching = false
+			h.mu.Unlock()
+			return
+		}
+		h.mu.Lock()
+		h.running[job.ID] = true
+		h.mu.Unlock()
+		h.launch(job)
+	}
+}
+
+func (h *Handler) launch(job analysisstore.Job) {
 	go func() {
 		defer func() {
 			h.mu.Lock()
-			delete(h.running, id)
+			delete(h.running, job.ID)
 			h.mu.Unlock()
+			h.schedule()
 		}()
-		h.execute(id, request, pinnedJSON)
+		var request createRequest
+		if err := json.Unmarshal(job.Request, &request); err != nil {
+			h.updateEventually(analysisstore.JobUpdate{ID: job.ID, Status: "failed", Stage: "failed", Error: "saved job request is invalid"})
+			return
+		}
+		h.execute(job.ID, request, job.Revisions)
 	}()
 }
 
@@ -305,44 +368,34 @@ func isNilProvider(provider reportservice.MetadataLookup) bool {
 func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if !analysisIDPattern.MatchString(id) {
-		writeError(w, http.StatusNotFound, "analysis not found")
+		writeError(w, http.StatusNotFound, "ANALYSIS_NOT_FOUND", "analysis not found")
 		return
 	}
 	if h.store == nil {
-		writeError(w, http.StatusServiceUnavailable, "analysis storage is unavailable")
+		writeError(w, http.StatusServiceUnavailable, "STORAGE_UNAVAILABLE", "analysis storage is unavailable")
 		return
 	}
 	job, found, err := h.store.GetJob(r.Context(), id)
 	if err != nil {
-		writeError(w, http.StatusServiceUnavailable, "analysis storage is unavailable")
+		writeError(w, http.StatusServiceUnavailable, "STORAGE_UNAVAILABLE", "analysis storage is unavailable")
 		return
 	}
 	if found {
-		if len(job.Result) > 0 && !json.Valid(job.Result) {
-			writeError(w, http.StatusInternalServerError, "stored analysis is invalid")
-			return
-		}
-		writeJSON(w, http.StatusOK, jobResponse{ID: id, Status: job.Status, Progress: progressView{Stage: job.Stage, Completed: job.Completed, Total: job.Total}, Result: job.Result, Error: job.Error})
+		h.writeJob(w, job.ID, job.Status, progressView{Stage: job.Stage, Completed: job.Completed, Total: job.Total}, job.Result, job.Error)
 		return
 	}
 	// Rows created by the synchronous API predate analysis_jobs. Keep them
 	// readable through the new endpoint as completed analyses.
 	result, found, err := h.store.Get(r.Context(), id)
 	if err != nil {
-		writeError(w, http.StatusServiceUnavailable, "analysis storage is unavailable")
+		writeError(w, http.StatusServiceUnavailable, "STORAGE_UNAVAILABLE", "analysis storage is unavailable")
 		return
 	}
 	if !found {
-		writeError(w, http.StatusNotFound, "analysis not found")
+		writeError(w, http.StatusNotFound, "ANALYSIS_NOT_FOUND", "analysis not found")
 		return
 	}
-	if !json.Valid(result) {
-		writeError(w, http.StatusInternalServerError, "stored analysis is invalid")
-		return
-	}
-	writeJSON(w, http.StatusOK, jobResponse{
-		ID: id, Status: "completed", Progress: progressView{Stage: "completed", Completed: 1, Total: 1}, Result: result,
-	})
+	h.writeJob(w, id, "completed", progressView{Stage: "completed", Completed: 1, Total: 1}, result, "")
 }
 
 func presentResult(result planservice.Result) resultView {
@@ -394,8 +447,37 @@ func isJSONContentType(value string) bool {
 	return err == nil && mediaType == "application/json"
 }
 
-func writeError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, errorResponse{Error: message})
+func methodNotAllowed(allow string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Allow", allow)
+		writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed")
+	}
+}
+
+func (h *Handler) writeJob(w http.ResponseWriter, id, status string, progress progressView, stored []byte, message string) {
+	response := jobResponse{ID: id, Status: status, Progress: progress}
+	if status == "completed" {
+		result, err := decodeStoredResult(stored)
+		if err != nil {
+			log.Printf("analysis %s stored result cannot be decoded: %v", id, err)
+			writeError(w, http.StatusInternalServerError, "INVALID_STORED_RESULT", "stored analysis is invalid")
+			return
+		}
+		serialized, err := json.Marshal(result)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "analysis response serialization failed")
+			return
+		}
+		response.Result = serialized
+	}
+	if status == "failed" {
+		response.Error = &apiErrorDTO{Code: "ANALYSIS_FAILED", Message: message}
+	}
+	writeJSON(w, http.StatusOK, response)
+}
+
+func writeError(w http.ResponseWriter, status int, code, message string) {
+	writeJSON(w, status, errorResponse{Error: &apiErrorDTO{Code: code, Message: message}})
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {

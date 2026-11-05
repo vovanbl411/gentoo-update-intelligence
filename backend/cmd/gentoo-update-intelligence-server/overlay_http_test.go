@@ -55,8 +55,17 @@ func (s *overlayTestStore) GetJob(_ context.Context, _ string) (analysisstore.Jo
 	job.Result = append([]byte(nil), job.Result...)
 	return job, job.ID != "", nil
 }
-func (*overlayTestStore) UnfinishedJobs(_ context.Context) ([]analysisstore.Job, error) {
-	return nil, nil
+func (*overlayTestStore) RequeueInterruptedJobs(_ context.Context) error {
+	return nil
+}
+func (s *overlayTestStore) ClaimNextJob(_ context.Context) (analysisstore.Job, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.job.Status != "pending" {
+		return analysisstore.Job{}, false, nil
+	}
+	s.job.Status, s.job.Stage = "running", "preparing"
+	return s.job, true, nil
 }
 
 type overlayResponse struct {
@@ -65,12 +74,16 @@ type overlayResponse struct {
 		Reports      []struct {
 			BeforeLookup struct {
 				Result *metadataprovider.LookupResult
-				Err    *string
-			}
+				Error  *struct {
+					Message string `json:"message"`
+				} `json:"error"`
+			} `json:"before_lookup"`
 			AfterLookup struct {
 				Result *metadataprovider.LookupResult
-				Err    *string
-			}
+				Error  *struct {
+					Message string `json:"message"`
+				} `json:"error"`
+			} `json:"after_lookup"`
 		}
 	} `json:"result"`
 }
@@ -81,7 +94,7 @@ func postOverlayPlan(t *testing.T, handler http.Handler, plan string) overlayRes
 	if err != nil {
 		t.Fatal(err)
 	}
-	request := httptest.NewRequest(http.MethodPost, "/analyses", bytes.NewReader(body))
+	request := httptest.NewRequest(http.MethodPost, "/api/v1/analyses", bytes.NewReader(body))
 	request.Header.Set("Content-Type", "application/json")
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, request)
@@ -91,7 +104,7 @@ func postOverlayPlan(t *testing.T, handler http.Handler, plan string) overlayRes
 	deadline := time.Now().Add(2 * time.Second)
 	for time.Now().Before(deadline) {
 		response = httptest.NewRecorder()
-		handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/analyses/28b28f31-7e85-4e6a-a839-84658f32cc74", nil))
+		handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/v1/analyses/28b28f31-7e85-4e6a-a839-84658f32cc74", nil))
 		var job struct {
 			Status string          `json:"status"`
 			Result json.RawMessage `json:"result"`
@@ -124,21 +137,18 @@ func TestOverlayConfigurationAndRefreshThroughHTTP(t *testing.T) {
 	firstCommit := fixtureRepo(t, overlayPath, "EAPI=8\nSLOT=0\nIUSE=old\n")
 	umbrielPath := filepath.Join(root, "umbriel")
 	fixtureRepo(t, umbrielPath, "EAPI=8\nSLOT=0\nIUSE=umbriel\n")
-	catalog, err := json.Marshal([]repositorymanager.Repository{
+	catalog := []repositorymanager.Repository{
 		{Name: "gentoo-zh", URL: overlayPath, Masters: []string{"gentoo"}},
 		{Name: "umbriel-overlay", URL: umbrielPath, Masters: []string{"gentoo"}},
 		{Name: "duplicate", URL: overlayPath, Masters: []string{"gentoo"}},
 		{Name: "duplicate", URL: umbrielPath, Masters: []string{"gentoo"}},
-	})
-	if err != nil {
-		t.Fatal(err)
 	}
-	manager, err := overlayManager(filepath.Join(root, "mirrors"), string(catalog))
+	manager, err := repositorymanager.New(filepath.Join(root, "mirrors"), append(repositorymanager.KnownOverlays(), catalog...))
 	if err != nil {
 		t.Fatal(err)
 	}
 	config := metadataprovider.Config{Repository: "gentoo", SourceURL: "https://example.invalid/gentoo", LocalPath: gentooPath, Commit: gentooCommit}
-	factory := newProviderFactory(config, manager)
+	factory := newProviderFactory(config, manager, workerSettings{})
 	handler := analysishttp.NewHandlerWithPlanProviderFactory(&overlayTestStore{}, factory)
 	plan := "[ebuild U] dev-libs/widget-1::gentoo-zh [1::gentoo-zh]"
 	first := postOverlayPlan(t, handler, plan)
@@ -168,7 +178,7 @@ func TestOverlayConfigurationAndRefreshThroughHTTP(t *testing.T) {
 	if err := json.Unmarshal(persistedPins, &restoredPins); err != nil {
 		t.Fatal(err)
 	}
-	resumeFactory := newResumableProviderFactory(config, manager)
+	resumeFactory := newResumableProviderFactory(config, manager, workerSettings{})
 	restoredProvider, err := resumeFactory(context.Background(), parser.Parse(plan), restoredPins)
 	if err != nil {
 		t.Fatalf("restore provider with persisted revisions: %v", err)
@@ -199,24 +209,16 @@ func TestOverlayConfigurationAndRefreshThroughHTTP(t *testing.T) {
 	for _, tc := range []struct{ name, reason string }{{"unknown", "unknown repository"}, {"duplicate", "ambiguous repository"}} {
 		result := postOverlayPlan(t, handler, "[ebuild U] dev-libs/widget-1::"+tc.name+" [1::umbriel-overlay]")
 		lookup := result.Result.Reports[0].AfterLookup
-		if lookup.Err == nil || !strings.Contains(*lookup.Err, tc.reason) {
+		if lookup.Error == nil || !strings.Contains(lookup.Error.Message, tc.reason) {
 			t.Fatalf("%s reason = %#v", tc.name, lookup)
 		}
 	}
 	missingInstalled := postOverlayPlan(t, handler, "[ebuild U] dev-libs/widget-1::unknown")
-	if got := missingInstalled.Result.Reports[0].AfterLookup.Err; got == nil || !strings.Contains(*got, "unknown repository") {
+	if got := missingInstalled.Result.Reports[0].AfterLookup.Error; got == nil || !strings.Contains(got.Message, "unknown repository") {
 		t.Fatalf("unknown target with missing installed version = %v", got)
 	}
 	unknownBefore := postOverlayPlan(t, handler, "[ebuild U] dev-libs/widget-1::umbriel-overlay [1::unknown]")
-	if got := unknownBefore.Result.Reports[0].BeforeLookup.Err; got == nil || !strings.Contains(*got, "unknown repository") {
+	if got := unknownBefore.Result.Reports[0].BeforeLookup.Error; got == nil || !strings.Contains(got.Message, "unknown repository") {
 		t.Fatalf("unknown installed repository = %v", got)
-	}
-}
-
-func TestOverlayManagerRejectsMalformedConfiguration(t *testing.T) {
-	for _, value := range []string{"null", "{}", "[] []", `[{"Name":"test","URL":"https://user:secret@example.invalid/repo"}]`, `[{"Name":"test","URL":"https://example.invalid/repo","extra":true}]`} {
-		if _, err := overlayManager(t.TempDir(), value); err == nil {
-			t.Fatalf("accepted invalid catalog %q", value)
-		}
 	}
 }

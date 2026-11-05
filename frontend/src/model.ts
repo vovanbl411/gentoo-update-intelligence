@@ -1,44 +1,38 @@
-// Go API retains exported field names; null slices and pointer fields are expected.
+import type { ApiResult, ApiError } from './api-types';
+export type { ApiResult, ApiError } from './api-types';
 export type Obj = Record<string, any>;
 export interface ApiEnvelope { id: string; result: ApiResult }
 export interface AnalysisJob {
   id: string;
   status: 'pending' | 'running' | 'completed' | 'failed';
   progress: { stage: string; completed: number; total: number };
-  result?: ApiResult;
-  error?: string;
+  result: ApiResult | null;
+  error: ApiError | null;
 }
-export interface ApiResult extends Obj { Plan: ApiPlan; Analysis: ApiAnalysis; Reports: ApiReport[] | null }
-export interface ApiPlan extends Obj { Status: string; Entries: ApiEntry[] | null; Blockers: Obj[] | null; Diagnostics: Obj[] | null }
-export interface ApiEntry extends Obj { Package: Obj; Target: Obj; Installed: Obj; FlagGroups?: Obj[] | null }
-export interface ApiAnalysis extends Obj { Status: string; Findings: ApiFinding[] | null }
-export interface ApiFinding extends Obj { Message: string; EntryIndex?: number | null; Evidence?: unknown }
-export interface ApiReport extends Obj { Report: Obj; BeforeLookup?: ApiLookup; AfterLookup?: ApiLookup }
-export interface ApiLookup extends Obj { Query?: Obj | null; Result?: Obj | null; Err?: string | null; SkipReason?: string }
 
 export const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export const array = (value: unknown): any[] => Array.isArray(value) ? value : [];
 const object = (value: unknown): value is Obj => value !== null && typeof value === 'object' && !Array.isArray(value);
 export function envelope(value: unknown): value is ApiEnvelope {
   if (!object(value) || typeof value.id !== 'string' || !uuid.test(value.id) || !object(value.result)) return false;
-  const { Plan, Analysis, Reports } = value.result;
-  const objects = (v: unknown) => v === null || (Array.isArray(v) && v.every(object));
-  if (!object(Plan) || typeof Plan.Status !== 'string' || !object(Analysis) || typeof Analysis.Status !== 'string') return false;
-  if (!['Entries', 'Blockers', 'Diagnostics'].every(k => objects(Plan[k])) || !objects(Analysis.Findings) || !objects(Reports)) return false;
-  return array(Plan.Entries).every(entry => object(entry.Package) && object(entry.Target) && object(entry.Installed) && objects(entry.Installed.Versions) && (entry.FlagGroups === undefined || objects(entry.FlagGroups)) && array(entry.FlagGroups).every((group: Obj) => objects(group.Values)))
-    && array(Reports).every(view => object(view.Report))
-    && array(Analysis.Findings).every(finding => typeof finding.Message === 'string');
+  const { plan, analysis, reports } = value.result;
+  const objects = (v: unknown) => Array.isArray(v) && v.every(object);
+  if (!object(plan) || typeof plan.status !== 'string' || !object(analysis) || typeof analysis.status !== 'string') return false;
+  if (!['entries', 'blockers', 'removals', 'diagnostics'].every(k => objects(plan[k])) || !objects(analysis.findings) || !objects(analysis.diagnostics) || !objects(reports) || !object(value.result.repositories)) return false;
+  return array(plan.entries).every(entry => object(entry.package) && object(entry.target) && object(entry.installed) && objects(entry.installed.versions) && (entry.flag_groups === undefined || objects(entry.flag_groups)) && array(entry.flag_groups).every((group: Obj) => objects(group.values)))
+    && array(reports).every(view => object(view.report))
+    && array(analysis.findings).every(finding => typeof finding.message === 'string');
 }
-export function analysisJob(value: unknown): value is AnalysisJob | ApiEnvelope {
+export function analysisJob(value: unknown): value is AnalysisJob {
   if (!object(value) || typeof value.id !== 'string' || !uuid.test(value.id)) return false;
-  // Continue to open saved results from the previous synchronous response shape.
-  if ('result' in value && !('status' in value)) return envelope(value);
   if (!['pending', 'running', 'completed', 'failed'].includes(value.status)) return false;
   if (!object(value.progress) || typeof value.progress.stage !== 'string' ||
       !Number.isInteger(value.progress.completed) || value.progress.completed < 0 ||
       !Number.isInteger(value.progress.total) || value.progress.total < 0) return false;
-  if (value.status === 'completed') return envelope({ id: value.id, result: value.result });
-  return value.result === undefined && (value.error === undefined || typeof value.error === 'string');
+  if (value.status === 'completed') return value.error === null && envelope({ id: value.id, result: value.result });
+  if (value.result !== null) return false;
+  if (value.status === 'failed') return object(value.error) && typeof value.error.code === 'string' && typeof value.error.message === 'string';
+  return value.error === null;
 }
 export function input(plan: string, lines: string) {
   if (!plan.trim()) throw new Error('Введите план.');
@@ -50,16 +44,16 @@ export function input(plan: string, lines: string) {
   return { plan, locally_patched_packages: packages };
 }
 export function evidence(plan: Obj, finding: Obj): string[] {
-  const ev = finding.Evidence;
+  const ev = finding.evidence;
   if (!ev || typeof ev !== 'object') return ['Основание недоступно'];
-  const entry = Number.isInteger(finding.EntryIndex) ? array(plan.Entries)[finding.EntryIndex] : undefined;
+  const entry = Number.isInteger(finding.entry_index) ? array(plan.entries)[finding.entry_index] : undefined;
   const result: string[] = [];
   const show = (name: string, value: unknown) => result.push(`${name}: ${value === undefined || value === null ? 'недоступно' : JSON.stringify(value)}`);
-  if (entry) show('Строки', entry.SourceLines);
-  if ('ContextIndex' in ev) show('Индекс контекста', ev.ContextIndex);
-  if ('BlockerIndex' in ev) show('Blocker', array(plan.Blockers)[ev.BlockerIndex]);
-  if ('InstalledVersionIndex' in ev) show('Установленная версия', array(entry?.Installed?.Versions)[ev.InstalledVersionIndex]);
-  if ('Tokens' in ev) for (const ref of array(ev.Tokens)) show('USE', object(ref) ? array(array(entry?.FlagGroups)[ref.GroupIndex]?.Values)[ref.ValueIndex] : undefined);
-  if (!['ContextIndex', 'BlockerIndex', 'InstalledVersionIndex', 'Tokens'].some(key => key in ev) || 'Operation' in ev) show('Evidence', ev);
+  if (entry) show('Строки', entry.source_lines);
+  if ('context_index' in ev) show('Индекс контекста', ev.context_index);
+  if ('blocker_index' in ev) show('Blocker', array(plan.blockers)[ev.blocker_index]);
+  if ('installed_version_index' in ev) show('Установленная версия', array(entry?.installed?.versions)[ev.installed_version_index]);
+  if ('tokens' in ev) for (const ref of array(ev.tokens)) show('USE', object(ref) ? array(array(entry?.flag_groups)[ref.group_index]?.values)[ref.value_index] : undefined);
+  if (!['context_index', 'blocker_index', 'installed_version_index', 'tokens'].some(key => key in ev) || 'operation' in ev) show('Evidence', ev);
   return result;
 }

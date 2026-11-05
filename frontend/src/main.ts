@@ -1,3 +1,4 @@
+import { createAnalysis, getAnalysis, responseErrorMessage } from './api';
 import { analysisJob, array, evidence, input, type Obj } from './model';
 import './style.css';
 const app = document.querySelector<HTMLElement>('#app')!;
@@ -18,8 +19,8 @@ function form() {
     let body; try { body = input(plan.value, pkgs.value); } catch (err) { const message = (err as Error).message; (plan.value.trim() ? pkgErr : planErr).textContent = message; return; }
     pending = true; button.disabled = true; status.textContent = 'Отправка…';
     try {
-      const response = await fetch('/api/analyses', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-      if (response.status !== 202) { let explanation = ''; try { const data = await response.json(); explanation = typeof data.error === 'string' ? `: ${data.error}` : ''; } catch {} status.textContent = `${response.status === 503 ? 'Сервис недоступен' : 'Ошибка запроса'} (${response.status})${explanation}`; return; }
+      const response = await createAnalysis(body);
+      if (response.status !== 202) { const message = await responseErrorMessage(response); const explanation = message ? `: ${message}` : ''; status.textContent = `${response.status === 503 ? 'Сервис недоступен' : 'Ошибка запроса'} (${response.status})${explanation}`; return; }
       let data: unknown; try { data = await response.json(); } catch { status.textContent = 'Некорректный ответ: сохранение не подтверждено.'; return; }
       if (!analysisJob(data) || !('status' in data) || !['pending', 'running'].includes(data.status)) { status.textContent = 'Некорректный ответ: сохранение не подтверждено.'; return; }
       navigate(`/analyses/${data.id}`);
@@ -28,27 +29,27 @@ function form() {
   };
 }
 function report(parent: HTMLElement, view: Obj) {
-  const r = view.Report; if (!r) return; const section = el('section'); add(section, 'h3', 'Metadata');
-  const g = r.Gentoo; if (g) { add(section, 'p', `Сравнение: ${g.Status}`); const c = g.Comparison;
-    if (c) { add(section, 'p', `Сравнённые поля: ${array(c.ComparedFields).join(', ') || 'не указаны'}`); const changes = c.Changes; const i = changes?.IUSE; if (array(c.ComparedFields).length && changes && (!array(c.ComparedFields).includes('IUSE') || (i && ['Added', 'Removed', 'DefaultChanges'].every(key => Array.isArray(i[key])))) && !changes.EAPI && !changes.Slot && !changes.Subslot && !array(i?.Added).length && !array(i?.Removed).length && !array(i?.DefaultChanges).length) add(section, 'p', 'В сравнённых полях различий нет.'); detail(section, 'Изменения', changes); detail(section, 'Ограничения сравнения', c.Limitations); detail(section, 'Provenance', { Before: c.Before, After: c.After }); }
-    detail(section, 'Диагностики связи', g.Diagnostics);
+  const r = view.report; if (!r) return; const section = el('section'); add(section, 'h3', 'Metadata');
+  const g = r.gentoo; if (g) { add(section, 'p', `Сравнение: ${g.status}`); const c = g.comparison;
+    if (c) { add(section, 'p', `Сравнённые поля: ${array(c.compared_fields).join(', ') || 'не указаны'}`); const changes = c.changes; const i = changes?.iuse; if (array(c.compared_fields).length && changes && (!array(c.compared_fields).includes('IUSE') || (i && ['added', 'removed', 'default_changes'].every(key => Array.isArray(i[key])))) && !changes.eapi && !changes.slot && !changes.subslot && !array(i?.added).length && !array(i?.removed).length && !array(i?.default_changes).length) add(section, 'p', 'В сравнённых полях различий нет.'); detail(section, 'Изменения', changes); detail(section, 'Ограничения сравнения', c.limitations); detail(section, 'Provenance', { before: c.before, after: c.after }); }
+    detail(section, 'Диагностики связи', g.diagnostics);
   }
-  for (const [name, lookup] of [['before', view.BeforeLookup], ['after', view.AfterLookup]] as const) {
-    const reasons = [lookup?.Result?.Status, lookup?.SkipReason, lookup?.Err].filter(value => typeof value === 'string' && value.length);
+  for (const [name, lookup] of [['before', view.before_lookup], ['after', view.after_lookup]] as const) {
+    const reasons = [lookup?.result?.status, lookup?.skip_reason, lookup?.error?.message].filter(value => typeof value === 'string' && value.length);
     add(section, 'p', `${name}: ${reasons.length ? reasons.join('; ') : 'данные недоступны'}`); detail(section, `${name}: сведения Lookup`, lookup);
   }
-  for (const [name, auxiliary] of [['EffectiveConfig', r.EffectiveConfig], ['Upstream', r.Upstream]] as const) {
-    if (auxiliary) add(section, 'p', `${name}: ${[auxiliary.Status, auxiliary.Reason].filter(Boolean).join('; ') || 'данные недоступны'}`);
+  for (const [name, auxiliary] of [['EffectiveConfig', r.effective_config], ['Upstream', r.upstream]] as const) {
+    if (auxiliary) add(section, 'p', `${name}: ${[auxiliary.status, auxiliary.reason].filter(Boolean).join('; ') || 'данные недоступны'}`);
   }
-  if (r.InterpretationLimitation) add(section, 'p', r.InterpretationLimitation); parent.append(section);
+  if (r.interpretation_limitation) add(section, 'p', r.interpretation_limitation); parent.append(section);
 }
 function result(data: Obj, app: HTMLElement) {
-  const { Plan: plan, Analysis: analysis, Reports: reports } = data; add(app, 'h1', 'Сохранённый анализ'); link(app, 'Новый анализ', '/');
-  add(app, 'p', `Статус Parser: ${plan.Status}`); for (const d of array(plan.Diagnostics)) add(app, 'p', `${d.Code}: ${d.Message} ${array(d.SourceLines).join(', ')}`);
-  const findings = array(analysis.Findings); const entries = array(plan.Entries);
-  const showFinding = (parent: HTMLElement, f: Obj) => { const item = el('article'); add(item, 'h4', `${f.Category}: ${f.Message}`); add(item, 'p', `Правило: ${f.RuleID}`); for (const line of evidence(plan, f)) add(item, 'p', line); parent.append(item); };
-  entries.forEach((entry, index) => { const section = el('section'); add(section, 'h2', `${entry.Package?.Category}/${entry.Package?.Name}`); add(section, 'p', `${entry.Operation}: ${array(entry.Installed?.Versions).map(v => v.Version).join(', ') || 'установленная версия не указана'} → ${entry.Target?.Version || 'версия не указана'}`); add(section, 'p', `Строки: ${array(entry.SourceLines).join(', ') || 'не указаны'}`); findings.filter(f => f.EntryIndex === index).forEach(f => showFinding(section, f)); array(reports).filter(r => r.Report?.EntryIndex === index).forEach(r => report(section, r)); app.append(section); });
-  const others = findings.filter(f => !Number.isInteger(f.EntryIndex) || f.EntryIndex < 0 || f.EntryIndex >= entries.length); if (others.length) { add(app, 'h2', 'Другие findings'); others.forEach(f => showFinding(app, f)); }
+  const { plan: plan, analysis: analysis, reports: reports } = data; add(app, 'h1', 'Сохранённый анализ'); link(app, 'Новый анализ', '/');
+  add(app, 'p', `Статус Parser: ${plan.status}`); for (const d of array(plan.diagnostics)) add(app, 'p', `${d.code}: ${d.message} ${array(d.source_lines).join(', ')}`);
+  const findings = array(analysis.findings); const entries = array(plan.entries);
+  const showFinding = (parent: HTMLElement, f: Obj) => { const item = el('article'); add(item, 'h4', `${f.category}: ${f.message}`); add(item, 'p', `Правило: ${f.rule_id}`); for (const line of evidence(plan, f)) add(item, 'p', line); parent.append(item); };
+  entries.forEach((entry, index) => { const section = el('section'); add(section, 'h2', `${entry.package?.category}/${entry.package?.name}`); add(section, 'p', `${entry.operation}: ${array(entry.installed?.versions).map(v => v.version).join(', ') || 'установленная версия не указана'} → ${entry.target?.version || 'версия не указана'}`); add(section, 'p', `Строки: ${array(entry.source_lines).join(', ') || 'не указаны'}`); findings.filter(f => f.entry_index === index).forEach(f => showFinding(section, f)); array(reports).filter(r => r.report?.entry_index === index).forEach(r => report(section, r)); app.append(section); });
+  const others = findings.filter(f => !Number.isInteger(f.entry_index) || f.entry_index < 0 || f.entry_index >= entries.length); if (others.length) { add(app, 'h2', 'Другие findings'); others.forEach(f => showFinding(app, f)); }
 }
 async function load(id: string, current: number) {
   app.replaceChildren(); add(app, 'h1', 'Анализ'); link(app, 'Новый анализ', '/');
@@ -58,24 +59,26 @@ async function load(id: string, current: number) {
   const showRetry = () => { const button = el('button', 'Повторить загрузку'); button.onclick = retry; app.append(button); };
   const poll = async () => {
     try {
-      const response = await fetch(`/api/analyses/${encodeURIComponent(id)}`);
+      const response = await getAnalysis(id);
       if (current !== generation) return;
       if (!response.ok) {
         state.textContent = response.status === 404 ? 'Анализ не найден.' : response.status === 503 ? 'Сервис недоступен.' : `Ошибка загрузки (${response.status}).`;
+        const explanation = await responseErrorMessage(response);
+        if (current !== generation) return;
+        if (explanation) state.textContent += ` ${explanation}`;
         if (response.status === 404) link(app, 'К форме', '/'); else showRetry();
         return;
       }
       const data: unknown = await response.json();
       if (current !== generation) return;
       if (!analysisJob(data) || data.id.toLowerCase() !== id.toLowerCase()) { state.textContent = 'Некорректный ответ сервиса.'; showRetry(); return; }
-      if (!('status' in data)) { const content = el('div'); result(data.result, content); app.replaceChildren(content); return; }
       const progress = data.progress;
       const stage = stageNames[progress.stage] || progress.stage;
       if (data.status === 'completed') {
         if (!data.result) { state.textContent = 'Сервис сообщил о завершении без итогового отчёта.'; showRetry(); return; }
         const content = el('div'); result(data.result, content); app.replaceChildren(content); return;
       }
-      if (data.status === 'failed') { state.textContent = `Анализ завершился с ошибкой: ${data.error || 'причина не указана'}`; return; }
+      if (data.status === 'failed') { state.textContent = `Анализ завершился с ошибкой: ${data.error?.message || 'причина не указана'}`; return; }
       state.textContent = `${data.status === 'pending' ? 'Ожидание' : 'Выполняется'}: ${stage}. Обработано ${progress.completed}${progress.total > 0 ? ` из ${progress.total}` : ''}.`;
       window.setTimeout(() => { if (current === generation) void poll(); }, 1000);
     } catch {

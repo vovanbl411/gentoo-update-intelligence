@@ -28,7 +28,7 @@ Compose SHALL монтировать volume `gentoo-data` в backend и metadata
 - **THEN** чтение разрешено, а запись из обоих контейнеров запрещена
 
 ### Requirement: Frontend обслуживает ссылки на анализ и проксирует API
-Frontend SHALL отдавать собранное приложение для прямого открытия `/analyses/<uuid>` и refresh этой страницы. Запросы `/api/` SHALL проксироваться в backend со снятием префикса `/api`, сохраняя HTTP status, `Content-Type` и тело ответа backend.
+Frontend SHALL отдавать собранное приложение для прямого открытия `/analyses/<uuid>` и refresh этой страницы. Запросы `/api/` SHALL проксироваться в backend без снятия префикса `/api`, сохраняя HTTP status, `Content-Type` и тело ответа backend.
 
 #### Scenario: Прямое открытие анализа
 - **WHEN** пользователь открывает `/analyses/<uuid>` напрямую или обновляет страницу
@@ -39,7 +39,7 @@ Frontend SHALL отдавать собранное приложение для �
 - **THEN** frontend proxy передаёт ответ `202 Accepted` с UUID и начальным состоянием задания без изменений
 
 #### Scenario: Ошибочный JSON-ответ API
-- **WHEN** backend возвращает JSON-ошибку для `/analyses/<unknown>` через запрос frontend proxy `/api/analyses/<unknown>`
+- **WHEN** backend возвращает JSON-ошибку для `/api/v1/analyses/<unknown>` через запрос frontend proxy `/api/v1/analyses/<unknown>`
 - **THEN** proxy передаёт исходные HTTP status, `Content-Type` и тело ответа, не заменяя JSON страницей приложения
 
 ### Requirement: PostgreSQL сохраняет задания между пересозданиями
@@ -54,3 +54,36 @@ PostgreSQL SHALL хранить задания и результаты в име
 - **GIVEN** задание имеет статус `pending` или `running` перед перезапуском backend
 - **WHEN** backend запускается снова
 - **THEN** задание восстанавливается согласно [контракту асинхронной подготовки metadata](../automatic-metadata-preparation/spec.md)
+
+### Requirement: Настройка числа активных анализов
+Compose SHALL передавать backend `GENTOO_UPDATE_INTELLIGENCE_ANALYSIS_CONCURRENCY_LIMIT`, по умолчанию `1`. Backend SHALL принимать неотрицательное целое, включая `0` без ограничения, и отклонять некорректное значение при запуске. Руководство SHALL объяснять применение нового значения через пересоздание backend и отличие от `METADATA_WORKER_GENERATION_LIMIT=2`.
+
+#### Scenario: Изменение предела
+- **WHEN** оператор задаёт положительное число или `0` и пересоздаёт backend
+- **THEN** backend использует новый предел, сохраняя задания и результаты в существующем PostgreSQL volume
+
+#### Scenario: Неверная настройка
+- **WHEN** значение отрицательное, нечисловое или не помещается в целое число
+- **THEN** backend завершается с явной ошибкой настройки до начала обработки заданий
+
+### Requirement: Proxy сохраняет версионированный путь
+Nginx и Vite SHALL передавать `/api/v1/analyses` в backend без снятия `/api`. Неизвестный API-путь SHALL давать JSON-ошибку backend вместо SPA HTML. Страница `/analyses/{id}` SHALL сохранять прямое открытие и refresh.
+
+#### Scenario: Запрос v1 через proxy
+- **WHEN** клиент отправляет POST `/api/v1/analyses`
+- **THEN** backend получает тот же путь, а proxy сохраняет 202, Content-Type, Location и тело ответа
+
+#### Scenario: Неизвестная версия
+- **WHEN** клиент обращается к `/api/v2/analyses`
+- **THEN** получает JSON 404, а не HTML frontend
+
+### Requirement: YAML backend в Compose
+Compose SHALL подключать BACKEND_CONFIG_PATH, по умолчанию `./config/backend.yaml`, read-only как `/etc/gentoo-update-intelligence/backend.yaml` и передавать --config. Отсутствие файла SHALL NOT создавать каталог. Обычные env SHALL передаваться как явные overrides без принудительных defaults. SOURCE_URL SHALL иметь приоритет над общим GENTOO_REPOSITORY_URL; DSN SHALL оставаться в env.
+
+#### Scenario: Настройка через файл
+- **WHEN** оператор меняет YAML и перезапускает backend
+- **THEN** применяются настройки файла без пересборки, если они не перекрыты непустыми env
+
+#### Scenario: Изменение env или источника файла
+- **WHEN** оператор меняет env либо BACKEND_CONFIG_PATH
+- **THEN** новое значение применяется через пересоздание backend; простой restart не объявляется способом изменения окружения или bind source

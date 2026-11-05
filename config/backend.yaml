@@ -1,0 +1,33 @@
+# Настройки backend для штатного Compose. DSN PostgreSQL задаётся только в env.
+# Изменения этого файла применяются после restart backend.
+startup_timeout: 15s
+
+http:
+  listen_address: "0.0.0.0:8080"
+  read_header_timeout: 5s
+  idle_timeout: 60s
+
+analysis:
+  # 0 отключает предел активных анализов. Это не лимит генераций worker.
+  concurrency_limit: 1
+
+repository:
+  name: gentoo
+  # Это происхождение для backend; URL sync-сервиса настраивается отдельно.
+  source_url: "https://anongit.gentoo.org/git/repo/gentoo.git"
+  path: "/metadata/gentoo.git"
+  # Пустое значение выбирает refs/gentoo/published при начале анализа.
+  commit: ""
+
+overlays:
+  # Пустая строка отключает подготовку overlays.
+  path: "/overlays"
+  # Дополнения к встроенному guru: записи name, url и masters.
+  catalog: []
+
+metadata:
+  # Пустая строка отключает обращения к worker.
+  worker_url: "http://metadata-worker:8090"
+  profile: "profiles/default/linux/amd64/23.0"
+  # Ожидание одного HTTP-запроса; не общий срок анализа или генерации.
+  worker_timeout: 20m

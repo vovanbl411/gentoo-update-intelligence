@@ -8,7 +8,7 @@ Gentoo Update Intelligence принимает текст плана `emerge` и 
 
 Сервис разбирает план, применяет правила анализа и сравнивает доступные Gentoo metadata для установленных и целевых версий. Отчёт сохраняет исходные факты плана, findings (выводы правил), evidence (основания этих выводов) и результат сравнения metadata. Он помогает увидеть изменения и понять, на каких данных основан каждый вывод.
 
-HTTP API сохраняет задание в PostgreSQL и возвращает UUID. Анализ выполняется в фоне; по UUID можно следить за обработкой и повторно открыть готовый отчёт.
+HTTP API v1 (`/api/v1/analyses`) сохраняет задание в PostgreSQL и возвращает UUID. Анализ выполняется в фоне; по UUID можно следить за обработкой и повторно открыть готовый отчёт.
 
 ## Что показывает отчёт
 
@@ -40,6 +40,7 @@ HTTP API сохраняет задание в PostgreSQL и возвращает
 
 - [Локальный запуск через Docker Compose](docs/local-compose.md) — запуск стека и получение отчёта.
 - [Gentoo-образы worker и sync](gentoo/README.md) — сборка, отдельный запуск и проверки Gentoo runtime.
+- [Конфигурация backend](docs/backend-configuration.md) — YAML, env, таймауты и применение настроек.
 - [HTTP API](docs/http-api.md) — создание анализа, его статус, прогресс и результат.
 - [Ручной CLI](docs/cli.md) — контракт командной строки.
 - [Frontend](frontend/README.md) — работа с интерфейсом.
@@ -58,4 +59,4 @@ HTTP API сохраняет задание в PostgreSQL и возвращает
 - [Архитектура](docs/architecture.md)
 - [План разработки](docs/plan.md)
 - [Работа с OpenSpec](docs/openspec.md)
-- Действующие спецификации OpenSpec: [frontend](openspec/specs/analysis-frontend/spec.md), [подготовка metadata](openspec/specs/automatic-metadata-preparation/spec.md) и [локальный Compose](openspec/specs/local-compose/spec.md).
+- Действующие спецификации OpenSpec: [HTTP API v1](openspec/specs/http-api/spec.md), [frontend](openspec/specs/analysis-frontend/spec.md), [подготовка metadata](openspec/specs/automatic-metadata-preparation/spec.md) и [локальный Compose](openspec/specs/local-compose/spec.md).

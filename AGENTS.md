@@ -15,7 +15,10 @@
 - [docs/report-service.md](docs/report-service.md) фиксирует контракт внутреннего reportservice.
 - [docs/plan-service.md](docs/plan-service.md) фиксирует контракт внутреннего planservice.
 - [docs/cli.md](docs/cli.md) фиксирует контракт ручного CLI.
-- [docs/http-api.md](docs/http-api.md) фиксирует контракт HTTP API и хранения анализа.
+- [openspec/specs/http-api/spec.md](openspec/specs/http-api/spec.md) фиксирует публичный транспортный контракт HTTP API v1.
+- [openspec/specs/backend-configuration/spec.md](openspec/specs/backend-configuration/spec.md) фиксирует контракт конфигурации backend.
+- [docs/backend-configuration.md](docs/backend-configuration.md) описывает поля YAML, env и применение настроек.
+- [docs/http-api.md](docs/http-api.md) поясняет использование API, хранение и восстановление анализа.
 - [docs/plan.md](docs/plan.md) задаёт этапы и критерии их завершения.
 - [docs/openspec.md](docs/openspec.md) задаёт пилотный workflow изменений и границы источников требований OpenSpec.
 - Реализованное состояние проверяй по коду и результатам проверок. Не описывай запланированные возможности как реализованные.
