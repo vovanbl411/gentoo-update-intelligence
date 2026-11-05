@@ -4,32 +4,19 @@
 
 Сборка и отдельная проверка Gentoo-образов описаны в [gentoo/README.md](../gentoo/README.md), устройство сборки — в [gentoo/build.md](../gentoo/build.md). Первый запуск sync загружает полную Git-историю Gentoo: это может занять время и потребовать много места на диске.
 
-## Локальные тестовые значения
-
-Для текущего локального запуска в корне создан `.env` с `POSTGRES_PASSWORD=guit-dev-only`. Compose читает этот файл автоматически: export, отдельный скрипт и `--env-file` не нужны. `.env` исключён из Git. В новом checkout создайте его с тестовым значением вручную; для другого окружения задайте собственный пароль.
-
-Обычный запуск выполняется из корня проекта:
-
-```sh
-docker compose up -d
-docker compose ps -a
-```
-
-Команда запускает весь стек, включая PostgreSQL, metadata worker и sync. `--no-deps` используйте только для обновления отдельных сервисов, когда их зависимости уже работают. Для проверки остановившегося backend выполните `docker compose logs --tail 50 backend`.
-
-Для существующей тестовой PostgreSQL пароль роли должен совпадать со значением в `.env`. Если он ещё не менялся на тестовый, при запущенном postgres выполните один раз:
-
-```sh
-docker compose exec postgres psql -U guit -d guit -c "ALTER ROLE guit WITH PASSWORD 'guit-dev-only';"
-```
-
-Команда меняет пароль роли guit и сохраняет данные. Изменение одного `.env` не меняет пароль существующей роли. Переменная POSTGRES_PASSWORD, ранее экспортированная в shell, имеет приоритет над файлом; для работы только через `.env` уберите её из окружения терминала.
-
 ## Первый отчёт
 
 ### 1. Запустите стек
 
-Убедитесь, что в `.env` задан действующий пароль PostgreSQL из URL-safe символов, затем проверьте конфигурацию и запустите сервисы:
+Если `.env` уже существует, сохраните его настройки и проверьте значение `POSTGRES_PASSWORD`. Для нового checkout создайте в корне проекта `.env` с одной строкой:
+
+```dotenv
+POSTGRES_PASSWORD=CHANGEME
+```
+
+Замените `CHANGEME` своим паролем из URL-safe символов, например букв, цифр, `_` и `-`. Для существующего PostgreSQL volume укажите действующий пароль базы. Compose читает `.env` автоматически; файл исключён из Git. Переменная, экспортированная в shell, имеет приоритет над `.env`.
+
+Проверьте конфигурацию, соберите образы и запустите стек:
 
 ```sh
 docker compose config -q
@@ -38,6 +25,14 @@ docker compose up --build -d
 ```
 
 Скрипт подготавливает Gentoo-базу и общий runtime для worker/sync. После этого `up --build` собирает образы сервисов из Compose и запускает стек. Сам по себе `docker compose up --build` не собирает отдельный `gentoo/Dockerfile.base`. Для стандартной локальной сборки `GENTOO_BASE_IMAGE` не должна переопределять базу; выбор готовой базы описан [ниже](#общий-gentoo-образ).
+
+Проверьте контейнеры:
+
+```sh
+docker compose ps -a
+```
+
+Все пять сервисов должны работать; дождитесь статуса `healthy` у PostgreSQL и metadata worker. Если сервис завершился, перейдите к [диагностике](#диагностика).
 
 ### 2. Дождитесь публикации Gentoo revision
 
@@ -65,21 +60,33 @@ docker compose exec gentoo git -C /metadata/gentoo.git rev-parse --verify refs/g
 http://127.0.0.1:8081/analyses/<UUID>
 ```
 
+## Повторный запуск и обновление
+
+Чтобы запустить уже собранный стек после остановки:
+
+```sh
+docker compose up -d
+```
+
+После обновления исходников backend или frontend пересоберите и пересоздайте оба сервиса:
+
+```sh
+docker compose up -d --build backend frontend
+```
+
+Compose запустит и необходимые зависимости. `--no-deps` используйте только для обновления отдельных сервисов, когда их зависимости уже работают. `start` и `restart` не пересобирают образы и не применяют изменения окружения контейнера. После обновления откройте прежний отчёт по UUID и отправьте новый план.
+
+Изменения исходников Gentoo-образов требуют отдельной сборки по [руководству Gentoo runtime](../gentoo/README.md).
+
 ## Настройки
 
 ### Конфигурация backend
 
 Обычные настройки backend находятся в [config/backend.yaml](../config/backend.yaml), подключённом read-only. Приоритет: defaults → YAML → непустые env. Поля, defaults и полный список env описаны в [руководстве конфигурации](backend-configuration.md).
 
-При первом переходе на YAML пересоберите и пересоздайте backend:
+После изменения того же YAML-файла выполните `docker compose restart backend`. Изменение env или источника файла требует пересоздания контейнера: `docker compose up -d backend`. Непустой env override продолжает перекрывать YAML после restart. DSN и пароль PostgreSQL остаются в env.
 
-```sh
-docker compose up -d --no-deps --build backend
-```
-
-Далее после изменения того же файла достаточно `docker compose restart backend`. Смена env или источника файла требует пересоздания контейнера. Непустой env override продолжает перекрывать YAML после restart. DSN и пароль PostgreSQL остаются в env; их не нужно переносить в файл.
-
-Другой файл на хосте выбирается `BACKEND_CONFIG_PATH`; по умолчанию это `./config/backend.yaml`. Он должен существовать. Изменение пути в конфигурации backend не меняет volumes Compose. Для предыдущего, ещё не применённого перехода на API v1 backend и frontend обновляются вместе по разделу [«Проверка API»](#проверка-api).
+Другой файл на хосте выбирается `BACKEND_CONFIG_PATH`; по умолчанию это `./config/backend.yaml`. Файл должен существовать. Пути внутри YAML задают расположение данных в контейнере; соответствующие mounts настраиваются отдельно в Compose.
 
 ### Общий Gentoo-образ
 
@@ -208,6 +215,22 @@ docker compose restart gentoo
 
 Если Gentoo revision пока недоступна, `POST /api/v1/analyses` всё равно сохранит задание и вернёт `202 Accepted`, а `GET` покажет `failed` и причину недоступности Provider. После публикации отправьте новое задание; перезапуск backend не требуется.
 
+### Backend завершается из-за пароля PostgreSQL
+
+Посмотрите журнал backend и PostgreSQL:
+
+```sh
+docker compose logs --tail 50 backend postgres
+```
+
+Изменение `.env` не меняет пароль роли в существующем volume. Укажите в `.env` действующий пароль базы. Если нужно сменить пароль локальной тестовой БД, при запущенном PostgreSQL выполните:
+
+```sh
+docker compose exec postgres psql -U guit -d guit -c "ALTER ROLE guit WITH PASSWORD 'CHANGEME';"
+```
+
+Замените `CHANGEME` выбранным URL-safe паролем и задайте тот же пароль в `.env`. Затем выполните `docker compose up -d backend frontend`. Команда изменения пароля сохраняет данные базы. Если пароль ранее экспортирован в shell, уберите эту переменную из окружения перед запуском Compose.
+
 ## Проверка API
 
 `POST /api/v1/analyses` принимает план, сохраняет задание и возвращает `202 Accepted` с UUID, не ожидая завершения анализа. `GET /api/v1/analyses/<UUID>` показывает статусы задания `pending`, `running`, `completed` или `failed`. При `completed` ответ содержит `result`; внутри него отдельный metadata lookup может иметь статус `not_found`. При `failed` ответ содержит `error` с `code` и `message`. Поля `result` и `error` всегда присутствуют; неиспользуемое поле равно `null`.
@@ -227,14 +250,6 @@ curl -fsS 'http://127.0.0.1:8081/api/v1/analyses/<UUID>'
 ```
 
 При другом `FRONTEND_PORT` замените порт в URL. Прямую ссылку на отчёт и его API можно открыть по адресам `http://127.0.0.1:8081/analyses/<UUID>` и `http://127.0.0.1:8081/api/v1/analyses/<UUID>`. Подробный контракт приведён в [документе HTTP API](http-api.md).
-
-После перехода на API v1 пересоберите и пересоздайте backend и frontend вместе:
-
-```sh
-docker compose up -d --no-deps --build backend frontend
-```
-
-Команда предполагает, что зависимости уже запущены, а в `.env` задан действующий `POSTGRES_PASSWORD`. Прежние API-адреса больше не работают; сохранённые страницы `/analyses/<UUID>` остаются доступными. `Location` из POST теперь указывает на API `/api/v1/analyses/<UUID>`. Сначала откройте прежний отчёт, затем отправьте новый план. `start` и `restart` не заменяют сборку и пересоздание контейнеров.
 
 ## Сохранение данных и остановка
 

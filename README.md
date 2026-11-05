@@ -59,4 +59,4 @@ HTTP API v1 (`/api/v1/analyses`) сохраняет задание в PostgreSQL
 - [Архитектура](docs/architecture.md)
 - [План разработки](docs/plan.md)
 - [Работа с OpenSpec](docs/openspec.md)
-- Действующие спецификации OpenSpec: [HTTP API v1](openspec/specs/http-api/spec.md), [frontend](openspec/specs/analysis-frontend/spec.md), [подготовка metadata](openspec/specs/automatic-metadata-preparation/spec.md) и [локальный Compose](openspec/specs/local-compose/spec.md).
+- Действующие спецификации OpenSpec: [HTTP API v1](openspec/specs/http-api/spec.md), [конфигурация backend](openspec/specs/backend-configuration/spec.md), [frontend](openspec/specs/analysis-frontend/spec.md), [подготовка metadata](openspec/specs/automatic-metadata-preparation/spec.md) и [локальный Compose](openspec/specs/local-compose/spec.md).

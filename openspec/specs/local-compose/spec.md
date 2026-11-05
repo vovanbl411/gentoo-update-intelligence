@@ -35,7 +35,7 @@ Frontend SHALL отдавать собранное приложение для �
 - **THEN** frontend возвращает приложение, которое запрашивает тот же UUID через API
 
 #### Scenario: Асинхронный ответ API
-- **WHEN** backend принимает корректный POST `/analyses`
+- **WHEN** backend принимает корректный POST `/api/v1/analyses`
 - **THEN** frontend proxy передаёт ответ `202 Accepted` с UUID и начальным состоянием задания без изменений
 
 #### Scenario: Ошибочный JSON-ответ API
@@ -56,10 +56,10 @@ PostgreSQL SHALL хранить задания и результаты в име
 - **THEN** задание восстанавливается согласно [контракту асинхронной подготовки metadata](../automatic-metadata-preparation/spec.md)
 
 ### Requirement: Настройка числа активных анализов
-Compose SHALL передавать backend `GENTOO_UPDATE_INTELLIGENCE_ANALYSIS_CONCURRENCY_LIMIT`, по умолчанию `1`. Backend SHALL принимать неотрицательное целое, включая `0` без ограничения, и отклонять некорректное значение при запуске. Руководство SHALL объяснять применение нового значения через пересоздание backend и отличие от `METADATA_WORKER_GENERATION_LIMIT=2`.
+Backend SHALL принимать неотрицательный `analysis.concurrency_limit` из YAML с приоритетом непустого `GENTOO_UPDATE_INTELLIGENCE_ANALYSIS_CONCURRENCY_LIMIT`; `0` снимает предел. Defaults и штатный YAML SHALL задавать `1`, Compose SHALL передавать env без принудительного default. Некорректное значение SHALL мешать запуску. Руководство SHALL различать restart для YAML, пересоздание для env и отдельный лимит `METADATA_WORKER_GENERATION_LIMIT=2`.
 
 #### Scenario: Изменение предела
-- **WHEN** оператор задаёт положительное число или `0` и пересоздаёт backend
+- **WHEN** оператор задаёт положительное число или `0` в YAML и перезапускает backend либо задаёт env override и пересоздаёт backend
 - **THEN** backend использует новый предел, сохраняя задания и результаты в существующем PostgreSQL volume
 
 #### Scenario: Неверная настройка

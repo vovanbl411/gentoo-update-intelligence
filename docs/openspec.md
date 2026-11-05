@@ -17,14 +17,16 @@ OpenSpec подключён как пилот для следующих согл
 замени перенесённые требования ссылкой на спецификацию, сохранив полезные пояснения.
 Не поддерживай два независимых описания одного требования. Если область ещё не
 перенесена, не создавай в OpenSpec её частичную копию без явного определения границ.
-Транспортный контракт HTTP API v1 перенесён в [`openspec/specs/http-api/spec.md`](../openspec/specs/http-api/spec.md); `docs/http-api.md` сохраняет пояснения, примеры и описание хранения. Другие контракты `docs/` не перенесены. Контракт конфигурации backend находится в [`openspec/specs/backend-configuration/spec.md`](../openspec/specs/backend-configuration/spec.md). Спецификации остальных новых областей находятся в
-[`openspec/specs/analysis-frontend/spec.md`](../openspec/specs/analysis-frontend/spec.md),
-[`openspec/specs/automatic-metadata-preparation/spec.md`](../openspec/specs/automatic-metadata-preparation/spec.md)
-и [`openspec/specs/local-compose/spec.md`](../openspec/specs/local-compose/spec.md).
-Changes `add-analysis-frontend`, `add-automatic-metadata-preparation` и
-`add-local-compose` архивированы: [frontend](../openspec/changes/archive/2026-11-03-add-analysis-frontend/proposal.md),
-[автоматическая подготовка metadata](../openspec/changes/archive/2026-11-05-add-automatic-metadata-preparation/proposal.md)
-и [локальный Compose](../openspec/changes/archive/2026-11-05-add-local-compose/proposal.md).
+
+Действующие спецификации OpenSpec:
+
+- [HTTP API v1](../openspec/specs/http-api/spec.md) — транспортный контракт; `docs/http-api.md` сохраняет пояснения, примеры и описание хранения.
+- [Конфигурация backend](../openspec/specs/backend-configuration/spec.md) — источники настроек, поля и валидация.
+- [Frontend](../openspec/specs/analysis-frontend/spec.md).
+- [Автоматическая подготовка metadata](../openspec/specs/automatic-metadata-preparation/spec.md).
+- [Локальный Compose](../openspec/specs/local-compose/spec.md).
+
+Остальные контракты `docs/` не перенесены. Завершённые changes и отчёты проверок хранятся в `openspec/changes/archive/`; они описывают историю изменений. Для текущих требований используйте действующие спецификации, для команд запуска — [руководство Compose](local-compose.md).
 
 ## Локальный инструмент
 
