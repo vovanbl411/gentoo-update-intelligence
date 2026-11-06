@@ -1,0 +1,615 @@
+{
+  "id": "7a74660b-c137-4906-9c19-c746362fdba4",
+  "first_seconds": 619.3399720769994,
+  "elapsed_seconds": 619.6544164070001,
+  "status": "completed",
+  "counts": {
+    "bin-backend-git.log": {
+      "total": 102,
+      "clone": 0,
+      "checkout": 0
+    },
+    "bin-worker-git.log": {
+      "total": 30960,
+      "clone": 86,
+      "checkout": 86
+    },
+    "bin-worker-egencache.log": {
+      "total": 80,
+      "clone": 0,
+      "checkout": 0
+    }
+  },
+  "stats": [
+    {
+      "elapsed": 0.12860631800140254,
+      "output": "guit-quick-base2-backend-1|0.00%|7.336MiB / 23.09GiB|14.1MB / 0B|12\nguit-quick-base2-metadata-worker-1|193.60%|111.4MiB / 23.09GiB|0B / 4.98MB|11\nguit-quick-base2-postgres-1|0.01%|25.08MiB / 23.09GiB|2.07MB / 203MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 5.648214780001581,
+      "output": "guit-quick-base2-backend-1|0.00%|6.758MiB / 23.09GiB|14.1MB / 0B|12\nguit-quick-base2-metadata-worker-1|191.31%|748MiB / 23.09GiB|0B / 140MB|11\nguit-quick-base2-postgres-1|0.02%|25.61MiB / 23.09GiB|2.07MB / 203MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 11.757782873999531,
+      "output": "guit-quick-base2-backend-1|0.00%|6.992MiB / 23.09GiB|14.1MB / 0B|12\nguit-quick-base2-metadata-worker-1|180.57%|111.5MiB / 23.09GiB|0B / 160MB|11\nguit-quick-base2-postgres-1|0.02%|24.93MiB / 23.09GiB|2.07MB / 203MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 15.720884574999218,
+      "output": "guit-quick-base2-backend-1|0.00%|7.262MiB / 23.09GiB|14.1MB / 0B|12\nguit-quick-base2-metadata-worker-1|189.70%|314.6MiB / 23.09GiB|0B / 196MB|14\nguit-quick-base2-postgres-1|0.01%|25.13MiB / 23.09GiB|2.07MB / 204MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 21.846581376001268,
+      "output": "guit-quick-base2-backend-1|0.00%|7.32MiB / 23.09GiB|14.1MB / 0B|12\nguit-quick-base2-metadata-worker-1|222.65%|551.8MiB / 23.09GiB|0B / 300MB|14\nguit-quick-base2-postgres-1|0.02%|24.85MiB / 23.09GiB|2.07MB / 204MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 25.842283082001813,
+      "output": "guit-quick-base2-backend-1|0.00%|7.531MiB / 23.09GiB|14.1MB / 0B|12\nguit-quick-base2-metadata-worker-1|182.23%|127.4MiB / 23.09GiB|0B / 300MB|12\nguit-quick-base2-postgres-1|0.02%|26.16MiB / 23.09GiB|2.07MB / 204MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 31.974884421000752,
+      "output": "guit-quick-base2-backend-1|0.00%|7.527MiB / 23.09GiB|14.1MB / 0B|12\nguit-quick-base2-metadata-worker-1|191.79%|524.2MiB / 23.09GiB|0B / 390MB|14\nguit-quick-base2-postgres-1|0.02%|24.99MiB / 23.09GiB|2.07MB / 204MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 35.95909299300183,
+      "output": "guit-quick-base2-backend-1|0.00%|8.055MiB / 23.09GiB|14.1MB / 0B|12\nguit-quick-base2-metadata-worker-1|204.28%|554.1MiB / 23.09GiB|0B / 441MB|20\nguit-quick-base2-postgres-1|6.37%|26.09MiB / 23.09GiB|2.07MB / 204MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 40.01493703199958,
+      "output": "guit-quick-base2-backend-1|0.00%|7.48MiB / 23.09GiB|14.1MB / 0B|12\nguit-quick-base2-metadata-worker-1|190.23%|148.1MiB / 23.09GiB|0B / 441MB|13\nguit-quick-base2-postgres-1|8.72%|28.75MiB / 23.09GiB|2.07MB / 206MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 46.17220557900146,
+      "output": "guit-quick-base2-backend-1|0.00%|7.613MiB / 23.09GiB|14.1MB / 0B|12\nguit-quick-base2-metadata-worker-1|193.98%|506MiB / 23.09GiB|0B / 527MB|15\nguit-quick-base2-postgres-1|4.38%|28.77MiB / 23.09GiB|2.07MB / 206MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 50.15195064599902,
+      "output": "guit-quick-base2-backend-1|0.00%|7.82MiB / 23.09GiB|14.1MB / 0B|12\nguit-quick-base2-metadata-worker-1|279.11%|543.6MiB / 23.09GiB|0B / 629MB|15\nguit-quick-base2-postgres-1|6.87%|28.7MiB / 23.09GiB|2.07MB / 206MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 56.29918314099996,
+      "output": "guit-quick-base2-backend-1|1.61%|9.086MiB / 23.09GiB|14.1MB / 0B|13\nguit-quick-base2-metadata-worker-1|195.10%|29.65MiB / 23.09GiB|0B / 629MB|16\nguit-quick-base2-postgres-1|6.34%|29.21MiB / 23.09GiB|2.07MB / 206MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 60.288115176001156,
+      "output": "guit-quick-base2-backend-1|0.00%|8.535MiB / 23.09GiB|14.1MB / 0B|13\nguit-quick-base2-metadata-worker-1|194.10%|477.9MiB / 23.09GiB|0B / 703MB|16\nguit-quick-base2-postgres-1|6.58%|29.26MiB / 23.09GiB|2.07MB / 206MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 66.42349541699878,
+      "output": "guit-quick-base2-backend-1|0.00%|8.238MiB / 23.09GiB|14.1MB / 0B|13\nguit-quick-base2-metadata-worker-1|187.82%|355.4MiB / 23.09GiB|0B / 770MB|14\nguit-quick-base2-postgres-1|5.89%|29.07MiB / 23.09GiB|2.07MB / 206MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 70.41622509399895,
+      "output": "guit-quick-base2-backend-1|1.13%|9.086MiB / 23.09GiB|14.1MB / 0B|13\nguit-quick-base2-metadata-worker-1|198.27%|48.75MiB / 23.09GiB|0B / 770MB|16\nguit-quick-base2-postgres-1|6.54%|29.59MiB / 23.09GiB|2.07MB / 206MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 76.55423712700212,
+      "output": "guit-quick-base2-backend-1|0.00%|8.504MiB / 23.09GiB|14.1MB / 0B|13\nguit-quick-base2-metadata-worker-1|193.93%|677.5MiB / 23.09GiB|0B / 891MB|16\nguit-quick-base2-postgres-1|6.55%|29.63MiB / 23.09GiB|2.07MB / 206MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 80.53528520500186,
+      "output": "guit-quick-base2-backend-1|0.00%|8.973MiB / 23.09GiB|14.1MB / 0B|13\nguit-quick-base2-metadata-worker-1|184.17%|408.6MiB / 23.09GiB|0B / 911MB|20\nguit-quick-base2-postgres-1|0.02%|28.42MiB / 23.09GiB|2.07MB / 207MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 86.70403706399884,
+      "output": "guit-quick-base2-backend-1|0.00%|8.586MiB / 23.09GiB|14.1MB / 0B|13\nguit-quick-base2-metadata-worker-1|190.52%|219.7MiB / 23.09GiB|0B / 935MB|16\nguit-quick-base2-postgres-1|0.02%|28.43MiB / 23.09GiB|2.07MB / 207MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 90.67912940799943,
+      "output": "guit-quick-base2-backend-1|0.00%|8.473MiB / 23.09GiB|14.1MB / 0B|13\nguit-quick-base2-metadata-worker-1|189.27%|647.9MiB / 23.09GiB|0B / 1.03GB|16\nguit-quick-base2-postgres-1|0.01%|29.04MiB / 23.09GiB|2.07MB / 207MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 96.81061107999994,
+      "output": "guit-quick-base2-backend-1|0.00%|9.102MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|179.65%|208.3MiB / 23.09GiB|0B / 1.06GB|14\nguit-quick-base2-postgres-1|0.02%|28.94MiB / 23.09GiB|2.07MB / 207MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 100.80000301800101,
+      "output": "guit-quick-base2-backend-1|0.00%|8.383MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|190.16%|227.4MiB / 23.09GiB|0B / 1.09GB|16\nguit-quick-base2-postgres-1|0.01%|28.94MiB / 23.09GiB|2.07MB / 207MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 106.929731946002,
+      "output": "guit-quick-base2-backend-1|0.00%|8.766MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|251.94%|542.5MiB / 23.09GiB|0B / 1.2GB|16\nguit-quick-base2-postgres-1|0.01%|28.59MiB / 23.09GiB|2.07MB / 207MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 110.91680792700208,
+      "output": "guit-quick-base2-backend-1|0.00%|8.5MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|179.57%|219.9MiB / 23.09GiB|0B / 1.2GB|14\nguit-quick-base2-postgres-1|0.01%|28.71MiB / 23.09GiB|2.07MB / 207MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 121.24006049500167,
+      "output": "guit-quick-base2-backend-1|0.00%|8.371MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|194.90%|765MiB / 23.09GiB|0B / 1.34GB|17\nguit-quick-base2-postgres-1|0.00%|28.76MiB / 23.09GiB|2.07MB / 207MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 125.08924244700029,
+      "output": "guit-quick-base2-backend-1|0.00%|8.254MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|183.26%|260.1MiB / 23.09GiB|0B / 1.37GB|15\nguit-quick-base2-postgres-1|0.00%|29.46MiB / 23.09GiB|2.07MB / 207MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 131.2618921909998,
+      "output": "guit-quick-base2-backend-1|0.00%|8.586MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|189.72%|377.1MiB / 23.09GiB|0B / 1.41GB|17\nguit-quick-base2-postgres-1|4.01%|28.99MiB / 23.09GiB|2.07MB / 208MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 135.23291617400173,
+      "output": "guit-quick-base2-backend-1|0.00%|8.324MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|194.03%|764.1MiB / 23.09GiB|0B / 1.51GB|17\nguit-quick-base2-postgres-1|5.02%|29.16MiB / 23.09GiB|2.07MB / 208MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 141.38549006000176,
+      "output": "guit-quick-base2-backend-1|0.00%|9.016MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|188.25%|74.68MiB / 23.09GiB|0B / 1.52GB|15\nguit-quick-base2-postgres-1|6.27%|28.96MiB / 23.09GiB|2.07MB / 208MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 145.3665437689997,
+      "output": "guit-quick-base2-backend-1|0.00%|8.359MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|195.15%|340.7MiB / 23.09GiB|0B / 1.55GB|17\nguit-quick-base2-postgres-1|5.63%|29.18MiB / 23.09GiB|2.07MB / 208MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 151.48917045200142,
+      "output": "guit-quick-base2-backend-1|0.00%|8.48MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|202.97%|503MiB / 23.09GiB|0B / 1.67GB|18\nguit-quick-base2-postgres-1|6.13%|29.33MiB / 23.09GiB|2.07MB / 208MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 155.479180792001,
+      "output": "guit-quick-base2-backend-1|0.44%|8.98MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|189.86%|33.2MiB / 23.09GiB|0B / 1.67GB|16\nguit-quick-base2-postgres-1|6.60%|29.35MiB / 23.09GiB|2.07MB / 208MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 161.60057615000187,
+      "output": "guit-quick-base2-backend-1|0.00%|8.688MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|192.60%|620.7MiB / 23.09GiB|0B / 1.78GB|17\nguit-quick-base2-postgres-1|4.36%|29.71MiB / 23.09GiB|2.07MB / 208MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 165.6037458380015,
+      "output": "guit-quick-base2-backend-1|0.00%|8.871MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|197.67%|427MiB / 23.09GiB|0B / 1.81GB|15\nguit-quick-base2-postgres-1|5.55%|29.2MiB / 23.09GiB|2.07MB / 208MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 171.75130198899933,
+      "output": "guit-quick-base2-backend-1|0.00%|8.535MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|194.06%|219MiB / 23.09GiB|0B / 1.83GB|17\nguit-quick-base2-postgres-1|4.33%|29.57MiB / 23.09GiB|2.07MB / 209MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 175.72776206799972,
+      "output": "guit-quick-base2-backend-1|0.00%|9.031MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|195.85%|645MiB / 23.09GiB|0B / 1.92GB|17\nguit-quick-base2-postgres-1|3.91%|29.59MiB / 23.09GiB|2.07MB / 209MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 181.86085628,
+      "output": "guit-quick-base2-backend-1|0.00%|9.34MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|186.90%|192.2MiB / 23.09GiB|0B / 1.97GB|15\nguit-quick-base2-postgres-1|2.78%|34.31MiB / 23.09GiB|2.07MB / 209MB|13\n",
+      "error": ""
+    },
+    {
+      "elapsed": 185.86809456400078,
+      "output": "guit-quick-base2-backend-1|0.00%|8.738MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|195.91%|246.5MiB / 23.09GiB|0B / 2GB|17\nguit-quick-base2-postgres-1|0.00%|28.27MiB / 23.09GiB|2.07MB / 209MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 191.97484208899914,
+      "output": "guit-quick-base2-backend-1|0.00%|8.758MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|263.38%|508.2MiB / 23.09GiB|0B / 2.12GB|17\nguit-quick-base2-postgres-1|0.01%|28.36MiB / 23.09GiB|2.07MB / 209MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 195.9892604359993,
+      "output": "guit-quick-base2-backend-1|0.00%|8.848MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|182.75%|160.6MiB / 23.09GiB|0B / 2.12GB|15\nguit-quick-base2-postgres-1|0.01%|28.14MiB / 23.09GiB|2.07MB / 209MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 200.0474707579997,
+      "output": "guit-quick-base2-backend-1|0.00%|8.496MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|189.32%|288.3MiB / 23.09GiB|0B / 2.16GB|17\nguit-quick-base2-postgres-1|0.01%|28.3MiB / 23.09GiB|2.07MB / 209MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 206.15221038399977,
+      "output": "guit-quick-base2-backend-1|0.00%|8.652MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|222.97%|535.2MiB / 23.09GiB|0B / 2.28GB|17\nguit-quick-base2-postgres-1|0.00%|29.56MiB / 23.09GiB|2.07MB / 209MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 210.16878429700228,
+      "output": "guit-quick-base2-backend-1|0.00%|8.789MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|181.26%|162.9MiB / 23.09GiB|0B / 2.28GB|15\nguit-quick-base2-postgres-1|0.00%|28.66MiB / 23.09GiB|2.07MB / 209MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 216.32113002299957,
+      "output": "guit-quick-base2-backend-1|0.00%|9.117MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|190.60%|451.1MiB / 23.09GiB|0B / 2.35GB|17\nguit-quick-base2-postgres-1|0.01%|28.8MiB / 23.09GiB|2.07MB / 209MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 220.30169333400045,
+      "output": "guit-quick-base2-backend-1|0.00%|8.781MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|240.80%|529.2MiB / 23.09GiB|0B / 2.42GB|17\nguit-quick-base2-postgres-1|0.01%|29.2MiB / 23.09GiB|2.07MB / 209MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 226.43811867200202,
+      "output": "guit-quick-base2-backend-1|0.38%|10.13MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|195.85%|101.8MiB / 23.09GiB|0B / 2.42GB|17\nguit-quick-base2-postgres-1|0.07%|29.06MiB / 23.09GiB|2.07MB / 209MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 230.42763894900054,
+      "output": "guit-quick-base2-backend-1|0.00%|8.527MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|190.30%|525.6MiB / 23.09GiB|0B / 2.51GB|17\nguit-quick-base2-postgres-1|0.00%|28.99MiB / 23.09GiB|2.07MB / 209MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 236.552113714999,
+      "output": "guit-quick-base2-backend-1|0.00%|8.684MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|181.96%|308.2MiB / 23.09GiB|0B / 2.58GB|15\nguit-quick-base2-postgres-1|6.69%|29.41MiB / 23.09GiB|2.07MB / 210MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 240.5583284810018,
+      "output": "guit-quick-base2-backend-1|0.00%|8.984MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|192.94%|124.1MiB / 23.09GiB|0B / 2.59GB|17\nguit-quick-base2-postgres-1|6.45%|29.15MiB / 23.09GiB|2.07MB / 210MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 246.6834744939988,
+      "output": "guit-quick-base2-backend-1|0.00%|8.684MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|194.02%|759MiB / 23.09GiB|0B / 2.72GB|17\nguit-quick-base2-postgres-1|6.01%|29.23MiB / 23.09GiB|2.07MB / 210MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 250.6711868780003,
+      "output": "guit-quick-base2-backend-1|0.00%|8.562MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|187.59%|243.7MiB / 23.09GiB|0B / 2.77GB|15\nguit-quick-base2-postgres-1|5.59%|29.21MiB / 23.09GiB|2.07MB / 210MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 256.8080268970007,
+      "output": "guit-quick-base2-backend-1|0.00%|9.195MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|195.80%|439.3MiB / 23.09GiB|0B / 2.83GB|17\nguit-quick-base2-postgres-1|5.57%|28.61MiB / 23.09GiB|2.07MB / 210MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 260.8006181769997,
+      "output": "guit-quick-base2-backend-1|0.00%|8.598MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|249.54%|538.9MiB / 23.09GiB|0B / 2.92GB|17\nguit-quick-base2-postgres-1|5.75%|29.48MiB / 23.09GiB|2.07MB / 210MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 266.943600822,
+      "output": "guit-quick-base2-backend-1|0.99%|9.578MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|200.31%|67.86MiB / 23.09GiB|0B / 2.93GB|17\nguit-quick-base2-postgres-1|5.86%|29.15MiB / 23.09GiB|2.07MB / 210MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 270.92208526800096,
+      "output": "guit-quick-base2-backend-1|0.00%|8.582MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|194.60%|495.2MiB / 23.09GiB|0B / 3.01GB|17\nguit-quick-base2-postgres-1|5.47%|29.67MiB / 23.09GiB|2.07MB / 210MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 281.22138038200137,
+      "output": "guit-quick-base2-backend-1|0.00%|9.059MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|196.47%|167.5MiB / 23.09GiB|0B / 3.09GB|17\nguit-quick-base2-postgres-1|3.77%|33.93MiB / 23.09GiB|2.07MB / 210MB|13\n",
+      "error": ""
+    },
+    {
+      "elapsed": 285.08109964899995,
+      "output": "guit-quick-base2-backend-1|0.00%|8.617MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|192.02%|590.5MiB / 23.09GiB|0B / 3.18GB|17\nguit-quick-base2-postgres-1|0.00%|28.24MiB / 23.09GiB|2.07MB / 210MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 291.19677752700227,
+      "output": "guit-quick-base2-backend-1|0.00%|8.859MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|185.82%|219.1MiB / 23.09GiB|0B / 3.23GB|15\nguit-quick-base2-postgres-1|0.12%|28.73MiB / 23.09GiB|2.07MB / 211MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 295.2018013779998,
+      "output": "guit-quick-base2-backend-1|0.00%|8.695MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|200.74%|134MiB / 23.09GiB|0B / 3.24GB|17\nguit-quick-base2-postgres-1|0.09%|28.92MiB / 23.09GiB|2.07MB / 211MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 301.3324958109988,
+      "output": "guit-quick-base2-backend-1|0.00%|9.027MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|193.53%|748MiB / 23.09GiB|0B / 3.37GB|17\nguit-quick-base2-postgres-1|0.01%|28.73MiB / 23.09GiB|2.07MB / 214MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 305.31834727000023,
+      "output": "guit-quick-base2-backend-1|0.00%|8.781MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|183.07%|248.8MiB / 23.09GiB|0B / 3.41GB|15\nguit-quick-base2-postgres-1|0.00%|28.45MiB / 23.09GiB|2.07MB / 214MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 311.4435556610006,
+      "output": "guit-quick-base2-backend-1|0.00%|9.258MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|191.18%|442.7MiB / 23.09GiB|0B / 3.47GB|17\nguit-quick-base2-postgres-1|0.00%|28.88MiB / 23.09GiB|2.07MB / 214MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 315.4318591629999,
+      "output": "guit-quick-base2-backend-1|0.00%|9.379MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|247.36%|522MiB / 23.09GiB|0B / 3.55GB|17\nguit-quick-base2-postgres-1|0.01%|28.17MiB / 23.09GiB|2.07MB / 214MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 321.5763952740017,
+      "output": "guit-quick-base2-backend-1|0.00%|9.676MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|194.55%|114.6MiB / 23.09GiB|0B / 3.55GB|17\nguit-quick-base2-postgres-1|0.01%|29.93MiB / 23.09GiB|2.07MB / 215MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 325.56365291399925,
+      "output": "guit-quick-base2-backend-1|0.00%|8.93MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|190.92%|567.4MiB / 23.09GiB|0B / 3.65GB|17\nguit-quick-base2-postgres-1|0.00%|28.95MiB / 23.09GiB|2.07MB / 215MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 331.70319894099885,
+      "output": "guit-quick-base2-backend-1|0.00%|9.098MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|182.66%|246.7MiB / 23.09GiB|0B / 3.7GB|15\nguit-quick-base2-postgres-1|3.74%|29.49MiB / 23.09GiB|2.07MB / 215MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 335.68862313200225,
+      "output": "guit-quick-base2-backend-1|0.00%|9.207MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|189.80%|200.1MiB / 23.09GiB|0B / 3.72GB|17\nguit-quick-base2-postgres-1|6.03%|29.17MiB / 23.09GiB|2.07MB / 215MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 341.81658373499886,
+      "output": "guit-quick-base2-backend-1|0.00%|9.355MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|250.45%|543.6MiB / 23.09GiB|0B / 3.84GB|17\nguit-quick-base2-postgres-1|6.27%|28.92MiB / 23.09GiB|2.07MB / 215MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 345.807979797999,
+      "output": "guit-quick-base2-backend-1|0.00%|9.113MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|182.85%|183MiB / 23.09GiB|0B / 3.84GB|15\nguit-quick-base2-postgres-1|6.78%|29.02MiB / 23.09GiB|2.07MB / 215MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 351.9560890149987,
+      "output": "guit-quick-base2-backend-1|0.00%|9.07MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|193.10%|464MiB / 23.09GiB|0B / 3.91GB|17\nguit-quick-base2-postgres-1|6.22%|29.75MiB / 23.09GiB|2.07MB / 215MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 355.9323546670021,
+      "output": "guit-quick-base2-backend-1|0.00%|9.055MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|244.94%|545.7MiB / 23.09GiB|0B / 3.98GB|17\nguit-quick-base2-postgres-1|5.76%|29.52MiB / 23.09GiB|2.07MB / 215MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 366.2817147249989,
+      "output": "guit-quick-base2-backend-1|0.00%|9.352MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|195.46%|389.6MiB / 23.09GiB|0B / 4.04GB|17\nguit-quick-base2-postgres-1|4.39%|29.77MiB / 23.09GiB|2.07MB / 215MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 370.12385181300124,
+      "output": "guit-quick-base2-backend-1|0.00%|9.574MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|224.67%|523.9MiB / 23.09GiB|0B / 4.14GB|17\nguit-quick-base2-postgres-1|4.51%|29.98MiB / 23.09GiB|2.07MB / 215MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 376.2628269279994,
+      "output": "guit-quick-base2-backend-1|0.80%|9.973MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|195.15%|50.59MiB / 23.09GiB|0B / 4.16GB|17\nguit-quick-base2-postgres-1|5.64%|29.96MiB / 23.09GiB|2.07MB / 216MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 380.24530315599986,
+      "output": "guit-quick-base2-backend-1|0.00%|9.52MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|194.68%|434.3MiB / 23.09GiB|0B / 4.23GB|17\nguit-quick-base2-postgres-1|0.54%|33.1MiB / 23.09GiB|2.07MB / 216MB|13\n",
+      "error": ""
+    },
+    {
+      "elapsed": 386.37263073400027,
+      "output": "guit-quick-base2-backend-1|0.00%|9.043MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|195.19%|402.1MiB / 23.09GiB|0B / 4.31GB|15\nguit-quick-base2-postgres-1|0.01%|28.54MiB / 23.09GiB|2.07MB / 216MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 390.3718711649999,
+      "output": "guit-quick-base2-backend-1|0.77%|9.648MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|198.78%|38.78MiB / 23.09GiB|0B / 4.31GB|17\nguit-quick-base2-postgres-1|0.14%|28.55MiB / 23.09GiB|2.07MB / 216MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 396.4999571510016,
+      "output": "guit-quick-base2-backend-1|0.00%|9.105MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|208.23%|320MiB / 23.09GiB|0B / 4.37GB|17\nguit-quick-base2-postgres-1|0.00%|28.27MiB / 23.09GiB|2.07MB / 216MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 400.5034346079992,
+      "output": "guit-quick-base2-backend-1|0.00%|9.355MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|203.58%|222.1MiB / 23.09GiB|0B / 4.39GB|22\nguit-quick-base2-postgres-1|0.01%|28.77MiB / 23.09GiB|2.07MB / 216MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 406.67197081500126,
+      "output": "guit-quick-base2-backend-1|0.00%|9.125MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|209.34%|19.12MiB / 23.09GiB|0B / 4.39GB|18\nguit-quick-base2-postgres-1|0.01%|28.42MiB / 23.09GiB|2.07MB / 216MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 410.65583336000054,
+      "output": "guit-quick-base2-backend-1|0.00%|9.148MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|202.82%|77.36MiB / 23.09GiB|0B / 4.39GB|18\nguit-quick-base2-postgres-1|0.00%|30.09MiB / 23.09GiB|2.07MB / 216MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 416.7951520450006,
+      "output": "guit-quick-base2-backend-1|0.00%|9.223MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|200.97%|405.6MiB / 23.09GiB|0B / 4.46GB|18\nguit-quick-base2-postgres-1|0.00%|28.8MiB / 23.09GiB|2.07MB / 216MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 420.7892514180021,
+      "output": "guit-quick-base2-backend-1|0.00%|9.574MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|189.32%|309.7MiB / 23.09GiB|0B / 4.5GB|17\nguit-quick-base2-postgres-1|0.01%|29.07MiB / 23.09GiB|2.07MB / 216MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 426.92212509599995,
+      "output": "guit-quick-base2-backend-1|0.00%|9.27MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|199.64%|526.5MiB / 23.09GiB|0B / 4.6GB|18\nguit-quick-base2-postgres-1|6.51%|28.36MiB / 23.09GiB|2.07MB / 217MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 430.9116480740013,
+      "output": "guit-quick-base2-backend-1|0.00%|9.418MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|223.16%|316.6MiB / 23.09GiB|0B / 4.64GB|18\nguit-quick-base2-postgres-1|5.66%|28.79MiB / 23.09GiB|2.07MB / 217MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 441.1945132910005,
+      "output": "guit-quick-base2-backend-1|0.00%|9.605MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|188.87%|479.5MiB / 23.09GiB|0B / 4.79GB|17\nguit-quick-base2-postgres-1|5.32%|29.23MiB / 23.09GiB|2.07MB / 217MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 445.08160204199885,
+      "output": "guit-quick-base2-backend-1|0.00%|9.301MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|203.79%|227.2MiB / 23.09GiB|0B / 4.8GB|17\nguit-quick-base2-postgres-1|7.89%|29.74MiB / 23.09GiB|2.07MB / 217MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 451.2124040179988,
+      "output": "guit-quick-base2-backend-1|0.00%|9.414MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|206.42%|176MiB / 23.09GiB|0B / 4.82GB|18\nguit-quick-base2-postgres-1|6.46%|29.58MiB / 23.09GiB|2.07MB / 217MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 455.2099437760007,
+      "output": "guit-quick-base2-backend-1|0.00%|9.18MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|203.50%|374.2MiB / 23.09GiB|0B / 4.87GB|18\nguit-quick-base2-postgres-1|6.49%|29.36MiB / 23.09GiB|2.07MB / 217MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 461.34324533900144,
+      "output": "guit-quick-base2-backend-1|0.36%|10.54MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|204.40%|337.7MiB / 23.09GiB|0B / 4.95GB|18\nguit-quick-base2-postgres-1|5.11%|30.52MiB / 23.09GiB|2.07MB / 217MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 465.3181709990022,
+      "output": "guit-quick-base2-backend-1|0.00%|10.03MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|213.95%|264.7MiB / 23.09GiB|0B / 4.96GB|17\nguit-quick-base2-postgres-1|6.57%|30.27MiB / 23.09GiB|2.07MB / 217MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 471.4746798460001,
+      "output": "guit-quick-base2-backend-1|0.00%|9.316MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|207.89%|142.7MiB / 23.09GiB|0B / 4.98GB|18\nguit-quick-base2-postgres-1|0.86%|34.25MiB / 23.09GiB|2.07MB / 217MB|13\n",
+      "error": ""
+    },
+    {
+      "elapsed": 475.451797714999,
+      "output": "guit-quick-base2-backend-1|0.00%|9.566MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|193.78%|458.9MiB / 23.09GiB|0B / 5.03GB|18\nguit-quick-base2-postgres-1|0.00%|28.28MiB / 23.09GiB|2.07MB / 217MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 481.58202861500104,
+      "output": "guit-quick-base2-backend-1|0.00%|9.559MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|195.60%|405.7MiB / 23.09GiB|0B / 5.11GB|17\nguit-quick-base2-postgres-1|0.03%|28.7MiB / 23.09GiB|2.07MB / 217MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 485.57020239399935,
+      "output": "guit-quick-base2-backend-1|0.00%|9.051MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|190.76%|262.1MiB / 23.09GiB|0B / 5.14GB|17\nguit-quick-base2-postgres-1|0.01%|28.38MiB / 23.09GiB|2.07MB / 218MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 491.70222551700135,
+      "output": "guit-quick-base2-backend-1|0.00%|9.32MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|204.75%|527.2MiB / 23.09GiB|0B / 5.24GB|20\nguit-quick-base2-postgres-1|0.00%|28.64MiB / 23.09GiB|2.07MB / 218MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 495.69180415899973,
+      "output": "guit-quick-base2-backend-1|0.39%|9.809MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|230.01%|284.9MiB / 23.09GiB|0B / 5.27GB|19\nguit-quick-base2-postgres-1|0.06%|28.74MiB / 23.09GiB|2.07MB / 218MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 501.87023641999986,
+      "output": "guit-quick-base2-backend-1|0.32%|9.57MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|203.31%|46.79MiB / 23.09GiB|0B / 5.28GB|18\nguit-quick-base2-postgres-1|0.09%|28.61MiB / 23.09GiB|2.07MB / 218MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 505.8467299059994,
+      "output": "guit-quick-base2-backend-1|0.00%|9.383MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|202.28%|246.5MiB / 23.09GiB|0B / 5.32GB|19\nguit-quick-base2-postgres-1|0.01%|28.66MiB / 23.09GiB|2.07MB / 218MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 516.3713262400015,
+      "output": "guit-quick-base2-backend-1|0.00%|9.855MiB / 23.09GiB|14.1MB / 0B|14\nguit-quick-base2-metadata-worker-1|185.33%|171.5MiB / 23.09GiB|0B / 5.36GB|18\nguit-quick-base2-postgres-1|0.00%|28.48MiB / 23.09GiB|2.07MB / 218MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 520.0829208889991,
+      "output": "guit-quick-base2-backend-1|0.00%|9.789MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|189.84%|427.9MiB / 23.09GiB|0B / 5.42GB|19\nguit-quick-base2-postgres-1|0.01%|28.66MiB / 23.09GiB|2.07MB / 218MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 526.2143168149996,
+      "output": "guit-quick-base2-backend-1|0.00%|9.406MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|218.04%|443.9MiB / 23.09GiB|123kB / 5.51GB|18\nguit-quick-base2-postgres-1|5.67%|28.68MiB / 23.09GiB|2.07MB / 218MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 530.2113547270019,
+      "output": "guit-quick-base2-backend-1|0.00%|9.426MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|189.66%|125.8MiB / 23.09GiB|123kB / 5.51GB|18\nguit-quick-base2-postgres-1|5.99%|29.33MiB / 23.09GiB|2.07MB / 218MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 536.3745385840011,
+      "output": "guit-quick-base2-backend-1|0.00%|9.383MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|202.66%|387.8MiB / 23.09GiB|123kB / 5.58GB|19\nguit-quick-base2-postgres-1|5.89%|28.5MiB / 23.09GiB|2.07MB / 218MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 540.3374172129988,
+      "output": "guit-quick-base2-backend-1|0.00%|9.375MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|200.61%|189.2MiB / 23.09GiB|123kB / 5.59GB|18\nguit-quick-base2-postgres-1|5.62%|28.78MiB / 23.09GiB|2.07MB / 218MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 546.4957509699998,
+      "output": "guit-quick-base2-backend-1|0.00%|9.379MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|206.50%|175.4MiB / 23.09GiB|123kB / 5.61GB|19\nguit-quick-base2-postgres-1|5.52%|28.96MiB / 23.09GiB|2.07MB / 219MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 550.4737618309991,
+      "output": "guit-quick-base2-backend-1|0.00%|9.395MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|193.82%|480MiB / 23.09GiB|123kB / 5.67GB|19\nguit-quick-base2-postgres-1|4.27%|28.79MiB / 23.09GiB|2.07MB / 219MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 556.5998393580012,
+      "output": "guit-quick-base2-backend-1|0.30%|9.707MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|202.40%|396.9MiB / 23.09GiB|123kB / 5.74GB|19\nguit-quick-base2-postgres-1|6.42%|29.61MiB / 23.09GiB|2.07MB / 219MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 560.5944942829992,
+      "output": "guit-quick-base2-backend-1|0.00%|9.395MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|207.52%|127.3MiB / 23.09GiB|123kB / 5.74GB|18\nguit-quick-base2-postgres-1|5.44%|29.73MiB / 23.09GiB|2.07MB / 219MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 566.7509596609998,
+      "output": "guit-quick-base2-backend-1|0.00%|9.41MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|209.78%|246.3MiB / 23.09GiB|123kB / 5.77GB|19\nguit-quick-base2-postgres-1|5.75%|29.33MiB / 23.09GiB|2.07MB / 219MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 570.726087523999,
+      "output": "guit-quick-base2-backend-1|0.00%|9.43MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|251.72%|286.8MiB / 23.09GiB|123kB / 5.81GB|19\nguit-quick-base2-postgres-1|0.01%|28.28MiB / 23.09GiB|2.07MB / 219MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 576.901047495001,
+      "output": "guit-quick-base2-backend-1|0.41%|9.328MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|198.31%|75.82MiB / 23.09GiB|123kB / 5.82GB|19\nguit-quick-base2-postgres-1|0.06%|28.54MiB / 23.09GiB|2.07MB / 219MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 580.8806518199999,
+      "output": "guit-quick-base2-backend-1|0.00%|9.695MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|192.49%|478.6MiB / 23.09GiB|123kB / 5.9GB|19\nguit-quick-base2-postgres-1|0.00%|28.34MiB / 23.09GiB|2.07MB / 219MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 591.1973568220019,
+      "output": "guit-quick-base2-backend-1|0.00%|10.25MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|192.48%|75.31MiB / 23.09GiB|1.61MB / 5.97GB|18\nguit-quick-base2-postgres-1|0.01%|28.46MiB / 23.09GiB|2.07MB / 220MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 595.0511648169995,
+      "output": "guit-quick-base2-backend-1|0.00%|9.332MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|188.92%|453MiB / 23.09GiB|1.61MB / 6.04GB|19\nguit-quick-base2-postgres-1|0.00%|28.6MiB / 23.09GiB|2.07MB / 220MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 601.185403427,
+      "output": "guit-quick-base2-backend-1|0.00%|9.32MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|184.60%|370.2MiB / 23.09GiB|1.83MB / 6.13GB|17\nguit-quick-base2-postgres-1|0.00%|28.3MiB / 23.09GiB|2.07MB / 220MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 605.1755429379991,
+      "output": "guit-quick-base2-backend-1|0.05%|9.559MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|107.45%|75.98MiB / 23.09GiB|1.83MB / 6.14GB|18\nguit-quick-base2-postgres-1|0.05%|28.95MiB / 23.09GiB|2.07MB / 221MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 611.3246673430003,
+      "output": "guit-quick-base2-backend-1|0.00%|9.625MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|96.72%|394MiB / 23.09GiB|1.83MB / 6.2GB|18\nguit-quick-base2-postgres-1|0.01%|29.61MiB / 23.09GiB|2.07MB / 221MB|7\n",
+      "error": ""
+    },
+    {
+      "elapsed": 615.2935306120016,
+      "output": "guit-quick-base2-backend-1|0.00%|9.445MiB / 23.09GiB|14.1MB / 0B|15\nguit-quick-base2-metadata-worker-1|96.95%|72.71MiB / 23.09GiB|1.83MB / 6.2GB|17\nguit-quick-base2-postgres-1|0.01%|29.38MiB / 23.09GiB|2.07MB / 221MB|7\n",
+      "error": ""
+    }
+  ]
+}

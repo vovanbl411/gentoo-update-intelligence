@@ -1,12 +1,12 @@
-import type { ApiResult, ApiError } from './api-types';
+import type { CompactResult, ApiError } from './api-types';
 export type { ApiResult, ApiError } from './api-types';
 export type Obj = Record<string, any>;
-export interface ApiEnvelope { id: string; result: ApiResult }
+export interface ApiEnvelope { id: string; result: CompactResult }
 export interface AnalysisJob {
   id: string;
   status: 'pending' | 'running' | 'completed' | 'failed';
   progress: { stage: string; completed: number; total: number };
-  result: ApiResult | null;
+  result: CompactResult | null;
   error: ApiError | null;
 }
 
@@ -33,6 +33,11 @@ export function analysisJob(value: unknown): value is AnalysisJob {
   if (value.result !== null) return false;
   if (value.status === 'failed') return object(value.error) && typeof value.error.code === 'string' && typeof value.error.message === 'string';
   return value.error === null;
+}
+export function partialJob(value: unknown): value is AnalysisJob & { pending_entries: number[] } {
+  if (!object(value) || !Array.isArray(value.pending_entries) || !value.pending_entries.every((v: unknown) => Number.isInteger(v) && (v as number) >= 0)) return false;
+  const base = { ...value, result: value.status === 'completed' ? value.result : null };
+  return analysisJob(base) && (value.result === null || envelope({ id: value.id, result: value.result }));
 }
 export function input(plan: string, lines: string) {
   if (!plan.trim()) throw new Error('Введите план.');

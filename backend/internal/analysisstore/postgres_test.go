@@ -66,9 +66,10 @@ func TestPostgresQueue(t *testing.T) {
 		t.Fatalf("first claim: %#v, %t, %v", first, found, err)
 	}
 	pins := []byte(`{"gentoo":{"Commit":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}}`)
-	if err := store.UpdateJob(ctx, JobUpdate{ID: first.ID, Status: "running", Stage: "analyzing", Completed: 1, Total: 2, Revisions: pins}); err != nil {
+	if err := store.UpdateJob(ctx, JobUpdate{ID: first.ID, Status: "running", Stage: "analyzing", Completed: 1, Total: 2, Revisions: pins, PartialReport: []byte(`{"ready":true}`)}); err != nil {
 		t.Fatal(err)
 	}
+	if err := store.UpdateJob(ctx, JobUpdate{ID: first.ID, Status: "running", Stage: "analyzing", Completed: 2, Total: 2}); err != nil { t.Fatal(err) }
 	if err := store.UpdateJob(ctx, JobUpdate{ID: ids[2], Status: "completed", Stage: "completed", Result: []byte(`{"saved":true}`)}); err != nil {
 		t.Fatal(err)
 	}
@@ -76,7 +77,7 @@ func TestPostgresQueue(t *testing.T) {
 		t.Fatal(err)
 	}
 	restored, _, err := store.GetJob(ctx, first.ID)
-	if err != nil || restored.Status != "pending" || restored.Stage != "queued" || restored.Completed != 0 || restored.Total != 0 || !strings.Contains(string(restored.Revisions), "aaaaaaaa") {
+	if err != nil || restored.Status != "pending" || restored.Stage != "queued" || restored.Completed != 0 || restored.Total != 0 || !strings.Contains(string(restored.Revisions), "aaaaaaaa") || !strings.Contains(string(restored.PartialReport), `"ready": true`) {
 		t.Fatalf("requeued job: %#v, %v", restored, err)
 	}
 	terminal, _, err := store.GetJob(ctx, ids[2])

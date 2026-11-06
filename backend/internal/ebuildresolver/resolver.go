@@ -80,6 +80,10 @@ func Open(localPath string) (*Resolver, error) {
 }
 
 func (r *Resolver) Resolve(input Input) (Result, error) {
+	return r.resolve(input, true)
+}
+
+func (r *Resolver) resolve(input Input, fast bool) (Result, error) {
 	if r == nil {
 		return Result{}, fmt.Errorf("%w: nil Resolver", ErrRepositoryAccess)
 	}
@@ -129,6 +133,11 @@ func (r *Resolver) Resolve(input Input) (Result, error) {
 			}
 			return Result{Status: StatusFound, ReferenceCommit: string(reference), SelectedCommit: commit, EbuildPath: path, BlobID: entry.objectID, Reason: reason}, nil
 		}
+		if first && fast {
+			if selected, ok := r.findDeletedPath(string(reference), path); ok {
+				return selected, nil
+			}
+		}
 		rawCommit, err := runGit(r.localPath, "cat-file", "commit", commit)
 		if err != nil {
 			return Result{}, fmt.Errorf("%w: commit %s: %v", ErrRead, commit, err)
@@ -153,6 +162,33 @@ func (r *Resolver) Resolve(input Input) (Result, error) {
 		}
 		first = false
 	}
+}
+
+// findDeletedPath uses one path-limited first-parent walk when Git can prove
+// the immediately preceding state. Ambiguous or incomplete history falls
+// back to the exhaustive walk, which preserves its detailed error handling.
+func (r *Resolver) findDeletedPath(reference, path string) (Result, bool) {
+	output, err := runGit(r.localPath, "log", "--first-parent", "--full-history", "-1", "--format=%H %P", reference, "--", ":(literal)"+path)
+	if err != nil {
+		return Result{}, false
+	}
+	fields := strings.Fields(string(output))
+	if len(fields) < 2 || !validObjectID(fields[0], r.objectLen) || !validObjectID(fields[1], r.objectLen) {
+		return Result{}, false
+	}
+	parent := fields[1]
+	typ, err := runGit(r.localPath, "cat-file", "-t", parent)
+	if err != nil || strings.TrimSpace(string(typ)) != "commit" {
+		return Result{}, false
+	}
+	entry, found, err := lookup(r.localPath, parent, path)
+	if err != nil || !found || (entry.mode != "100644" && entry.mode != "100755") || entry.kind != "blob" {
+		return Result{}, false
+	}
+	if _, err := runGit(r.localPath, "cat-file", "blob", entry.objectID); err != nil {
+		return Result{}, false
+	}
+	return Result{Status: StatusFound, ReferenceCommit: reference, SelectedCommit: parent, EbuildPath: path, BlobID: entry.objectID, Reason: ReasonFirstParentHistory}, true
 }
 
 type treeEntry struct{ mode, kind, objectID string }

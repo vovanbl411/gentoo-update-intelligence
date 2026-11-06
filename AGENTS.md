@@ -40,6 +40,7 @@
 ## Проверки
 
 - Проверяй изменённое поведение подходящими проверками проекта.
+- Для браузерных тестов frontend используй установленный Flatpak Chrome: `PLAYWRIGHT_BROWSER_EXECUTABLE=/var/lib/flatpak/app/com.google.Chrome/current/active/files/extra/chrome npm run test:browser --prefix frontend`. Путь `current/active` следует за обновлениями Flatpak; не скачивай браузер Playwright, если этот Chrome доступен.
 - Для Parser, Analyzer, metadata diff, ChangeReport, Metadata Provider, reportservice и planservice запускай команды из `backend/`: `gofmt` для изменённых Go-файлов, `go test -count=1 ./...` и `go vet ./...`.
 - Для CLI запускай команды из `backend/`: `gofmt` для изменённых Go-файлов, `go test -count=1 ./...`, `go vet ./...` и `go build -o /tmp/gentoo-update-intelligence ./cmd/gentoo-update-intelligence`.
 - Выполняй `git diff --check` для изменённых tracked-файлов. Новые untracked-файлы также проверяй на whitespace.

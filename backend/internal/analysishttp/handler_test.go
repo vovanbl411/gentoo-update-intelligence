@@ -144,6 +144,130 @@ func TestGetReportsProgressWhileAnalysisIsRunning(t *testing.T) {
 	}
 }
 
+func TestPartialReportAvailableBeforeProviderAndLegacyResultRemainsNull(t *testing.T) {
+	store := &memoryStore{id: testID}
+	started, release := make(chan struct{}), make(chan struct{})
+	handler := NewHandlerWithProviderFactory(store, func() (reportservice.MetadataLookup, error) {
+		close(started)
+		<-release
+		return &sequenceProvider{}, nil
+	})
+	newPost(handler, `{"plan":"[ebuild U] dev-libs/widget-2::gentoo [1::gentoo]"}`)
+	select {
+	case <-started:
+	case <-time.After(time.Second):
+		t.Fatal("provider did not start")
+	}
+	defer close(release)
+	var partial struct {
+		Status  string            `json:"status"`
+		Result  *compactResultDTO `json:"result"`
+		Pending []int             `json:"pending_entries"`
+	}
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/v1/analyses/"+testID+"/partial-report", nil))
+	if err := json.Unmarshal(response.Body.Bytes(), &partial); err != nil {
+		t.Fatal(err)
+	}
+	if response.Code != http.StatusOK || partial.Status != "running" || partial.Result == nil || len(partial.Result.Plan.Entries) != 1 || len(partial.Pending) != 1 || partial.Pending[0] != 0 {
+		t.Fatalf("partial response: %s", response.Body.String())
+	}
+	legacy := httptest.NewRecorder()
+	handler.ServeHTTP(legacy, httptest.NewRequest(http.MethodGet, "/api/v1/analyses/"+testID, nil))
+	var job jobResponse
+	if err := json.Unmarshal(legacy.Body.Bytes(), &job); err != nil {
+		t.Fatal(err)
+	}
+	if job.Status != "running" || len(job.Result) != 0 && string(job.Result) != "null" {
+		t.Fatalf("legacy response: %s", legacy.Body.String())
+	}
+}
+
+type partialBlockingProvider struct {
+	started chan struct{}
+	release chan struct{}
+	once    sync.Once
+}
+
+func (p *partialBlockingProvider) Lookup(q metadataprovider.Query) (metadataprovider.LookupResult, error) {
+	if q.Name == "other" {
+		p.once.Do(func() { close(p.started) })
+		<-p.release
+	}
+	return metadataprovider.LookupResult{Status: metadataprovider.StatusNotFound}, nil
+}
+
+func TestPartialReportIncludesFinishedEntriesWhileAnotherWaits(t *testing.T) {
+	store := &memoryStore{id: testID}
+	provider := &partialBlockingProvider{started: make(chan struct{}), release: make(chan struct{})}
+	handler := NewHandler(store, provider)
+	newPost(handler, `{"plan":"[ebuild U] dev-libs/widget-2::gentoo [1::gentoo]\n[ebuild U] dev-libs/other-2::gentoo [1::gentoo]"}`)
+	select {
+	case <-provider.started:
+	case <-time.After(time.Second):
+		t.Fatal("second entry did not start")
+	}
+	var partial struct {
+		Result  *compactResultDTO `json:"result"`
+		Pending []int             `json:"pending_entries"`
+	}
+	var response *httptest.ResponseRecorder
+	deadline := time.Now().Add(time.Second)
+	for {
+		response = httptest.NewRecorder()
+		handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/v1/analyses/"+testID+"/partial-report", nil))
+		if err := json.Unmarshal(response.Body.Bytes(), &partial); err != nil {
+			t.Fatal(err)
+		}
+		if partial.Result != nil && len(partial.Result.Reports) == 1 {
+			break
+		}
+		if time.Now().After(deadline) {
+			break
+		}
+		time.Sleep(time.Millisecond)
+	}
+	if partial.Result == nil || len(partial.Result.Reports) != 1 || partial.Result.Reports[0].Report.EntryIndex != 0 || len(partial.Pending) != 1 || partial.Pending[0] != 1 {
+		t.Fatalf("partial response: %s", response.Body.String())
+	}
+	close(provider.release)
+	if result := waitJob(t, handler, testID); result.Status != "completed" {
+		t.Fatalf("job: %#v", result)
+	}
+}
+
+func TestPartialReportSurvivesRequeue(t *testing.T) {
+	store := &memoryStore{id: testID}
+	provider := &blockingProvider{started: make(chan struct{}), release: make(chan struct{})}
+	handler := NewHandler(store, provider)
+	newPost(handler, `{"plan":"[ebuild U] dev-libs/widget-2::gentoo [1::gentoo]"}`)
+	select {
+	case <-provider.started:
+	case <-time.After(time.Second):
+		t.Fatal("lookup did not start")
+	}
+	if err := store.RequeueInterruptedJobs(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/api/v1/analyses/"+testID+"/partial-report", nil))
+	var partial struct {
+		Status  string            `json:"status"`
+		Result  *compactResultDTO `json:"result"`
+		Pending []int             `json:"pending_entries"`
+	}
+	if err := json.Unmarshal(response.Body.Bytes(), &partial); err != nil {
+		t.Fatal(err)
+	}
+	if partial.Status != "pending" || partial.Result == nil || len(partial.Pending) != 1 {
+		t.Fatalf("requeued partial: %s", response.Body.String())
+	}
+	close(provider.release)
+	if job := waitJob(t, handler, testID); job.Status != "completed" {
+		t.Fatalf("job: %#v", job)
+	}
+}
+
 func TestPostStorageFailureDoesNotReturnCreatedOrID(t *testing.T) {
 	store := &memoryStore{id: testID, saveErr: errors.New("database unavailable")}
 	handler := NewHandler(store, &sequenceProvider{})
@@ -340,6 +464,9 @@ func (s *memoryStore) UpdateJob(_ context.Context, update analysisstore.JobUpdat
 	job.ID, job.Status, job.Stage = update.ID, update.Status, update.Stage
 	job.Completed, job.Total, job.Error = update.Completed, update.Total, update.Error
 	job.Result = append([]byte(nil), update.Result...)
+	if len(update.PartialReport) > 0 {
+		job.PartialReport = append([]byte(nil), update.PartialReport...)
+	}
 	if len(update.Revisions) > 0 {
 		job.Revisions = append([]byte(nil), update.Revisions...)
 	}
@@ -353,6 +480,7 @@ func (s *memoryStore) GetJob(_ context.Context, id string) (analysisstore.Job, b
 	job, ok := s.jobs[id]
 	job.Request = append([]byte(nil), job.Request...)
 	job.Result = append([]byte(nil), job.Result...)
+	job.PartialReport = append([]byte(nil), job.PartialReport...)
 	job.Revisions = append([]byte(nil), job.Revisions...)
 	return job, ok, nil
 }

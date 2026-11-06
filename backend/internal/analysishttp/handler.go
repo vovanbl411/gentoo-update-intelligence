@@ -127,6 +127,10 @@ func NewHandlerWithConcurrencyLimit(store analysisstore.Store, factory func(cont
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /api/v1/analyses", handler.create)
 	mux.HandleFunc("GET /api/v1/analyses/{id}", handler.get)
+	mux.HandleFunc("GET /api/v1/analyses/{id}/report", handler.get)
+	mux.HandleFunc("GET /api/v1/analyses/{id}/partial-report", handler.getPartial)
+	mux.HandleFunc("/api/v1/analyses/{id}/partial-report", methodNotAllowed("GET, HEAD"))
+	mux.HandleFunc("/api/v1/analyses/{id}/report", methodNotAllowed("GET, HEAD"))
 	mux.HandleFunc("/api/v1/analyses", methodNotAllowed("POST"))
 	mux.HandleFunc("/api/v1/analyses/{id}", methodNotAllowed("GET, HEAD"))
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -262,11 +266,11 @@ func (h *Handler) launch(job analysisstore.Job) {
 			h.updateEventually(analysisstore.JobUpdate{ID: job.ID, Status: "failed", Stage: "failed", Error: "saved job request is invalid"})
 			return
 		}
-		h.execute(job.ID, request, job.Revisions)
+		h.execute(job.ID, request, job.Revisions, job.PartialReport)
 	}()
 }
 
-func (h *Handler) execute(id string, request createRequest, pinnedJSON []byte) {
+func (h *Handler) execute(id string, request createRequest, pinnedJSON, previousPartial []byte) {
 	update := func(status, stage string, completed, total int, result, revisions []byte, message string) {
 		h.updateEventually(analysisstore.JobUpdate{
 			ID: id, Status: status, Stage: stage, Completed: completed, Total: total, Result: result, Revisions: revisions, Error: message,
@@ -280,12 +284,21 @@ func (h *Handler) execute(id string, request createRequest, pinnedJSON []byte) {
 		}
 	}
 	parsed := parser.Parse(request.Plan)
+	initial := presentResult(planservice.Result{Plan: parsed, Analysis: analyzer.Analyze(parsed, analyzer.Context{LocallyPatchedPackages: request.LocallyPatchedPackages})})
+	partial, marshalErr := json.Marshal(initial)
+	if marshalErr != nil {
+		update("failed", "failed", 0, 0, nil, nil, "analysis serialization failed")
+		return
+	}
 	total, err := planservice.LookupUnitCount(parsed)
 	if err != nil {
 		update("failed", "failed", 0, 0, nil, nil, "analysis plan could not be prepared")
 		return
 	}
-	update("running", "preparing", 0, total, nil, nil, "")
+	if len(previousPartial) > 0 {
+		partial = nil
+	}
+	h.updateEventually(analysisstore.JobUpdate{ID: id, Status: "running", Stage: "preparing", Total: total, PartialReport: partial})
 	if h.providerFactory == nil {
 		update("failed", "failed", 0, total, nil, nil, "metadata provider is unavailable")
 		return
@@ -313,9 +326,45 @@ func (h *Handler) execute(id string, request createRequest, pinnedJSON []byte) {
 		}
 	}
 	lastCompleted, lastTotal := 0, total
-	result, err := planservice.AnalyzeParsedWithProgress(request.Plan, parsed, analyzer.Context{LocallyPatchedPackages: request.LocallyPatchedPackages}, provider, func(completed, total int) {
+	previousReports := make(map[int]reportView)
+	if len(previousPartial) > 0 {
+		var saved resultView
+		if json.Unmarshal(previousPartial, &saved) == nil {
+			for _, report := range saved.Reports {
+				previousReports[report.Report.EntryIndex] = report
+			}
+		}
+	}
+	concurrency := 1
+	if _, ok := provider.(interface{ ConcurrentLookups() }); ok {
+		concurrency = 2
+	}
+	result, err := planservice.AnalyzeParsedProgressive(request.Plan, parsed, analyzer.Context{LocallyPatchedPackages: request.LocallyPatchedPackages}, provider, concurrency, func(completed, total int, partialResult *planservice.Result) {
 		lastCompleted, lastTotal = completed, total
-		update("running", "analyzing", completed, total, nil, nil, "")
+		var serializedPartial []byte
+		if partialResult != nil {
+			view := presentResult(*partialResult)
+			for _, report := range view.Reports {
+				previousReports[report.Report.EntryIndex] = report
+			}
+			view.Reports = make([]reportView, 0, len(previousReports))
+			for index := range parsed.Entries {
+				if report, ok := previousReports[index]; ok {
+					view.Reports = append(view.Reports, report)
+				}
+			}
+			if source, ok := provider.(interface {
+				RepositoryRevisions() map[string]repositorymanager.Revision
+			}); ok {
+				view.Repositories = source.RepositoryRevisions()
+			}
+			var marshalErr error
+			serializedPartial, marshalErr = json.Marshal(view)
+			if marshalErr != nil {
+				log.Printf("analysis job %s partial report serialization failed: %v", id, marshalErr)
+			}
+		}
+		h.updateEventually(analysisstore.JobUpdate{ID: id, Status: "running", Stage: "analyzing", Completed: completed, Total: total, PartialReport: serializedPartial})
 	})
 	if err != nil {
 		update("failed", "failed", lastCompleted, lastTotal, nil, nil, "analysis failed")
@@ -333,6 +382,72 @@ func (h *Handler) execute(id string, request createRequest, pinnedJSON []byte) {
 		return
 	}
 	update("completed", "completed", lastTotal, lastTotal, serialized, nil, "")
+}
+
+func (h *Handler) getPartial(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if !analysisIDPattern.MatchString(id) {
+		writeError(w, http.StatusNotFound, "ANALYSIS_NOT_FOUND", "analysis not found")
+		return
+	}
+	if h.store == nil {
+		writeError(w, http.StatusServiceUnavailable, "STORAGE_UNAVAILABLE", "analysis storage is unavailable")
+		return
+	}
+	job, found, err := h.store.GetJob(r.Context(), id)
+	if err != nil {
+		writeError(w, http.StatusServiceUnavailable, "STORAGE_UNAVAILABLE", "analysis storage is unavailable")
+		return
+	}
+	if !found {
+		result, exists, getErr := h.store.Get(r.Context(), id)
+		if getErr != nil {
+			writeError(w, http.StatusServiceUnavailable, "STORAGE_UNAVAILABLE", "analysis storage is unavailable")
+			return
+		}
+		if !exists {
+			writeError(w, http.StatusNotFound, "ANALYSIS_NOT_FOUND", "analysis not found")
+			return
+		}
+		job = analysisstore.Job{ID: id, Status: "completed", Stage: "completed", Completed: 1, Total: 1, Result: result}
+	}
+	stored := job.PartialReport
+	if job.Status == "completed" {
+		stored = job.Result
+	}
+	var result any
+	pending := []int{}
+	if len(stored) > 0 {
+		decoded, decodeErr := decodeStoredResult(stored)
+		if decodeErr != nil {
+			writeError(w, http.StatusInternalServerError, "INVALID_STORED_RESULT", "stored analysis is invalid")
+			return
+		}
+		result = compactResult(decoded)
+		if job.Status != "completed" {
+			ready := make(map[int]bool, len(decoded.Reports))
+			for _, report := range decoded.Reports {
+				ready[report.Report.EntryIndex] = true
+			}
+			for i := range decoded.Plan.Entries {
+				if !ready[i] {
+					pending = append(pending, i)
+				}
+			}
+		}
+	}
+	var failure *apiErrorDTO
+	if job.Status == "failed" {
+		failure = &apiErrorDTO{Code: "ANALYSIS_FAILED", Message: job.Error}
+	}
+	writeJSON(w, http.StatusOK, struct {
+		ID             string       `json:"id"`
+		Status         string       `json:"status"`
+		Progress       progressView `json:"progress"`
+		Result         any          `json:"result"`
+		PendingEntries []int        `json:"pending_entries"`
+		Error          *apiErrorDTO `json:"error"`
+	}{id, job.Status, progressView{job.Stage, job.Completed, job.Total}, result, pending, failure})
 }
 
 func (h *Handler) updateEventually(update analysisstore.JobUpdate) {
@@ -381,7 +496,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if found {
-		h.writeJob(w, job.ID, job.Status, progressView{Stage: job.Stage, Completed: job.Completed, Total: job.Total}, job.Result, job.Error)
+		h.writeJob(w, job.ID, job.Status, progressView{Stage: job.Stage, Completed: job.Completed, Total: job.Total}, job.Result, job.Error, strings.HasSuffix(r.URL.Path, "/report"))
 		return
 	}
 	// Rows created by the synchronous API predate analysis_jobs. Keep them
@@ -395,7 +510,7 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, "ANALYSIS_NOT_FOUND", "analysis not found")
 		return
 	}
-	h.writeJob(w, id, "completed", progressView{Stage: "completed", Completed: 1, Total: 1}, result, "")
+	h.writeJob(w, id, "completed", progressView{Stage: "completed", Completed: 1, Total: 1}, result, "", strings.HasSuffix(r.URL.Path, "/report"))
 }
 
 func presentResult(result planservice.Result) resultView {
@@ -454,7 +569,7 @@ func methodNotAllowed(allow string) http.HandlerFunc {
 	}
 }
 
-func (h *Handler) writeJob(w http.ResponseWriter, id, status string, progress progressView, stored []byte, message string) {
+func (h *Handler) writeJob(w http.ResponseWriter, id, status string, progress progressView, stored []byte, message string, compact bool) {
 	response := jobResponse{ID: id, Status: status, Progress: progress}
 	if status == "completed" {
 		result, err := decodeStoredResult(stored)
@@ -463,7 +578,11 @@ func (h *Handler) writeJob(w http.ResponseWriter, id, status string, progress pr
 			writeError(w, http.StatusInternalServerError, "INVALID_STORED_RESULT", "stored analysis is invalid")
 			return
 		}
-		serialized, err := json.Marshal(result)
+		var output any = result
+		if compact {
+			output = compactResult(result)
+		}
+		serialized, err := json.Marshal(output)
 		if err != nil {
 			writeError(w, http.StatusInternalServerError, "INTERNAL_ERROR", "analysis response serialization failed")
 			return

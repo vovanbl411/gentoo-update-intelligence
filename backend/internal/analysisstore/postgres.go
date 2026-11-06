@@ -22,6 +22,9 @@ var createAnalysisJobsTable string
 //go:embed migrations/003_add_analysis_job_revisions.sql
 var addAnalysisJobRevisions string
 
+//go:embed migrations/004_add_partial_report.sql
+var addPartialReport string
+
 type Store interface {
 	Save(context.Context, []byte) (string, error)
 	Get(context.Context, string) ([]byte, bool, error)
@@ -33,26 +36,28 @@ type Store interface {
 }
 
 type Job struct {
-	ID        string
-	Request   []byte
-	Status    string
-	Stage     string
-	Completed int
-	Total     int
-	Revisions []byte
-	Result    []byte
-	Error     string
+	ID            string
+	Request       []byte
+	Status        string
+	Stage         string
+	Completed     int
+	Total         int
+	Revisions     []byte
+	Result        []byte
+	PartialReport []byte
+	Error         string
 }
 
 type JobUpdate struct {
-	ID        string
-	Status    string
-	Stage     string
-	Completed int
-	Total     int
-	Revisions []byte
-	Result    []byte
-	Error     string
+	ID            string
+	Status        string
+	Stage         string
+	Completed     int
+	Total         int
+	Revisions     []byte
+	Result        []byte
+	PartialReport []byte
+	Error         string
 }
 
 type Postgres struct {
@@ -88,6 +93,9 @@ func (p *Postgres) Migrate(ctx context.Context) error {
 	if _, err := p.db.ExecContext(ctx, addAnalysisJobRevisions); err != nil {
 		return fmt.Errorf("add analysis job revisions: %w", err)
 	}
+	if _, err := p.db.ExecContext(ctx, addPartialReport); err != nil {
+		return fmt.Errorf("add partial report: %w", err)
+	}
 	return nil
 }
 
@@ -112,8 +120,9 @@ func (p *Postgres) UpdateJob(ctx context.Context, update JobUpdate) error {
 		UPDATE analysis_jobs
 		SET status = $2, stage = $3, completed = $4, total = $5,
 		    result = NULLIF($6, '')::jsonb, error = NULLIF($7, ''),
-		    revisions = COALESCE(NULLIF($8, '')::jsonb, revisions), updated_at = now()
-		WHERE id = $1::uuid`, update.ID, update.Status, update.Stage, update.Completed, update.Total, string(update.Result), update.Error, string(update.Revisions))
+		    revisions = COALESCE(NULLIF($8, '')::jsonb, revisions),
+		    partial_report = COALESCE(NULLIF($9, '')::jsonb, partial_report), updated_at = now()
+		WHERE id = $1::uuid`, update.ID, update.Status, update.Stage, update.Completed, update.Total, string(update.Result), update.Error, string(update.Revisions), string(update.PartialReport))
 	if err != nil {
 		return fmt.Errorf("update analysis job: %w", err)
 	}
@@ -132,9 +141,9 @@ func (p *Postgres) GetJob(ctx context.Context, id string) (Job, bool, error) {
 	var request, result []byte
 	err := p.db.QueryRowContext(ctx, `
 		SELECT id::text, request::text, status, stage, completed, total, COALESCE(revisions::text, ''),
-		       COALESCE(result::text, ''), COALESCE(error, '')
+		       COALESCE(result::text, ''), COALESCE(error, ''), COALESCE(partial_report::text, '')
 		FROM analysis_jobs WHERE id = $1::uuid`, id).
-		Scan(&job.ID, &request, &job.Status, &job.Stage, &job.Completed, &job.Total, &job.Revisions, &result, &job.Error)
+		Scan(&job.ID, &request, &job.Status, &job.Stage, &job.Completed, &job.Total, &job.Revisions, &result, &job.Error, &job.PartialReport)
 	if err == sql.ErrNoRows {
 		return Job{}, false, nil
 	}
@@ -164,9 +173,9 @@ func (p *Postgres) ClaimNextJob(ctx context.Context) (Job, bool, error) {
 		WHERE id = (SELECT id FROM analysis_jobs WHERE status = 'pending'
 		    ORDER BY created_at, id LIMIT 1 FOR UPDATE SKIP LOCKED)
 		RETURNING id::text, request::text, status, stage, completed, total,
-		    COALESCE(revisions::text, ''), COALESCE(result::text, ''), COALESCE(error, '')`).
+		    COALESCE(revisions::text, ''), COALESCE(result::text, ''), COALESCE(error, ''), COALESCE(partial_report::text, '')`).
 		Scan(&job.ID, &job.Request, &job.Status, &job.Stage, &job.Completed, &job.Total,
-			&job.Revisions, &job.Result, &job.Error)
+			&job.Revisions, &job.Result, &job.Error, &job.PartialReport)
 	if err == sql.ErrNoRows {
 		return Job{}, false, nil
 	}

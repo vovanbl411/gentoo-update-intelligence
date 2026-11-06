@@ -56,6 +56,8 @@ Changes `add-analysis-frontend`, `add-automatic-metadata-preparation` и `add-lo
 
 Следующий функциональный этап выбирается отдельно. Перечень ниже не задаёт новый согласованный scope или порядок реализации:
 
+Предложения по ускорению анализа, отмене, истории заданий и идентификации пользователей собраны в [backlog](backlog.md).
+
 - Предупреждения о пропущенных обновлениях из-за dependency conflict остаются ограничением Parser.
 - Реальных downgrade и blocker fixtures пока нет; эти сценарии проверяются синтетическими входами.
 - Metadata diff ограничен EAPI, SLOT/SUBSLOT и IUSE; effective configuration и upstream остаются `unavailable`.

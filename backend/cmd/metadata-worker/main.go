@@ -40,6 +40,7 @@ type response struct {
 }
 
 const defaultGenerationLimit = 2
+const defaultPreparationLimit = 2
 
 type preparationOutcome struct {
 	result       metadatagenerator.Result
@@ -60,18 +61,30 @@ type metadataWorker struct {
 	prepare func(request) preparationOutcome
 }
 
-func newMetadataWorker(limit int) (*metadataWorker, error) {
+func newMetadataWorkerWithPreparationLimit(limit, preparationLimit int) (*metadataWorker, error) {
 	if limit <= 0 {
 		return nil, errors.New("metadata generation limit must be positive")
+	}
+	if preparationLimit <= 0 {
+		return nil, errors.New("metadata preparation limit must be positive")
 	}
 	limiter := make(chan struct{}, limit)
 	return &metadataWorker{
 		calls: make(map[string]*preparationCall),
-		prepare: func(input request) preparationOutcome {
+		prepare: limitPreparation(preparationLimit, func(input request) preparationOutcome {
 			result, cached, sourceCommit, err := prepareMetadata(input, limiter)
 			return preparationOutcome{result: result, cached: cached, sourceCommit: sourceCommit, err: err}
-		},
+		}),
 	}, nil
+}
+
+func limitPreparation(limit int, prepare func(request) preparationOutcome) func(request) preparationOutcome {
+	slots := make(chan struct{}, limit)
+	return func(input request) preparationOutcome {
+		slots <- struct{}{}
+		defer func() { <-slots }()
+		return prepare(input)
+	}
 }
 
 func (w *metadataWorker) do(ctx context.Context, input request) preparationOutcome {
@@ -144,7 +157,11 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	worker, err := newMetadataWorker(limit)
+	preparationLimit, err := preparationLimitFromEnv()
+	if err != nil {
+		log.Fatal(err)
+	}
+	worker, err := newMetadataWorkerWithPreparationLimit(limit, preparationLimit)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -166,6 +183,18 @@ func main() {
 	if err := http.ListenAndServe(address, nil); err != nil {
 		panic(err)
 	}
+}
+
+func preparationLimitFromEnv() (int, error) {
+	value := os.Getenv("METADATA_WORKER_PREPARATION_LIMIT")
+	if value == "" {
+		return defaultPreparationLimit, nil
+	}
+	limit, err := strconv.Atoi(value)
+	if err != nil || limit <= 0 {
+		return 0, fmt.Errorf("METADATA_WORKER_PREPARATION_LIMIT must be a positive integer, got %q", value)
+	}
+	return limit, nil
 }
 
 func generationLimitFromEnv() (int, error) {
@@ -269,6 +298,17 @@ func prepareMetadata(input request, generationSlots chan struct{}) (metadatagene
 	if err != nil {
 		return metadatagenerator.Result{}, false, "", err
 	}
+	// A tree entry proves that Git can traverse the complete profile path
+	// without following a worktree symlink. Other cases retain the checkout path.
+	if key, ok := pinnedTreeProfile(input, resolution.SelectedCommit); ok {
+		cacheInputs.Profile = key
+		if result, found, loadErr := store.Load(cacheInputs); loadErr != nil {
+			return metadatagenerator.Result{}, false, "", loadErr
+		} else if found {
+			log.Printf("metadata cache hit repository=%s package=%s/%s version=%s", input.Repository.Name, input.Category, input.Name, input.Version)
+			return result, true, resolution.SelectedCommit, nil
+		}
+	}
 	tempRoot, err := os.MkdirTemp(os.Getenv("METADATA_WORKER_TEMP_PATH"), "metadata-")
 	if err != nil {
 		return metadatagenerator.Result{}, false, "", err
@@ -334,6 +374,48 @@ func prepareMetadata(input request, generationSlots chan struct{}) (metadatagene
 	}
 	log.Printf("metadata generated repository=%s package=%s/%s version=%s source_commit=%s", input.Repository.Name, input.Category, input.Name, input.Version, resolution.SelectedCommit)
 	return generated, false, resolution.SelectedCommit, nil
+}
+
+// pinnedTreeProfile recognizes only paths whose canonical checkout path can be
+// proven directly from Git. Symlinks, absolute paths and errors fall back.
+func pinnedTreeProfile(input request, selectedCommit string) (string, bool) {
+	// The checkout path verifies each master commit even when the profile is
+	// elsewhere. Do not bypass that check for a cache hit.
+	for _, master := range input.Masters {
+		cmd := exec.Command("git", "--no-replace-objects", "--no-lazy-fetch", "-C", master.Path, "cat-file", "-t", master.Commit)
+		typ, err := cmd.Output()
+		if err != nil || strings.TrimSpace(string(typ)) != "commit" {
+			return "", false
+		}
+	}
+	profile := input.Profile
+	repo := input.Repository
+	commit := selectedCommit
+	prefix := ""
+	if name, relative, found := strings.Cut(profile, ":"); found {
+		profile = relative
+		if name != repo.Name {
+			foundMaster := false
+			for _, master := range input.Masters {
+				if master.Name == name {
+					repo, commit, prefix, foundMaster = master, master.Commit, name+":", true
+					break
+				}
+			}
+			if !foundMaster {
+				return "", false
+			}
+		}
+	}
+	if profile == "" || filepath.IsAbs(profile) || filepath.Clean(profile) != profile || profile == "." || profile == ".." || strings.HasPrefix(profile, "../") || strings.ContainsAny(profile, "\\\n\r") {
+		return "", false
+	}
+	cmd := exec.Command("git", "--no-replace-objects", "--no-lazy-fetch", "-C", repo.Path, "cat-file", "-t", commit+":"+profile)
+	typ, err := cmd.Output()
+	if err != nil || strings.TrimSpace(string(typ)) != "tree" {
+		return "", false
+	}
+	return prefix + profile, true
 }
 
 func canonicalProfile(profile, mainCheckout string, masterPaths map[string]string, masters []repository) (string, error) {

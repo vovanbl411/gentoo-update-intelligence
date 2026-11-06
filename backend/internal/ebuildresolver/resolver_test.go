@@ -11,12 +11,12 @@ import (
 )
 
 type testRepo struct {
-	t     *testing.T
+	t     testing.TB
 	path  string
 	clock int
 }
 
-func newRepo(t *testing.T) *testRepo {
+func newRepo(t testing.TB) *testRepo {
 	t.Helper()
 	path := t.TempDir()
 	r := &testRepo{t: t, path: path}
@@ -25,6 +25,35 @@ func newRepo(t *testing.T) *testRepo {
 	r.git("config", "user.email", "resolver@example.invalid")
 	r.git("config", "commit.gpgsign", "false")
 	return r
+}
+
+func BenchmarkDeletedEbuildHistory(b *testing.B) {
+	r := newRepo(b)
+	path := "dev-libs/example/example-1.ebuild"
+	r.commit("add", map[string]string{path: "EAPI=8\n"})
+	r.commit("remove", nil, path)
+	var reference string
+	for i := 0; i < 80; i++ {
+		reference = r.commit("unrelated", map[string]string{"other": fmt.Sprint(i)})
+	}
+	resolver, err := Open(r.path)
+	if err != nil {
+		b.Fatal(err)
+	}
+	input := inputFor(reference, "dev-libs", "example", "1")
+	for _, tc := range []struct {
+		name string
+		fast bool
+	}{{"exhaustive", false}, {"path-history", true}} {
+		b.Run(tc.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				result, err := resolver.resolve(input, tc.fast)
+				if err != nil || result.Status != StatusFound {
+					b.Fatalf("resolve: %+v %v", result, err)
+				}
+			}
+		})
+	}
 }
 
 func (r *testRepo) git(args ...string) string {
@@ -68,6 +97,34 @@ func (r *testRepo) branch(name string, commit string) { r.git("branch", name, co
 
 func inputFor(reference string, category, name, version string) Input {
 	return Input{Repository: "gentoo", Reference: reference, Category: category, Name: name, Version: version}
+}
+
+func TestFastHistoryMatchesExhaustiveWalk(t *testing.T) {
+	r := newRepo(t)
+	path := "dev-libs/example/example-1.ebuild"
+	refs := []string{r.commit("add", map[string]string{path: "EAPI=8\n"})}
+	for i := 0; i < 12; i++ {
+		refs = append(refs, r.commit("unrelated", map[string]string{"other": fmt.Sprint(i)}))
+	}
+	refs = append(refs, r.commit("remove", nil, path))
+	for i := 12; i < 24; i++ {
+		refs = append(refs, r.commit("later", map[string]string{"other": fmt.Sprint(i)}))
+	}
+	resolver, err := Open(r.path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, ref := range refs {
+		input := inputFor(ref, "dev-libs", "example", "1")
+		fast, fastErr := resolver.resolve(input, true)
+		slow, slowErr := resolver.resolve(input, false)
+		if fast != slow || (fastErr == nil) != (slowErr == nil) {
+			t.Fatalf("%s: fast=%+v %v slow=%+v %v", ref, fast, fastErr, slow, slowErr)
+		}
+	}
+	if _, ok := resolver.findDeletedPath(refs[len(refs)-1], path); !ok {
+		t.Fatal("expected fast path to handle deletion")
+	}
 }
 
 func TestResolveFirstParentStateTransitions(t *testing.T) {
@@ -171,6 +228,38 @@ func TestResolveMergeUsesOnlyFirstParent(t *testing.T) {
 	}
 	if main == side {
 		t.Fatal("fixture branches unexpectedly match")
+	}
+}
+
+func TestFastHistoryDeletionAtMergeUsesFirstParent(t *testing.T) {
+	r := newRepo(t)
+	path := "cat/pkg/pkg-1.ebuild"
+	base := r.commit("base", map[string]string{path: "EAPI=8\n"})
+	r.branch("mainline", base)
+	r.git("checkout", "-q", "-b", "side", base)
+	r.commit("remove on side", nil, path)
+	r.git("checkout", "-q", "mainline")
+	parent := r.commit("unrelated", map[string]string{"README": "main"})
+	r.git("merge", "--no-ff", "-q", "side", "-m", "merge deletion")
+	reference := r.commit("later", map[string]string{"later": "value"})
+	resolver, err := Open(r.path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input := inputFor(reference, "cat", "pkg", "1")
+	fast, err := resolver.resolve(input, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	slow, err := resolver.resolve(input, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fast != slow || fast.SelectedCommit != parent {
+		t.Fatalf("fast=%+v slow=%+v, want parent %s", fast, slow, parent)
+	}
+	if _, ok := resolver.findDeletedPath(reference, path); !ok {
+		t.Fatal("merge deletion did not use fast path")
 	}
 }
 

@@ -1,29 +1,28 @@
 import { test, expect } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-test('реальный backend и PostgreSQL', async ({ page, context }) => {
-  test.skip(process.env.LIVE_ACCEPTANCE !== '1', 'Требуется локальный backend с закреплённой metadata и PostgreSQL');
-  test.setTimeout(5 * 60 * 1000);
-  const plan = readFileSync('../testdata/parser/ebuild-updates.txt', 'utf8');
-  await page.goto('/'); await page.getByLabel('План emerge').fill(plan); await page.getByLabel(/Локально/).fill('dev-libs/libei');
+
+test('реальный frontend, backend и PostgreSQL', async ({ page, context }) => {
+  test.skip(process.env.LIVE_ACCEPTANCE !== '1', 'Требуется локальный Compose');
+  test.setTimeout(300_000);
+  const base = process.env.LIVE_ACCEPTANCE_URL || 'http://127.0.0.1:8081';
+  const plan = '[ebuild U] dev-libs/libei-1.6.0-r1::gentoo [1.6.0::gentoo] USE="(systemd) (-elogind) -test" 0 KiB';
+  await page.goto(base); await page.getByLabel('План emerge').fill(plan); await page.getByLabel(/Локально/).fill('dev-libs/libei');
   const responsePromise = page.waitForResponse(r => r.url().endsWith('/api/v1/analyses') && r.request().method() === 'POST');
   await page.getByRole('button', { name: 'Анализировать' }).click();
   const response = await responsePromise; expect(response.status()).toBe(202); const accepted = await response.json();
-  expect(accepted.status).toBe('pending');
-  await expect(page).toHaveURL(`/analyses/${accepted.id}`);
-  await expect.poll(async () => (await (await page.request.get(`/api/v1/analyses/${accepted.id}`)).json()).status, {timeout:300_000}).toBe('completed');
-  const get = await page.request.get(`/api/v1/analyses/${accepted.id}`); const data = await get.json();
-  expect(data.id).toBe(accepted.id); expect(data.result).toBeTruthy();
-  const first = data.result.reports[0]; expect(first.before_lookup.result.status).toBe('found'); expect(first.after_lookup.result.status).toBe('found');
-  expect(first.report.gentoo.comparison.compared_fields).toEqual(['EAPI','SLOT','IUSE']);
-  expect(first.report.gentoo.comparison.changes.eapi).toBeNull(); expect(first.report.gentoo.comparison.changes.slot).toBeNull(); expect(first.report.gentoo.comparison.changes.subslot).toBeNull();
-  for (const key of ['added','removed','default_changes']) expect(first.report.gentoo.comparison.changes.iuse[key]).toEqual([]);
-  for (const entry of data.result.plan.entries) { const card = page.locator('section').filter({has: page.getByRole('heading', {name:`${entry.package.category}/${entry.package.name}`, exact:true})}); await expect(card).toContainText(entry.operation); await expect(card).toContainText(entry.target.version); for (const version of entry.installed.versions ?? []) await expect(card).toContainText(version.version); }
-  const finding = data.result.analysis.findings.find((f: {evidence?: {context_index?: number}}) => f.evidence?.context_index === 0);
-  expect(finding).toBeTruthy(); expect(finding.entry_index).toBe(0);
-  await expect(page.getByText(finding.message, {exact:false})).toBeVisible();
-  await expect(page.getByText('Индекс контекста: 0')).toBeVisible();
-  for (const item of data.result.analysis.findings ?? []) await expect(page.getByText(item.message, {exact:false})).toBeVisible();
-  const check = async (p: typeof page) => { await expect(p.getByText('Сравнённые поля: EAPI, SLOT, IUSE').first()).toBeVisible(); await expect(p.getByText('В сравнённых полях различий нет.').first()).toBeVisible(); };
-  await check(page); const other = await context.newPage(); await other.goto(`/analyses/${data.id}`); await check(other); await expect(other.getByText('Индекс контекста: 0')).toBeVisible(); await page.reload(); await check(page); await expect(page.getByText('Индекс контекста: 0')).toBeVisible();
+  expect(accepted.status).toBe('pending'); await expect(page).toHaveURL(`${base}/analyses/${accepted.id}`);
+  await expect.poll(async () => (await (await page.request.get(`${base}/api/v1/analyses/${accepted.id}/report`)).json()).status, {timeout:240_000}).toBe('completed');
+  const compact = await (await page.request.get(`${base}/api/v1/analyses/${accepted.id}/report`)).json();
+  const full = await (await page.request.get(`${base}/api/v1/analyses/${accepted.id}`)).json();
+  expect(compact.id).toBe(accepted.id); expect(compact.result.plan).toEqual(full.result.plan); expect(compact.result.analysis).toEqual(full.result.analysis);
+  const entry = compact.result.plan.entries[0]; expect(`${entry.package.category}/${entry.package.name}`).toBe('dev-libs/libei');
+  const check = async (p: typeof page) => {
+    const card = p.locator('#package-0'); await expect(card.locator('summary')).toContainText('dev-libs/libei');
+    await expect(card.locator('summary')).toContainText(entry.target.version); await card.locator('summary').click();
+    await expect(card.getByRole('heading', {name: `Metadata: ${compact.result.reports[0].report.gentoo.status}`})).toBeVisible();
+    await expect(p.getByText('Индекс контекста: 0').first()).toBeVisible();
+  };
+  await check(page); const other = await context.newPage(); await other.goto(`${base}/analyses/${accepted.id}`); await check(other);
+  await page.reload(); await check(page);
+  await page.getByText('Технические данные', {exact:true}).click(); await expect(page.getByRole('link', {name:'Скачать JSON'})).toBeVisible();
   console.log(`LIVE_ACCEPTANCE_UUID=${accepted.id}`);
 });

@@ -5,6 +5,20 @@ export interface ApiResult {
   reports: (ApiReport)[];
   repositories: Record<string, RepositorymanagerRevision>;
 }
+export interface CompactLookup {
+  query: MetadataproviderQuery | null;
+  result: { status: string } | null;
+  error: ApiError | null;
+  skip_reason: string;
+}
+export interface CompactReport {
+  report: Omit<ChangereportReport, 'parser_status' | 'parser_diagnostics'>;
+  before_lookup: CompactLookup;
+  after_lookup: CompactLookup;
+}
+export interface CompactResult extends Omit<ApiResult, 'reports'> {
+  reports: CompactReport[];
+}
 export interface ApiPlan {
   status: string;
   entries: (ApiEntry)[];

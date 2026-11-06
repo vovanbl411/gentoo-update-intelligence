@@ -37,6 +37,10 @@ type preparedMetadata struct {
 	SourceCommit string                   `json:"source_commit"`
 }
 
+// ConcurrentLookups indicates that the pinned providers are immutable and may
+// serve independent lookups concurrently.
+func (*pinnedRepositories) ConcurrentLookups() {}
+
 func (p *pinnedRepositories) RepositoryFailure(name string) error {
 	if err := p.failures[name]; err != nil {
 		return err

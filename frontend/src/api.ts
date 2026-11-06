@@ -17,6 +17,14 @@ export function getAnalysis(id: string): Promise<Response> {
   return fetch(`${analysesPath}/${encodeURIComponent(id)}`);
 }
 
+export function getAnalysisReport(id: string): Promise<Response> {
+  return fetch(`${analysesPath}/${encodeURIComponent(id)}/report`);
+}
+
+export function getPartialReport(id: string): Promise<Response> {
+  return fetch(`${analysesPath}/${encodeURIComponent(id)}/partial-report`);
+}
+
 // Codes are stable identifiers; even a code unknown to this frontend retains
 // its message. Rendering uses textContent, never HTML from the API.
 export async function responseErrorMessage(response: Response): Promise<string> {
