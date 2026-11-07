@@ -304,3 +304,102 @@ func (f testFixture) git(args ...string) string {
 func shellQuote(value string) string {
 	return "'" + strings.ReplaceAll(value, "'", "'\\''") + "'"
 }
+
+func TestPortageVersionSharesConcurrentLookupAndRetriesFailure(t *testing.T) {
+	root := t.TempDir()
+	marker := filepath.Join(root, "attempts")
+	emerge := filepath.Join(root, "emerge")
+	script := "#!/bin/sh\nprintf x >> " + shellQuote(marker) + "\nsleep 0.05\nif [ \"$(wc -c < " + shellQuote(marker) + ")\" -eq 1 ]; then exit 1; fi\nprintf 'Portage 3.0.99\n'\n"
+	if err := os.WriteFile(emerge, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	g := New(Config{EmergePath: emerge})
+	temp := t.TempDir()
+	const callers = 12
+	start := make(chan struct{})
+	results := make(chan error, callers)
+	for i := 0; i < callers; i++ {
+		go func() {
+			<-start
+			_, err := g.PortageVersion(temp)
+			results <- err
+		}()
+	}
+	close(start)
+	for i := 0; i < callers; i++ {
+		if err := <-results; err == nil {
+			t.Fatal("concurrent caller unexpectedly succeeded during failed shared attempt")
+		}
+	}
+	if got, err := os.ReadFile(marker); err != nil || len(got) != 1 {
+		t.Fatalf("version command attempts = %d, err = %v; want one shared failed attempt", len(got), err)
+	}
+	if version, err := g.PortageVersion(temp); err != nil || version != "3.0.99" {
+		t.Fatalf("cached version = %q, err = %v", version, err)
+	}
+	if got, _ := os.ReadFile(marker); len(got) != 2 {
+		t.Fatalf("successful version was not cached: attempts = %d", len(got))
+	}
+	if version, err := g.PortageVersion(temp); err != nil || version != "3.0.99" {
+		t.Fatalf("second successful lookup = %q, err = %v", version, err)
+	}
+	if got, _ := os.ReadFile(marker); len(got) != 2 {
+		t.Fatalf("successful lookup was repeated: attempts = %d", len(got))
+	}
+	if err := os.WriteFile(emerge, []byte("#!/bin/sh\nprintf x >> "+shellQuote(marker)+"\nprintf 'Portage 3.1.0\\n'\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	newGenerator := New(Config{EmergePath: emerge})
+	if version, err := newGenerator.PortageVersion(temp); err != nil || version != "3.1.0" {
+		t.Fatalf("new generator version = %q, err = %v", version, err)
+	}
+	if got, _ := os.ReadFile(marker); len(got) != 3 {
+		t.Fatalf("new generator did not resolve runtime: attempts = %d", len(got))
+	}
+}
+
+func TestGeneratorCapturesExecutablePathsAndPath(t *testing.T) {
+	root := t.TempDir()
+	first, second := filepath.Join(root, "first"), filepath.Join(root, "second")
+	for dir, version := range map[string]string{first: "3.0.1", second: "3.0.2"} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "emerge"), []byte("#!/bin/sh\nprintf 'Portage "+version+"\\n'\n"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "egencache"), []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Setenv("PATH", first)
+	g := New(Config{})
+	t.Setenv("PATH", second)
+	if version, err := g.PortageVersion(t.TempDir()); err != nil || version != "3.0.1" {
+		t.Fatalf("captured runtime = %q, err = %v", version, err)
+	}
+	newGenerator := New(Config{})
+	if version, err := newGenerator.PortageVersion(t.TempDir()); err != nil || version != "3.0.2" {
+		t.Fatalf("new runtime = %q, err = %v", version, err)
+	}
+}
+
+func TestResolveExecutableFromRelativePathIsAbsolute(t *testing.T) {
+	root := t.TempDir()
+	t.Chdir(root)
+	if err := os.Mkdir("bin", 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile("bin/tool", []byte("#!/bin/sh\nprintf pinned\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	executable, err := resolveExecutable("tool", "bin")
+	if err != nil || !filepath.IsAbs(executable) {
+		t.Fatalf("resolved executable = %q, err = %v", executable, err)
+	}
+	cmd := exec.Command(executable)
+	cmd.Dir = t.TempDir()
+	if out, err := cmd.Output(); err != nil || string(out) != "pinned" {
+		t.Fatalf("different command directory: output=%q err=%v", out, err)
+	}
+}

@@ -1,0 +1,382 @@
+diff --git a/backend/internal/analysishttp/dto_convert.go b/backend/internal/analysishttp/dto_convert.go
+index c37cc69..05e67b9 100644
+--- a/backend/internal/analysishttp/dto_convert.go
++++ b/backend/internal/analysishttp/dto_convert.go
+@@ -119,6 +119,7 @@ func convertParserSummary(source storedParserSummary) parserSummaryDTO {
+ 	return parserSummaryDTO{
+ 		Packages:   source.Packages,
+ 		Upgrades:   source.Upgrades,
++		Reinstalls: source.Reinstalls,
+ 		Downgrades: source.Downgrades,
+ 		Uninstalls: source.Uninstalls,
+ 		NewSlots:   source.NewSlots,
+diff --git a/backend/internal/analysishttp/dto_stored.go b/backend/internal/analysishttp/dto_stored.go
+index e3ca838..db484aa 100644
+--- a/backend/internal/analysishttp/dto_stored.go
++++ b/backend/internal/analysishttp/dto_stored.go
+@@ -100,6 +100,7 @@ type storedParserConflictSummary struct {
+ type storedParserSummary struct {
+ 	Packages   int              `json:"Packages"`
+ 	Upgrades   int              `json:"Upgrades"`
++	Reinstalls int              `json:"Reinstalls"`
+ 	Downgrades int              `json:"Downgrades"`
+ 	Uninstalls int              `json:"Uninstalls"`
+ 	NewSlots   int              `json:"NewSlots"`
+diff --git a/backend/internal/analysishttp/dto_v1.go b/backend/internal/analysishttp/dto_v1.go
+index 62e25e5..b46b601 100644
+--- a/backend/internal/analysishttp/dto_v1.go
++++ b/backend/internal/analysishttp/dto_v1.go
+@@ -99,6 +99,7 @@ type parserConflictSummaryDTO struct {
+ type parserSummaryDTO struct {
+ 	Packages   int           `json:"packages"`
+ 	Upgrades   int           `json:"upgrades"`
++	Reinstalls int           `json:"reinstalls"`
+ 	Downgrades int           `json:"downgrades"`
+ 	Uninstalls int           `json:"uninstalls"`
+ 	NewSlots   int           `json:"new_slots"`
+diff --git a/backend/internal/analysishttp/testdata/v1-found.json b/backend/internal/analysishttp/testdata/v1-found.json
+index 12bf46f..fe32b37 100644
+--- a/backend/internal/analysishttp/testdata/v1-found.json
++++ b/backend/internal/analysishttp/testdata/v1-found.json
+@@ -1659,6 +1659,7 @@
+       "summary": {
+         "packages": 6,
+         "upgrades": 5,
++        "reinstalls": 0,
+         "downgrades": 0,
+         "uninstalls": 0,
+         "new_slots": 1,
+diff --git a/backend/internal/changereport/changereport.go b/backend/internal/changereport/changereport.go
+index 65ca821..b20d413 100644
+--- a/backend/internal/changereport/changereport.go
++++ b/backend/internal/changereport/changereport.go
+@@ -110,6 +110,13 @@ func Build(
+ 		InterpretationLimitation: interpretationLimit,
+ 	}
+ 
++	// A rebuild without explicit installed facts can bind only its target.
++	if entry.Operation == parser.OperationReinstall && len(entry.Installed.Versions) == 0 {
++		report.Gentoo.Diagnostics = checkOperationAndInstalled(entry)
++		report.Gentoo.Diagnostics = append(report.Gentoo.Diagnostics, checkTarget(entry, after)...)
++		return report, nil
++	}
++
+ 	if diagnostics := checkOperationAndInstalled(entry); len(diagnostics) != 0 {
+ 		report.Gentoo.Diagnostics = diagnostics
+ 		return report, nil
+@@ -139,11 +146,11 @@ func Build(
+ 
+ func checkOperationAndInstalled(entry parser.Entry) []BindingDiagnostic {
+ 	diagnostics := make([]BindingDiagnostic, 0, 2)
+-	if entry.Operation != parser.OperationUpgrade && entry.Operation != parser.OperationDowngrade {
++	if entry.Operation != parser.OperationUpgrade && entry.Operation != parser.OperationDowngrade && entry.Operation != parser.OperationReinstall {
+ 		diagnostics = append(diagnostics, BindingDiagnostic{
+ 			Code:     CodeOperationUnsupported,
+ 			Field:    field(BindingFieldOperation),
+-			Expected: value("upgrade or downgrade"),
++			Expected: value("upgrade, downgrade or reinstall"),
+ 			Actual:   value(string(entry.Operation)),
+ 		})
+ 	}
+@@ -195,17 +202,7 @@ func checkSnapshotIdentity(entry parser.Entry, installed parser.InstalledVersion
+ 		{side: metadatadiff.SideAfter, snapshot: after, version: entry.Target.Version, repository: *entry.Target.Repository},
+ 	}
+ 	for _, current := range sides {
+-		source := current.snapshot.Source
+-		if source.Category != entry.Package.Category || source.Name != entry.Package.Name {
+-			diagnostics = append(diagnostics, mismatch(CodePackageMismatch, current.side, BindingFieldPackage,
+-				packageName(entry.Package), packageName(parser.Package{Category: source.Category, Name: source.Name})))
+-		}
+-		if source.Version != current.version {
+-			diagnostics = append(diagnostics, mismatch(CodeVersionMismatch, current.side, BindingFieldVersion, current.version, source.Version))
+-		}
+-		if source.Repository != current.repository {
+-			diagnostics = append(diagnostics, mismatch(CodeRepositoryMismatch, current.side, BindingFieldRepository, current.repository, source.Repository))
+-		}
++		diagnostics = append(diagnostics, checkSideIdentity(entry.Package, current.version, current.repository, current.snapshot, current.side)...)
+ 	}
+ 	return diagnostics
+ }
+@@ -223,16 +220,7 @@ func checkSlots(entry parser.Entry, installed parser.InstalledVersion, before, a
+ 		{side: metadatadiff.SideAfter, planSlot: entry.Target.Slot, planSubslot: entry.Target.Subslot, snapshot: after},
+ 	}
+ 	for _, current := range sides {
+-		if current.snapshot.Slot.State != metadatadiff.StateValid {
+-			continue
+-		}
+-		slot := current.snapshot.Slot
+-		if current.planSlot != nil && *current.planSlot != slot.Name {
+-			diagnostics = append(diagnostics, mismatch(CodeSlotMismatch, current.side, BindingFieldSlot, *current.planSlot, slot.Name))
+-		}
+-		if current.planSubslot != nil && *current.planSubslot != slot.Subslot {
+-			diagnostics = append(diagnostics, mismatch(CodeSubslotMismatch, current.side, BindingFieldSubslot, *current.planSubslot, slot.Subslot))
+-		}
++		diagnostics = append(diagnostics, checkSideSlots(current.planSlot, current.planSubslot, current.snapshot, current.side)...)
+ 	}
+ 	return diagnostics
+ }
+@@ -264,3 +252,48 @@ func cloneParserDiagnostics(diagnostics []parser.Diagnostic) []parser.Diagnostic
+ 	}
+ 	return cloned
+ }
++
++func checkTarget(entry parser.Entry, after *metadatadiff.Snapshot) []BindingDiagnostic {
++	diagnostics := make([]BindingDiagnostic, 0)
++	if after == nil {
++		diagnostics = append(diagnostics, BindingDiagnostic{Code: CodeSnapshotMissing, Side: side(metadatadiff.SideAfter), Field: field(BindingFieldSnapshot)})
++	}
++	if entry.Target.Repository == nil || *entry.Target.Repository == "" {
++		diagnostics = append(diagnostics, BindingDiagnostic{Code: CodeRepositoryUnknown, Side: side(metadatadiff.SideAfter), Field: field(BindingFieldRepository)})
++	}
++	if len(diagnostics) != 0 {
++		return diagnostics
++	}
++	diagnostics = append(diagnostics, checkSideIdentity(entry.Package, entry.Target.Version, *entry.Target.Repository, after, metadatadiff.SideAfter)...)
++	diagnostics = append(diagnostics, checkSideSlots(entry.Target.Slot, entry.Target.Subslot, after, metadatadiff.SideAfter)...)
++	return diagnostics
++}
++
++func checkSideIdentity(pkg parser.Package, version, repository string, snapshot *metadatadiff.Snapshot, snapshotSide metadatadiff.Side) []BindingDiagnostic {
++	diagnostics := make([]BindingDiagnostic, 0, 3)
++	source := snapshot.Source
++	if source.Category != pkg.Category || source.Name != pkg.Name {
++		diagnostics = append(diagnostics, mismatch(CodePackageMismatch, snapshotSide, BindingFieldPackage, packageName(pkg), packageName(parser.Package{Category: source.Category, Name: source.Name})))
++	}
++	if source.Version != version {
++		diagnostics = append(diagnostics, mismatch(CodeVersionMismatch, snapshotSide, BindingFieldVersion, version, source.Version))
++	}
++	if source.Repository != repository {
++		diagnostics = append(diagnostics, mismatch(CodeRepositoryMismatch, snapshotSide, BindingFieldRepository, repository, source.Repository))
++	}
++	return diagnostics
++}
++
++func checkSideSlots(planSlot, planSubslot *string, snapshot *metadatadiff.Snapshot, snapshotSide metadatadiff.Side) []BindingDiagnostic {
++	diagnostics := make([]BindingDiagnostic, 0, 2)
++	if snapshot.Slot.State != metadatadiff.StateValid {
++		return diagnostics
++	}
++	if planSlot != nil && *planSlot != snapshot.Slot.Name {
++		diagnostics = append(diagnostics, mismatch(CodeSlotMismatch, snapshotSide, BindingFieldSlot, *planSlot, snapshot.Slot.Name))
++	}
++	if planSubslot != nil && *planSubslot != snapshot.Slot.Subslot {
++		diagnostics = append(diagnostics, mismatch(CodeSubslotMismatch, snapshotSide, BindingFieldSubslot, *planSubslot, snapshot.Slot.Subslot))
++	}
++	return diagnostics
++}
+diff --git a/backend/internal/parser/parser.go b/backend/internal/parser/parser.go
+index e65457c..fdeb4de 100644
+--- a/backend/internal/parser/parser.go
++++ b/backend/internal/parser/parser.go
+@@ -26,6 +26,7 @@ const (
+ 	OperationUpgrade   Operation = "upgrade"
+ 	OperationDowngrade Operation = "downgrade"
+ 	OperationInstall   Operation = "install"
++	OperationReinstall Operation = "reinstall"
+ )
+ 
+ // Result is the deterministic, source-linked result of parsing one input.
+@@ -112,6 +113,7 @@ type Size struct {
+ type Summary struct {
+ 	Packages   int
+ 	Upgrades   int
++	Reinstalls int
+ 	Downgrades int
+ 	Uninstalls int
+ 	NewSlots   int
+@@ -129,9 +131,10 @@ type Diagnostic struct {
+ var (
+ 	rowPrefixRE   = regexp.MustCompile(`^\[(ebuild|binary)\s+([^]]*)\]\s*(.*)$`)
+ 	versionRE     = regexp.MustCompile(`^(.+)-([0-9][A-Za-z0-9._+~-]*)$`)
+-	summaryRE     = regexp.MustCompile(`^Total:\s*([0-9]+) package(?:s)?\s*\((.*)\),\s*Size of downloads:\s*([0-9]+)\s+(B|KiB|MiB|GiB)$`)
+-	summaryItemRE = regexp.MustCompile(`^([0-9]+)\s+(upgrade|upgrades|downgrade|downgrades|in new slot|in new slots|uninstall|uninstalls)$`)
+-	sizeRE        = regexp.MustCompile(`^([0-9]+)\s+(B|KiB|MiB|GiB)$`)
++	summaryRE     = regexp.MustCompile(`^Total:\s*([0-9]+) package(?:s)?\s*\((.*)\),\s*Size of downloads:\s*([0-9,]+)\s+(B|KiB|MiB|GiB)$`)
++	summaryItemRE = regexp.MustCompile(`^([0-9]+)\s+(upgrade|upgrades|downgrade|downgrades|in new slot|in new slots|uninstall|uninstalls|reinstall|reinstalls)$`)
++	sizeRE        = regexp.MustCompile(`^([0-9,]+)\s+(B|KiB|MiB|GiB)$`)
++	sizeIntegerRE = regexp.MustCompile(`^(?:[0-9]+|[0-9]{1,3}(?:,[0-9]{3})+)$`)
+ 	ansiRE        = regexp.MustCompile(`\x1b\[[0-?]*[ -/]*[@-~]`)
+ )
+ 
+@@ -296,6 +299,8 @@ func parseEbuildRow(markerField, body string, line int) (Entry, string, string)
+ 		operation = OperationUpgrade
+ 	case "UD":
+ 		operation = OperationDowngrade
++	case "R":
++		operation = OperationReinstall
+ 	case "NS":
+ 		operation = OperationInstall
+ 	default:
+@@ -339,13 +344,21 @@ func parseEbuildRow(markerField, body string, line int) (Entry, string, string)
+ 		}
+ 		if index+1 < len(tokens) {
+ 			if match := sizeRE.FindStringSubmatch(token + " " + tokens[index+1]); match != nil {
+-				entry.Download = &Size{Value: int64(integer(match[1])), Unit: match[2]}
++				size, err := parseSize(match[1], match[2])
++				if err != nil {
++					return Entry{}, "MALFORMED_ENTRY", "некорректный целочисленный размер"
++				}
++				entry.Download = &size
+ 				index++
+ 				continue
+ 			}
+ 		}
+ 		if match := sizeRE.FindStringSubmatch(token); match != nil {
+-			entry.Download = &Size{Value: int64(integer(match[1])), Unit: match[2]}
++			size, err := parseSize(match[1], match[2])
++			if err != nil {
++				return Entry{}, "MALFORMED_ENTRY", "некорректный целочисленный размер"
++			}
++			entry.Download = &size
+ 			continue
+ 		}
+ 		return Entry{}, "MALFORMED_ENTRY", "неожиданный токен в записи ebuild"
+@@ -354,11 +367,15 @@ func parseEbuildRow(markerField, body string, line int) (Entry, string, string)
+ }
+ 
+ func parseSummary(match []string, line int) (Summary, bool) {
+-	summary := Summary{
+-		Packages:   integer(match[1]),
+-		Download:   Size{Value: int64(integer(match[3])), Unit: match[4]},
+-		SourceLine: line,
++	packages, err := strconv.Atoi(match[1])
++	if err != nil {
++		return Summary{}, false
+ 	}
++	download, err := parseSize(match[3], match[4])
++	if err != nil {
++		return Summary{}, false
++	}
++	summary := Summary{Packages: packages, Download: download, SourceLine: line}
+ 	if strings.TrimSpace(match[2]) == "" {
+ 		return summary, true
+ 	}
+@@ -368,10 +385,15 @@ func parseSummary(match []string, line int) (Summary, bool) {
+ 		if parts == nil {
+ 			return Summary{}, false
+ 		}
+-		count := integer(parts[1])
++		count, err := strconv.Atoi(parts[1])
++		if err != nil {
++			return Summary{}, false
++		}
+ 		kind := parts[2]
+ 		key := ""
+ 		switch kind {
++		case "reinstall", "reinstalls":
++			key, summary.Reinstalls = "reinstall", count
+ 		case "upgrade", "upgrades":
+ 			key, summary.Upgrades = "upgrade", count
+ 		case "downgrade", "downgrades":
+@@ -544,3 +566,15 @@ func integer(value string) int {
+ 	parsed, _ := strconv.Atoi(value)
+ 	return parsed
+ }
++
++// parseSize validates grouping before removing separators and rejects overflow.
++func parseSize(number, unit string) (Size, error) {
++	if !sizeIntegerRE.MatchString(number) {
++		return Size{}, strconv.ErrSyntax
++	}
++	value, err := strconv.ParseInt(strings.ReplaceAll(number, ",", ""), 10, 64)
++	if err != nil {
++		return Size{}, err
++	}
++	return Size{Value: value, Unit: unit}, nil
++}
+diff --git a/backend/internal/parser/parser_test.go b/backend/internal/parser/parser_test.go
+index cc6e97c..1b55cf3 100644
+--- a/backend/internal/parser/parser_test.go
++++ b/backend/internal/parser/parser_test.go
+@@ -211,7 +211,7 @@ func TestParseSyntheticDowngradeSummaries(t *testing.T) {
+ 			}
+ 		})
+ 	}
+-	unknown := Parse(row + "Total: 1 package (1 reinstalls), Size of downloads: 2 MiB")
++	unknown := Parse(row + "Total: 1 package (1 unknown-operation), Size of downloads: 2 MiB")
+ 	if unknown.Status != StatusPartial || !hasDiagnostic(unknown.Diagnostics, "MALFORMED_SUMMARY") || unknown.Summary != nil {
+ 		t.Fatalf("unknown summary operation was ignored: %+v", unknown)
+ 	}
+@@ -232,7 +232,7 @@ func TestParseNegativeInputs(t *testing.T) {
+ 		{"service-only synthetic input", "These are the packages that would be merged, in order:\nCalculating dependencies ... done!", StatusUnsupported, ""},
+ 		{"fixture summary without its rows", "Total: 6 packages (5 upgrades, 1 in new slot), Size of downloads: 481212 KiB", StatusUnsupported, "SUMMARY_MISMATCH"},
+ 		{"fixture plus unknown synthetic line", first + "\nunknown noteworthy output", StatusPartial, "UNRECOGNIZED_LINE"},
+-		{"fixture row with unsupported operation", strings.Replace(base, "[ebuild     U  ]", "[ebuild     R  ]", 1), StatusPartial, "UNSUPPORTED_OPERATION"},
++		{"fixture row with unsupported operation", strings.Replace(base, "[ebuild     U  ]", "[ebuild     X  ]", 1), StatusPartial, "UNSUPPORTED_OPERATION"},
+ 		{"synthetic binary row", "[binary     U  ] dev-libs/libei-1.6.0::gentoo 0 KiB", StatusUnsupported, "UNSUPPORTED_OPERATION"},
+ 		{"fixture row with unclosed group quote", strings.Replace(base, `USE="(systemd) (-elogind) -test"`, `USE="(systemd) (-elogind) -test`, 1), StatusPartial, "MALFORMED_ENTRY"},
+ 		{"synthetic malformed row", "[ebuild     U  ] this-is-not-a-package 1 KiB", StatusUnsupported, "MALFORMED_ENTRY"},
+diff --git a/backend/internal/reportservice/reportservice.go b/backend/internal/reportservice/reportservice.go
+index 0e0ee0a..54b9477 100644
+--- a/backend/internal/reportservice/reportservice.go
++++ b/backend/internal/reportservice/reportservice.go
+@@ -74,8 +74,12 @@ func Build(plan parser.Result, entryIndex int, provider MetadataLookup) (Result,
+ 		return Result{Report: preliminary, BeforeLookup: before, AfterLookup: after}, nil
+ 	}
+ 
+-	beforeOutcome, before := lookup(provider, queries[0])
+-	afterOutcome, after := lookup(provider, queries[1])
++	beforeOutcome := LookupOutcome{SkipReason: SkipBindingRejected}
++	var before *metadatadiff.Snapshot
++	if len(queries) == 2 {
++		beforeOutcome, before = lookup(provider, queries[0])
++	}
++	afterOutcome, after := lookup(provider, queries[len(queries)-1])
+ 
+ 	report, err := changereport.Build(plan, entryIndex, before, after)
+ 	if err != nil {
+@@ -85,7 +89,8 @@ func Build(plan parser.Result, entryIndex int, provider MetadataLookup) (Result,
+ }
+ 
+ // LookupQueries returns the metadata lookup candidates Build may request for
+-// one entry, in before/after order. Invalid bindings return no queries.
++// one entry, in before/after order (after only for a rebuild without installed
++// context). Invalid bindings return no queries.
+ func LookupQueries(plan parser.Result, entryIndex int) ([]metadataprovider.Query, error) {
+ 	preliminary, err := changereport.Build(plan, entryIndex, nil, nil)
+ 	if err != nil {
+@@ -95,10 +100,14 @@ func LookupQueries(plan parser.Result, entryIndex int) ([]metadataprovider.Query
+ }
+ 
+ func queriesForEntry(plan parser.Result, entryIndex int, preliminary changereport.Report) ([]metadataprovider.Query, error) {
+-	if !lookupAllowed(preliminary.Gentoo.Diagnostics) {
++	entry := plan.Entries[entryIndex]
++	targetOnly := entry.Operation == parser.OperationReinstall && len(entry.Installed.Versions) == 0
++	if !lookupAllowed(preliminary.Gentoo.Diagnostics, targetOnly) {
+ 		return nil, nil
+ 	}
+-	entry := plan.Entries[entryIndex]
++	if targetOnly {
++		return []metadataprovider.Query{{Repository: *entry.Target.Repository, Category: entry.Package.Category, Name: entry.Package.Name, Version: entry.Target.Version}}, nil
++	}
+ 	if len(entry.Installed.Versions) == 0 || entry.Installed.Versions[0].Repository == nil || entry.Target.Repository == nil {
+ 		return nil, errors.New("metadata lookup bindings are incomplete")
+ 	}
+@@ -122,12 +131,12 @@ func isNilProvider(provider MetadataLookup) bool {
+ 	}
+ }
+ 
+-func lookupAllowed(diagnostics []changereport.BindingDiagnostic) bool {
++func lookupAllowed(diagnostics []changereport.BindingDiagnostic, targetOnly bool) bool {
+ 	if len(diagnostics) == 0 {
+ 		return false
+ 	}
+ 	for _, diagnostic := range diagnostics {
+-		if diagnostic.Code != changereport.CodeSnapshotMissing {
++		if diagnostic.Code != changereport.CodeSnapshotMissing && !(targetOnly && diagnostic.Code == changereport.CodeInstalledContextMissing) {
+ 			return false
+ 		}
+ 	}
+diff --git a/backend/internal/reportservice/reportservice_test.go b/backend/internal/reportservice/reportservice_test.go
+index a31ad0e..5bba53a 100644
+--- a/backend/internal/reportservice/reportservice_test.go
++++ b/backend/internal/reportservice/reportservice_test.go
+@@ -59,7 +59,7 @@ func TestLookupAllowed(t *testing.T) {
+ 	}
+ 	for _, test := range tests {
+ 		t.Run(test.name, func(t *testing.T) {
+-			if got := lookupAllowed(test.diagnostics); got != test.want {
++			if got := lookupAllowed(test.diagnostics, false); got != test.want {
+ 				t.Fatalf("lookupAllowed() = %t, want %t", got, test.want)
+ 			}
+ 		})

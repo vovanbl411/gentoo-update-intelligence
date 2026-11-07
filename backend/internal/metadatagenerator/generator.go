@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/vovanbl411/gentoo-update-intelligence/internal/ebuildresolver"
 )
@@ -88,8 +89,20 @@ type Result struct {
 type Generator struct {
 	egencachePath string
 	emergePath    string
+	path          string
+	egencacheErr  error
+	emergeErr     error
 	userName      string
 	groupName     string
+	versionMu     sync.Mutex
+	version       string
+	versionFlight *versionAttempt
+}
+
+type versionAttempt struct {
+	done    chan struct{}
+	version string
+	err     error
 }
 
 var versionPattern = regexp.MustCompile(`^[0-9]+(\.[0-9]+)*[a-z]?(_(alpha|beta|pre|rc|p)[0-9]*)*(-r[0-9]+)?$`)
@@ -99,6 +112,7 @@ var repositoryNamePattern = regexp.MustCompile(`^[A-Za-z0-9_][A-Za-z0-9_-]*$`)
 var fullCommitPattern = regexp.MustCompile(`^([a-f0-9]{40}|[a-f0-9]{64})$`)
 
 func New(config Config) *Generator {
+	path := os.Getenv("PATH")
 	egencache := config.EgencachePath
 	if egencache == "" {
 		egencache = "egencache"
@@ -107,10 +121,52 @@ func New(config Config) *Generator {
 	if emerge == "" {
 		emerge = "emerge"
 	}
-	return &Generator{egencachePath: egencache, emergePath: emerge, userName: config.PortageUserName, groupName: config.PortageGroupName}
+	resolvedEgencache, egencacheErr := resolveExecutable(egencache, path)
+	resolvedEmerge, emergeErr := resolveExecutable(emerge, path)
+	return &Generator{egencachePath: resolvedEgencache, emergePath: resolvedEmerge, path: path,
+		egencacheErr: egencacheErr, emergeErr: emergeErr,
+		userName: config.PortageUserName, groupName: config.PortageGroupName}
+}
+
+// CheckoutRuntimeIdentity identifies the fixed execution configuration of this generator.
+// PortageVersion is added by the caller after its lazy runtime probe.
+func (g *Generator) CheckoutRuntimeIdentity() string {
+	return fmt.Sprintf("%q", []string{g.egencachePath, g.emergePath, g.path, g.userName, g.groupName})
+}
+
+func resolveExecutable(name, path string) (string, error) {
+	if strings.ContainsRune(name, os.PathSeparator) {
+		abs, err := filepath.Abs(name)
+		if err != nil {
+			return "", err
+		}
+		name = abs
+		info, err := os.Stat(name)
+		if err != nil {
+			return "", err
+		}
+		if info.IsDir() || info.Mode()&0o111 == 0 {
+			return "", fmt.Errorf("%s is not executable", name)
+		}
+		return name, nil
+	}
+	for _, dir := range filepath.SplitList(path) {
+		candidate := filepath.Join(dir, name)
+		info, err := os.Stat(candidate)
+		if err == nil && !info.IsDir() && info.Mode()&0o111 != 0 {
+			return filepath.Abs(candidate)
+		}
+	}
+	return "", fmt.Errorf("%s not found in configured PATH", name)
 }
 
 func (g *Generator) Generate(request Request) (Result, error) {
+	if g == nil {
+		return Result{}, ErrInvalidInput
+	}
+	if g.egencacheErr != nil {
+		return Result{}, fmt.Errorf("resolve egencache executable: %w", g.egencacheErr)
+	}
 	if request.Repository == "" {
 		request.Repository = "gentoo"
 	}
@@ -229,28 +285,17 @@ func (g *Generator) Generate(request Request) (Result, error) {
 		return Result{}, fmt.Errorf("%w: create intermediate cache: %v", ErrInvalidInput, err)
 	}
 	repositories += "[" + request.Repository + "]\nlocation = " + checkout + "\n"
-	versionCommand := exec.Command(g.emergePath, "--version")
-	versionCommand.Env = isolatedEnvironment(tempDir)
-	portageOutput, err := versionCommand.Output()
+	portageVersion, err := g.PortageVersion(tempDir)
 	if err != nil {
-		return Result{}, fmt.Errorf("%w: read Portage version with %q --version: %v", ErrEgencache, g.emergePath, err)
+		return Result{}, err
 	}
-	portageVersion := strings.TrimSpace(string(portageOutput))
-	if portageVersion == "" {
-		return Result{}, fmt.Errorf("%w: %q --version returned empty output", ErrEgencache, g.emergePath)
-	}
-	versionMatch := portageVersionPattern.FindStringSubmatch(portageVersion)
-	if len(versionMatch) != 2 {
-		return Result{}, fmt.Errorf("%w: cannot parse Portage version from %q --version output", ErrEgencache, g.emergePath)
-	}
-	portageVersion = versionMatch[1]
 	args := []string{
 		"--ignore-default-opts", "--repo", request.Repository, "--update", request.Category + "/" + request.Name,
 		"--config-root", configRoot, "--cache-dir", cacheDir, "--repositories-configuration", repositories,
 	}
 	command := exec.Command(g.egencachePath, args...)
 	command.Dir = checkout
-	command.Env = isolatedEnvironment(tempDir)
+	command.Env = g.isolatedEnvironment(tempDir)
 	var stdout, stderr bytes.Buffer
 	command.Stdout = &stdout
 	command.Stderr = &stderr
@@ -296,12 +341,58 @@ func (g *Generator) Generate(request Request) (Result, error) {
 			EgencacheStderr:  strings.TrimSpace(stderr.String()),
 			Repositories:     repositories,
 			MakeConf:         makeConf,
-			Path:             os.Getenv("PATH"),
+			Path:             g.path,
 			PortageUserName:  g.userName,
 			PortageGroupName: g.groupName,
 			MasterRevisions:  masterRevisions,
 		},
 	}, nil
+}
+
+// PortageVersion resolves and caches the runtime version for this generator.
+// Concurrent callers share one attempt; failures are shared with its waiters
+// and a later call may retry.
+func (g *Generator) PortageVersion(tempDir string) (string, error) {
+	if g == nil {
+		return "", ErrInvalidInput
+	}
+	if g.emergeErr != nil {
+		return "", fmt.Errorf("resolve emerge executable: %w", g.emergeErr)
+	}
+	for {
+		g.versionMu.Lock()
+		if g.version != "" {
+			v := g.version
+			g.versionMu.Unlock()
+			return v, nil
+		}
+		if flight := g.versionFlight; flight != nil {
+			g.versionMu.Unlock()
+			<-flight.done
+			return flight.version, flight.err
+		}
+		flight := &versionAttempt{done: make(chan struct{})}
+		g.versionFlight = flight
+		g.versionMu.Unlock()
+		cmd := exec.Command(g.emergePath, "--version")
+		cmd.Env = g.isolatedEnvironment(tempDir)
+		output, runErr := cmd.Output()
+		var version string
+		if runErr != nil {
+			runErr = fmt.Errorf("%w: read Portage version with %q --version: %v", ErrEgencache, g.emergePath, runErr)
+		} else if match := portageVersionPattern.FindStringSubmatch(strings.TrimSpace(string(output))); len(match) != 2 {
+			runErr = fmt.Errorf("%w: cannot parse Portage version from %q --version output", ErrEgencache, g.emergePath)
+		} else {
+			version = match[1]
+		}
+		g.versionMu.Lock()
+		g.version = version
+		flight.version, flight.err = version, runErr
+		g.versionFlight = nil
+		close(flight.done)
+		g.versionMu.Unlock()
+		return version, runErr
+	}
 }
 
 func validateCheckout(checkout, profile string, request Request, profileRoots []string) error {
@@ -404,8 +495,8 @@ func git(repo string, args ...string) ([]byte, error) {
 	return nil, err
 }
 
-func isolatedEnvironment(tempDir string) []string {
-	return []string{"PATH=" + os.Getenv("PATH"), "HOME=" + tempDir, "TMPDIR=" + tempDir, "LANG=C"}
+func (g *Generator) isolatedEnvironment(tempDir string) []string {
+	return []string{"PATH=" + g.path, "HOME=" + tempDir, "TMPDIR=" + tempDir, "LANG=C"}
 }
 
 func validPair(category, name string) bool {

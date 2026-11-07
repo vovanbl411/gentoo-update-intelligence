@@ -149,3 +149,51 @@ Parser и Analyzer SHALL выполняться до подготовки реп
 #### Scenario: Восстановление
 - **WHEN** backend перезапускается после закрепления ревизий
 - **THEN** отчёт остаётся доступен, а обработка продолжается с сохранёнными ревизиями
+
+### Requirement: Параллельная обработка metadata
+HTTP-анализ SHALL выполнять до двух независимых уникальных запросов metadata одновременно и сохранять порядок отчётов, результаты, ошибки и evidence.
+
+#### Scenario: Независимые запросы
+- **WHEN** анализ содержит несколько независимых запросов metadata
+- **THEN** до двух запросов могут выполняться одновременно, а отчёты следуют порядку записей плана
+
+#### Scenario: Ошибка и повтор запроса
+- **WHEN** повторяющийся запрос завершается ошибкой
+- **THEN** запрос учитывается в прогрессе один раз, а ошибка отражается во всех соответствующих отчётах
+
+### Requirement: Предел общей подготовки
+Worker SHALL ограничивать число одновременно выполняемых подготовок, включая поиск ревизии и checkout, отдельным настраиваемым положительным пределом `METADATA_WORKER_PREPARATION_LIMIT`, по умолчанию `2`. Дедупликация SHALL выполняться до получения слота.
+
+#### Scenario: Одновременные анализы
+- **WHEN** разные анализы одновременно запрашивают подготовку metadata
+- **THEN** число выполняемых подготовок не превышает общий предел worker и совпадающие запросы используют одну подготовку
+
+#### Scenario: Недопустимый предел
+- **WHEN** предел подготовки не является положительным целым
+- **THEN** worker не запускается
+
+### Requirement: Reuse the worker Portage runtime identity
+The metadata worker SHALL resolve the configured Portage version lazily on the first request that needs generated metadata or generated-cache lookup, then reuse that successful version for the lifetime of the worker. Its generated-cache key and generated provenance SHALL contain the same version. Repository metadata found directly in the pinned revision SHALL remain available without resolving Portage.
+
+#### Scenario: Concurrent first lookup
+- **WHEN** multiple requests require the Portage version before a successful lookup exists
+- **THEN** they share one `emerge --version` invocation and use its version in cache identity and provenance
+
+#### Scenario: Failed lookup is retried
+- **WHEN** one version lookup fails and a later request again needs the version
+- **THEN** the later request starts a new lookup
+
+### Requirement: Share concurrent Portage version lookups
+Concurrent requests that need an unresolved Portage version SHALL share one lookup attempt. If that attempt fails, all waiting requests SHALL receive its failure and a later request MAY retry.
+
+#### Scenario: Concurrent failed lookup
+- **WHEN** multiple requests wait on a Portage version lookup that fails
+- **THEN** all waiting requests receive the failure and a later request can start a new attempt
+
+#### Scenario: Repository metadata hit
+- **WHEN** the exact metadata entry exists in the selected pinned repository revision
+- **THEN** the worker returns it without starting Portage
+
+#### Scenario: Worker restart observes runtime update
+- **WHEN** a new worker process starts with a changed Portage executable or runtime
+- **THEN** it resolves and uses the new version for subsequent generated-cache keys and provenance

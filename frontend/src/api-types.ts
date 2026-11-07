@@ -97,6 +97,7 @@ export interface ParserConflictSummary {
 export interface ParserSummary {
   packages: number;
   upgrades: number;
+  reinstalls: number;
   downgrades: number;
   uninstalls: number;
   new_slots: number;

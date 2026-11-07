@@ -1,0 +1,59 @@
+services:
+  backend:
+    image: gentoo-update-intelligence-backend:latest
+    command: ["--config", "/config/backend.yaml"]
+    environment:
+      GENTOO_UPDATE_INTELLIGENCE_DATABASE_URL: postgres://guit:acceptance-only@postgres:5432/guit?sslmode=disable
+    ports: ["127.0.0.1:18951:8080"]
+    networks: [default, access]
+    volumes:
+      - ${ACCEPT_ROOT}/${ACCEPT_VERSION}-backend:/usr/local/bin/gentoo-update-intelligence-server:ro
+      - ${ACCEPT_ROOT}/backend.yaml:/config/backend.yaml:ro
+      - ${ACCEPT_ROOT}/gentoo:/metadata:ro
+      - ${ACCEPT_ROOT}/${ACCEPT_OVERLAY}-overlays:/overlays
+    depends_on:
+      postgres: {condition: service_healthy}
+      metadata-worker: {condition: service_healthy}
+  metadata-worker:
+    image: gentoo-update-intelligence/gentoo-runtime:local
+    entrypoint: ["/usr/local/bin/metadata-worker"]
+    environment:
+      METADATA_WORKER_LISTEN_ADDR: :8090
+      METADATA_WORKER_CACHE_PATH: /metadata-cache
+      METADATA_WORKER_TEMP_PATH: /var/tmp/gentoo-update-intelligence
+      METADATA_WORKER_PORTAGE_USER: portage
+      METADATA_WORKER_PORTAGE_GROUP: portage
+      METADATA_WORKER_GENERATION_LIMIT: "2"
+      METADATA_WORKER_PREPARATION_LIMIT: "2"
+    volumes:
+      - ${ACCEPT_ROOT}/${ACCEPT_VERSION}-worker:/usr/local/bin/metadata-worker:ro
+      - ${ACCEPT_ROOT}/gentoo:/metadata:ro
+      - ${ACCEPT_ROOT}/${ACCEPT_OVERLAY}-overlays:/overlays:ro
+      - cache:/metadata-cache
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETGID, SETUID]
+    security_opt: ["no-new-privileges:true"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8090/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: guit
+      POSTGRES_USER: guit
+      POSTGRES_PASSWORD: acceptance-only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U guit -d guit"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    volumes: ["database:/var/lib/postgresql/data"]
+volumes:
+  cache:
+  database:
+networks:
+  default:
+    internal: true
+  access: {}

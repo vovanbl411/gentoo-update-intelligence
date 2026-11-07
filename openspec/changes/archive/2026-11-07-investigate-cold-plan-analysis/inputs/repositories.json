@@ -1,0 +1,27 @@
+{
+  "gentoo": {
+    "commit": "989f681821c978586a54c383b182cd20ed39bebe",
+    "shallow": "false",
+    "layout": "# Copyright 1999-2026 Gentoo Authors\n# Distributed under the terms of the GNU General Public License v2\n\n# For details on this file, see the layout.conf section of the\n# portage(5) man page.\n\n# Allow specific PROPERTIES and RESTRICT values in ebuilds.\nproperties-allowed = interactive live test_network test_privileged\nrestrict-allowed = binchecks bindist fetch installsources mirror preserve-libs splitdebug strip test userpriv\n\n# manifest-hashes specify hashes used for new/updated entries\n# the current set went live on 2017-11-21, per 2017-11-12 Council meeting\n# https://archives.gentoo.org/gentoo-dev/message/ba2e5d9666ebd7e1bff1143485a37856\nmanifest-hashes = BLAKE2B SHA512\n\n# The following hashes are required on all Manifest entries. If any\n# of them are missing, pkgcheck will refetch and rehash old distfiles.\n# Otherwise, old distfiles will keep using their current hash set.\nmanifest-required-hashes = BLAKE2B\n\n# 2013-04-09 gentoo's council says to deprecate EAPIs 1 and 2 (bug #470670).\n# 2014-02-25 council meeting deprecated EAPIs 0 and 3.\n# 2014-03-11 council meeting banned EAPIs 1 and 2.\n# 2015-10-11 council meeting deprecated EAPI 4.\n# 2016-01-10 council meeting banned EAPIs 0 and 3.\n# 2018-04-08 council meeting banned EAPI 4.\n# 2018-05-13 council meeting deprecated EAPI 5 for ebuilds.\n# 2021-07-11 council meeting deprecated EAPI 6.\n# 2021-08-08 council meeting banned EAPI 5.\n# 2023-07-11 council banned EAPI 6 (bug #909432).\n# 2025-07-13 council meeting deprecated EAPI 7.\neapis-banned = 0 1 2 3 4 5 6\neapis-deprecated = 7\n\n# EAPIs 0 to 4 are banned for profiles\n# EAPIs 6 and 7 do not include any profile related changes\nprofile-eapis-banned = 0 1 2 3 4 6 7\nprofile-eapis-deprecated =\n\n# Bug #337853 - gentoo's council says to enable\n# --echangelog by default for the \"gentoo\" repo\n# INFRA NOTE 2015/08/08: No more old ChangeLogs in Git\nupdate-changelog = false\n\n# Make egencache generate newer (more reliable)\n# md5-dict cache format (see bug #409445).\n# NOTE: list md5-dict first so clients prefer it\n# INFRA NOTE: Format 'pms' was removed on Aug 6 2012. (Announced prior as Aug 1\n# 2012 was the removal date)\ncache-formats = md5-dict\n\n# Support for implicit masters is deprecated, so we need to explicitly\n# specify that this repo does not depend on any masters, in order\n# to distinguish it from repos that rely on the deprecated behavior.\nmasters =\n\n# Use thin Manifests for Git\nthin-manifests = true\n\n# Sign Git commits, and NOT Manifests\nsign-commits = true\nsign-manifests = false\n"
+  },
+  "guru": {
+    "commit": "949a279b16d2b63b3ca54e717b6e181eac3ac347",
+    "shallow": "false",
+    "layout": "masters = gentoo\n\n# Please keep this reasonably in sync with ::gentoo\nmanifest-hashes = BLAKE2B SHA512\nmanifest-required-hashes = BLAKE2B\nupdate-changelog = false\ncache-formats = md5-dict\nthin-manifests = true\nsign-commits = true\nsign-manifests = false\n\n# Let's start with new EAPIs if possible\neapis-banned = 0 1 2 3 4 5 6\n"
+  },
+  "gentoo-zh": {
+    "commit": "73b502777b071c0cb934f4ad0053eec6c54a2139",
+    "shallow": "false",
+    "layout": "masters = gentoo\n\n# manifest-hashes specify hashes used for new/updated entries\n# the current set went live on 2017-11-21, per 2017-11-12 Council meeting\n# https://archives.gentoo.org/gentoo-dev/message/ba2e5d9666ebd7e1bff1143485a37856\nmanifest-hashes = BLAKE2B SHA512\n\n# The following hashes are required on all Manifest entries. If any\n# of them are missing, repoman will refetch and rehash old distfiles.\n# Otherwise, old distfiles will keep using their current hash set.\n manifest-required-hashes = BLAKE2B\n\n# Do not update changelogs\nupdate-changelog = false\n# Use thin manifests\nthin-manifests = true\n# Dont sign thinn manifests. There is no current policy for git commit signing\nsign-manifests = false\n"
+  },
+  "umbriel-overlay": {
+    "commit": "7b73f8dfac5f5896b088def7e1670e7073437947",
+    "shallow": "false",
+    "layout": "masters = gentoo\nthin-manifests = true\n"
+  },
+  "zed-overlay": {
+    "commit": "04d6661bbb977fd90240d5c9939a64ca4302c168",
+    "shallow": "false",
+    "layout": "masters = gentoo\nthin-manifests = true\n"
+  }
+}

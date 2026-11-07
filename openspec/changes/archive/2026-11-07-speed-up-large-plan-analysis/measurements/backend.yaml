@@ -1,0 +1,23 @@
+startup_timeout: 30s
+http:
+  listen_address: "0.0.0.0:8080"
+analysis:
+  concurrency_limit: 1
+repository:
+  name: gentoo
+  source_url: "https://anongit.gentoo.org/git/repo/gentoo.git"
+  path: /metadata/gentoo.git
+  commit: b3c5634f01d86a33bc5fc0a599f5c318989a2839
+overlays:
+  path: /overlays
+  catalog:
+    - name: gentoo-zh
+      url: /unavailable/gentoo-zh.git
+      masters: [gentoo]
+    - name: umbriel-overlay
+      url: /unavailable/umbriel-overlay.git
+      masters: [gentoo]
+metadata:
+  worker_url: http://metadata-worker:8090
+  profile: profiles/default/linux/amd64/23.0
+  worker_timeout: 20m

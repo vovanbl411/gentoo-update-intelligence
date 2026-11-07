@@ -1,0 +1,11 @@
+{
+  "id": "9b7d46ed-e012-4eec-8ff4-e726a87d5c07",
+  "status": "pending",
+  "progress": {
+    "stage": "queued",
+    "completed": 0,
+    "total": 0
+  },
+  "result": null,
+  "error": null
+}

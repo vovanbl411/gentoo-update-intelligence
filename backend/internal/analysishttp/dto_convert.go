@@ -119,6 +119,7 @@ func convertParserSummary(source storedParserSummary) parserSummaryDTO {
 	return parserSummaryDTO{
 		Packages:   source.Packages,
 		Upgrades:   source.Upgrades,
+		Reinstalls: source.Reinstalls,
 		Downgrades: source.Downgrades,
 		Uninstalls: source.Uninstalls,
 		NewSlots:   source.NewSlots,

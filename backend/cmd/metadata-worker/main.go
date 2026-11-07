@@ -56,12 +56,17 @@ type preparationCall struct {
 }
 
 type metadataWorker struct {
-	mu      sync.Mutex
-	calls   map[string]*preparationCall
-	prepare func(request) preparationOutcome
+	mu        sync.Mutex
+	calls     map[string]*preparationCall
+	prepare   func(request) preparationOutcome
+	generator *metadatagenerator.Generator
 }
 
 func newMetadataWorkerWithPreparationLimit(limit, preparationLimit int) (*metadataWorker, error) {
+	return newMetadataWorkerWithPool(limit, preparationLimit, nil)
+}
+
+func newMetadataWorkerWithPool(limit, preparationLimit int, pool *checkoutPool) (*metadataWorker, error) {
 	if limit <= 0 {
 		return nil, errors.New("metadata generation limit must be positive")
 	}
@@ -69,10 +74,16 @@ func newMetadataWorkerWithPreparationLimit(limit, preparationLimit int) (*metada
 		return nil, errors.New("metadata preparation limit must be positive")
 	}
 	limiter := make(chan struct{}, limit)
+	generator := metadatagenerator.New(metadatagenerator.Config{
+		PortageUserName:  os.Getenv("METADATA_WORKER_PORTAGE_USER"),
+		PortageGroupName: os.Getenv("METADATA_WORKER_PORTAGE_GROUP"),
+		EmergePath:       os.Getenv("EMERGE_PATH"),
+	})
 	return &metadataWorker{
-		calls: make(map[string]*preparationCall),
+		calls:     make(map[string]*preparationCall),
+		generator: generator,
 		prepare: limitPreparation(preparationLimit, func(input request) preparationOutcome {
-			result, cached, sourceCommit, err := prepareMetadata(input, limiter)
+			result, cached, sourceCommit, err := prepareMetadataWithPool(input, limiter, generator, pool)
 			return preparationOutcome{result: result, cached: cached, sourceCommit: sourceCommit, err: err}
 		}),
 	}, nil
@@ -161,12 +172,21 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	worker, err := newMetadataWorkerWithPreparationLimit(limit, preparationLimit)
+	maxBytes, err := checkoutCacheMaxBytesFromEnv()
 	if err != nil {
 		log.Fatal(err)
 	}
 	if err := dropToPortage(); err != nil {
-		panic(err)
+		log.Fatal(err)
+	}
+	pool, err := openCheckoutPool(os.Getenv("METADATA_WORKER_TEMP_PATH"), maxBytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer pool.close()
+	worker, err := newMetadataWorkerWithPool(limit, preparationLimit, pool)
+	if err != nil {
+		log.Fatal(err)
 	}
 	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
@@ -236,6 +256,18 @@ func dropToPortage() error {
 }
 
 func prepareMetadata(input request, generationSlots chan struct{}) (metadatagenerator.Result, bool, string, error) {
+	return prepareMetadataWithGenerator(input, generationSlots, metadatagenerator.New(metadatagenerator.Config{
+		PortageUserName:  os.Getenv("METADATA_WORKER_PORTAGE_USER"),
+		PortageGroupName: os.Getenv("METADATA_WORKER_PORTAGE_GROUP"),
+		EmergePath:       os.Getenv("EMERGE_PATH"),
+	}))
+}
+
+func prepareMetadataWithGenerator(input request, generationSlots chan struct{}, generator *metadatagenerator.Generator) (metadatagenerator.Result, bool, string, error) {
+	return prepareMetadataWithPool(input, generationSlots, generator, nil)
+}
+
+func prepareMetadataWithPool(input request, generationSlots chan struct{}, generator *metadatagenerator.Generator, pool *checkoutPool) (result metadatagenerator.Result, cached bool, sourceCommit string, returnedErr error) {
 	if input.Repository.Name == "" || input.Repository.Path == "" || input.Repository.Commit == "" || input.Profile == "" {
 		return metadatagenerator.Result{}, false, "", errors.New("repository, pinned commit and profile are required")
 	}
@@ -278,7 +310,12 @@ func prepareMetadata(input request, generationSlots chan struct{}) (metadatagene
 			},
 		}, false, resolution.SelectedCommit, nil
 	}
-	portageVersion, err := readPortageVersion()
+	versionTemp, err := os.MkdirTemp("", "metadata-version-")
+	if err != nil {
+		return metadatagenerator.Result{}, false, "", err
+	}
+	defer os.RemoveAll(versionTemp)
+	portageVersion, err := generator.PortageVersion(versionTemp)
 	if err != nil {
 		return metadatagenerator.Result{}, false, "", err
 	}
@@ -314,17 +351,32 @@ func prepareMetadata(input request, generationSlots chan struct{}) (metadatagene
 		return metadatagenerator.Result{}, false, "", err
 	}
 	defer os.RemoveAll(tempRoot)
-	mainCheckout := filepath.Join(tempRoot, input.Repository.Name)
-	if err := checkout(input.Repository.Path, resolution.SelectedCommit, mainCheckout); err != nil {
-		return metadatagenerator.Result{}, false, "", err
+	var set *checkoutSet
+	if pool != nil {
+		set, err = pool.acquire(context.Background(), input, resolution.SelectedCommit, "metadata-worker-v1/"+portageVersion+"/"+generator.CheckoutRuntimeIdentity())
+		if err != nil {
+			return metadatagenerator.Result{}, false, "", err
+		}
+		defer func() {
+			returnedErr = errors.Join(returnedErr, pool.release(set, errors.Is(returnedErr, metadatagenerator.ErrCheckout) || errors.Is(returnedErr, metadatagenerator.ErrInvalidInput)))
+		}()
+	} else {
+		set = &checkoutSet{}
+		repositories := append([]repository{input.Repository}, input.Masters...)
+		repositories[0].Commit = resolution.SelectedCommit
+		for i, repo := range repositories {
+			path := filepath.Join(tempRoot, fmt.Sprintf("repo-%d", i))
+			if err := checkout(repo.Path, repo.Commit, path); err != nil {
+				return metadatagenerator.Result{}, false, "", err
+			}
+			set.paths = append(set.paths, path)
+		}
 	}
+	mainCheckout := set.paths[0]
 	masterCheckouts := make([]metadatagenerator.Master, 0, len(input.Masters))
 	masterPaths := make(map[string]string, len(input.Masters))
 	for i, master := range input.Masters {
-		path := filepath.Join(tempRoot, fmt.Sprintf("master-%d", i))
-		if err := checkout(master.Path, master.Commit, path); err != nil {
-			return metadatagenerator.Result{}, false, "", fmt.Errorf("checkout master %s: %w", master.Name, err)
-		}
+		path := set.paths[i+1]
 		masterCheckouts = append(masterCheckouts, metadatagenerator.Master{Name: master.Name, Checkout: path, Commit: master.Commit})
 		masterPaths[master.Name] = path
 	}
@@ -357,10 +409,7 @@ func prepareMetadata(input request, generationSlots chan struct{}) (metadatagene
 		return metadatagenerator.Result{}, false, "", err
 	}
 	generated, err := generateWithLimit(generationSlots, func() (metadatagenerator.Result, error) {
-		return metadatagenerator.New(metadatagenerator.Config{
-			PortageUserName:  os.Getenv("METADATA_WORKER_PORTAGE_USER"),
-			PortageGroupName: os.Getenv("METADATA_WORKER_PORTAGE_GROUP"),
-		}).Generate(metadatagenerator.Request{
+		return generator.Generate(metadatagenerator.Request{
 			Resolution: resolution, Repository: input.Repository.Name, Category: input.Category,
 			Name: input.Name, Version: input.Version, Checkout: mainCheckout, Profile: profile,
 			TempDir: tempDir, Masters: masterCheckouts,
@@ -454,25 +503,4 @@ func checkout(mirror, commit, destination string) error {
 		return fmt.Errorf("checkout %s: %w: %s", commit, err, strings.TrimSpace(string(output)))
 	}
 	return nil
-}
-
-func readPortageVersion() (string, error) {
-	emerge := os.Getenv("EMERGE_PATH")
-	if emerge == "" {
-		emerge = "emerge"
-	}
-	command := exec.Command(emerge, "--version")
-	output, err := command.Output()
-	if err != nil {
-		return "", fmt.Errorf("read Portage version: %w", err)
-	}
-	for _, line := range strings.Split(string(output), "\n") {
-		if strings.HasPrefix(line, "Portage ") {
-			fields := strings.Fields(strings.TrimPrefix(line, "Portage "))
-			if len(fields) > 0 {
-				return fields[0], nil
-			}
-		}
-	}
-	return "", errors.New("cannot parse Portage version")
 }

@@ -1,0 +1,53 @@
+{
+  "startup_timeout": "30s",
+  "http": {
+    "listen_address": "0.0.0.0:8080"
+  },
+  "analysis": {
+    "concurrency_limit": 1
+  },
+  "repository": {
+    "name": "gentoo",
+    "source_url": "https://anongit.gentoo.org/git/repo/gentoo.git",
+    "path": "/metadata/gentoo.git",
+    "commit": "989f681821c978586a54c383b182cd20ed39bebe"
+  },
+  "overlays": {
+    "path": "/overlays",
+    "catalog": [
+      {
+        "name": "guru",
+        "url": "https://github.com/gentoo-mirror/guru.git",
+        "masters": [
+          "gentoo"
+        ]
+      },
+      {
+        "name": "gentoo-zh",
+        "url": "https://github.com/gentoo-zh/overlay.git",
+        "masters": [
+          "gentoo"
+        ]
+      },
+      {
+        "name": "umbriel-overlay",
+        "url": "https://github.com/vovanbl411/umbriel-overlay.git",
+        "masters": [
+          "gentoo"
+        ]
+      },
+      {
+        "name": "zed-overlay",
+        "url": "https://github.com/vovanbl411/zed-overlay.git",
+        "masters": [
+          "gentoo"
+        ]
+      }
+    ]
+  },
+  "metadata": {
+    "worker_url": "http://cold-worker:8090",
+    "profile": "profiles/default/linux/amd64/23.0",
+    "worker_timeout": "20m"
+  }
+}

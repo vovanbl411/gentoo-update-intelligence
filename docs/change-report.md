@@ -35,7 +35,7 @@ func Build(
 
 | Код | Значение полей |
 |---|---|
-| `OPERATION_UNSUPPORTED` | Поле `operation`; `Expected` — `upgrade or downgrade`, `Actual` — операция записи. |
+| `OPERATION_UNSUPPORTED` | Поле `operation`; `Expected` — `upgrade, downgrade or reinstall`, `Actual` — операция записи. |
 | `INSTALLED_CONTEXT_MISSING` | Поле `installed_context`; в плане нет установленной версии. |
 | `INSTALLED_CONTEXT_AMBIGUOUS` | Поле `installed_context`; `Expected` — ровно одна версия, `Actual` — фактическое число. |
 | `SNAPSHOT_MISSING` | Сторона и поле `snapshot`; соответствующий снимок не передан. |
@@ -50,12 +50,14 @@ func Build(
 
 ## Проверка связи снимков
 
-Порядок проверок в `Build`:
+После проверки индекса для `R` / `reinstall` без установленного контекста действует отдельная ветка: сохраняется `INSTALLED_CONTEXT_MISSING`, затем проверяется только целевая сторона. Для неизвестного repository и отсутствующего after snapshot возвращаются диагностики стороны after. Если repository известен и snapshot доступен, проверяются package, version, repository и явно показанные SLOT/SUBSLOT. Before snapshot не используется и не восстанавливается. Даже корректный after оставляет `Gentoo.Status = unavailable` и `Comparison = nil`. Отсутствие installed само по себе не является ошибкой всего анализа.
+
+Для остальных случаев порядок проверок в `Build`:
 
 1. Проверить индекс записи. Некорректный индекс возвращает `ErrInvalidEntryIndex` и нулевой `Report`.
-2. Проверить, что операция — `upgrade` или `downgrade` и в `Installed.Versions` ровно одна версия. `NS` / `install` не поддерживается: показанная старая версия не считается заменяемой. Для обеих проверок текущего этапа диагностики можно вернуть вместе.
+2. Проверить, что операция — `upgrade`, `downgrade` или `reinstall` и в `Installed.Versions` ровно одна версия. `NS` / `install` не поддерживается: показанная старая версия не считается заменяемой. Для обеих проверок текущего этапа диагностики можно вернуть вместе.
 3. Проверить наличие снимков и непустые явно известные repository обеих сторон.
-4. Для `upgrade` и `downgrade` `before` — единственная показанная установленная версия, а `after` — целевая версия. Проверить для before, затем after, что снимок соответствует `Entry.Package`, точной версии плана и repository этой стороны. Версии сравниваются буквально, включая `-rN`; направление `Compare` следует переданным сторонам. Автоматической сортировки, перестановки или подбора версий нет.
+4. Для `upgrade`, `downgrade` и `reinstall` с единственной установленной версией `before` — эта показанная версия, а `after` — целевая версия. Проверить для before, затем after, что снимок соответствует `Entry.Package`, точной версии плана и repository этой стороны. Версии сравниваются буквально, включая `-rN`; направление `Compare` следует переданным сторонам. Автоматической сортировки, перестановки или подбора версий нет.
 5. Проверить явно известные SLOT/SUBSLOT плана только при `Snapshot.Slot.State == valid`. SLOT сопоставляется с `Snapshot.Slot.Name`, SUBSLOT — с `Snapshot.Slot.Subslot`.
 6. Если предыдущие проверки прошли, вызвать `metadatadiff.Compare(before, after)` и сохранить весь результат.
 

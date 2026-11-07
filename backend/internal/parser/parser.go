@@ -26,6 +26,7 @@ const (
 	OperationUpgrade   Operation = "upgrade"
 	OperationDowngrade Operation = "downgrade"
 	OperationInstall   Operation = "install"
+	OperationReinstall Operation = "reinstall"
 )
 
 // Result is the deterministic, source-linked result of parsing one input.
@@ -112,6 +113,7 @@ type Size struct {
 type Summary struct {
 	Packages   int
 	Upgrades   int
+	Reinstalls int
 	Downgrades int
 	Uninstalls int
 	NewSlots   int
@@ -129,9 +131,10 @@ type Diagnostic struct {
 var (
 	rowPrefixRE   = regexp.MustCompile(`^\[(ebuild|binary)\s+([^]]*)\]\s*(.*)$`)
 	versionRE     = regexp.MustCompile(`^(.+)-([0-9][A-Za-z0-9._+~-]*)$`)
-	summaryRE     = regexp.MustCompile(`^Total:\s*([0-9]+) package(?:s)?\s*\((.*)\),\s*Size of downloads:\s*([0-9]+)\s+(B|KiB|MiB|GiB)$`)
-	summaryItemRE = regexp.MustCompile(`^([0-9]+)\s+(upgrade|upgrades|downgrade|downgrades|in new slot|in new slots|uninstall|uninstalls)$`)
-	sizeRE        = regexp.MustCompile(`^([0-9]+)\s+(B|KiB|MiB|GiB)$`)
+	summaryRE     = regexp.MustCompile(`^Total:\s*([0-9]+) package(?:s)?\s*\((.*)\),\s*Size of downloads:\s*([0-9,]+)\s+(B|KiB|MiB|GiB)$`)
+	summaryItemRE = regexp.MustCompile(`^([0-9]+)\s+(upgrade|upgrades|downgrade|downgrades|in new slot|in new slots|uninstall|uninstalls|reinstall|reinstalls)$`)
+	sizeRE        = regexp.MustCompile(`^([0-9,]+)\s+(B|KiB|MiB|GiB)$`)
+	sizeIntegerRE = regexp.MustCompile(`^(?:[0-9]+|[0-9]{1,3}(?:,[0-9]{3})+)$`)
 	ansiRE        = regexp.MustCompile(`\x1b\[[0-?]*[ -/]*[@-~]`)
 )
 
@@ -296,6 +299,8 @@ func parseEbuildRow(markerField, body string, line int) (Entry, string, string) 
 		operation = OperationUpgrade
 	case "UD":
 		operation = OperationDowngrade
+	case "R":
+		operation = OperationReinstall
 	case "NS":
 		operation = OperationInstall
 	default:
@@ -339,13 +344,21 @@ func parseEbuildRow(markerField, body string, line int) (Entry, string, string) 
 		}
 		if index+1 < len(tokens) {
 			if match := sizeRE.FindStringSubmatch(token + " " + tokens[index+1]); match != nil {
-				entry.Download = &Size{Value: int64(integer(match[1])), Unit: match[2]}
+				size, err := parseSize(match[1], match[2])
+				if err != nil {
+					return Entry{}, "MALFORMED_ENTRY", "некорректный целочисленный размер"
+				}
+				entry.Download = &size
 				index++
 				continue
 			}
 		}
 		if match := sizeRE.FindStringSubmatch(token); match != nil {
-			entry.Download = &Size{Value: int64(integer(match[1])), Unit: match[2]}
+			size, err := parseSize(match[1], match[2])
+			if err != nil {
+				return Entry{}, "MALFORMED_ENTRY", "некорректный целочисленный размер"
+			}
+			entry.Download = &size
 			continue
 		}
 		return Entry{}, "MALFORMED_ENTRY", "неожиданный токен в записи ebuild"
@@ -354,11 +367,15 @@ func parseEbuildRow(markerField, body string, line int) (Entry, string, string) 
 }
 
 func parseSummary(match []string, line int) (Summary, bool) {
-	summary := Summary{
-		Packages:   integer(match[1]),
-		Download:   Size{Value: int64(integer(match[3])), Unit: match[4]},
-		SourceLine: line,
+	packages, err := strconv.Atoi(match[1])
+	if err != nil {
+		return Summary{}, false
 	}
+	download, err := parseSize(match[3], match[4])
+	if err != nil {
+		return Summary{}, false
+	}
+	summary := Summary{Packages: packages, Download: download, SourceLine: line}
 	if strings.TrimSpace(match[2]) == "" {
 		return summary, true
 	}
@@ -368,10 +385,15 @@ func parseSummary(match []string, line int) (Summary, bool) {
 		if parts == nil {
 			return Summary{}, false
 		}
-		count := integer(parts[1])
+		count, err := strconv.Atoi(parts[1])
+		if err != nil {
+			return Summary{}, false
+		}
 		kind := parts[2]
 		key := ""
 		switch kind {
+		case "reinstall", "reinstalls":
+			key, summary.Reinstalls = "reinstall", count
 		case "upgrade", "upgrades":
 			key, summary.Upgrades = "upgrade", count
 		case "downgrade", "downgrades":
@@ -543,4 +565,16 @@ func diagnostic(code, message string, line int) Diagnostic {
 func integer(value string) int {
 	parsed, _ := strconv.Atoi(value)
 	return parsed
+}
+
+// parseSize validates grouping before removing separators and rejects overflow.
+func parseSize(number, unit string) (Size, error) {
+	if !sizeIntegerRE.MatchString(number) {
+		return Size{}, strconv.ErrSyntax
+	}
+	value, err := strconv.ParseInt(strings.ReplaceAll(number, ",", ""), 10, 64)
+	if err != nil {
+		return Size{}, err
+	}
+	return Size{Value: value, Unit: unit}, nil
 }

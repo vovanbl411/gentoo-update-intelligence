@@ -110,6 +110,13 @@ func Build(
 		InterpretationLimitation: interpretationLimit,
 	}
 
+	// A rebuild without explicit installed facts can bind only its target.
+	if entry.Operation == parser.OperationReinstall && len(entry.Installed.Versions) == 0 {
+		report.Gentoo.Diagnostics = checkOperationAndInstalled(entry)
+		report.Gentoo.Diagnostics = append(report.Gentoo.Diagnostics, checkTarget(entry, after)...)
+		return report, nil
+	}
+
 	if diagnostics := checkOperationAndInstalled(entry); len(diagnostics) != 0 {
 		report.Gentoo.Diagnostics = diagnostics
 		return report, nil
@@ -139,11 +146,11 @@ func Build(
 
 func checkOperationAndInstalled(entry parser.Entry) []BindingDiagnostic {
 	diagnostics := make([]BindingDiagnostic, 0, 2)
-	if entry.Operation != parser.OperationUpgrade && entry.Operation != parser.OperationDowngrade {
+	if entry.Operation != parser.OperationUpgrade && entry.Operation != parser.OperationDowngrade && entry.Operation != parser.OperationReinstall {
 		diagnostics = append(diagnostics, BindingDiagnostic{
 			Code:     CodeOperationUnsupported,
 			Field:    field(BindingFieldOperation),
-			Expected: value("upgrade or downgrade"),
+			Expected: value("upgrade, downgrade or reinstall"),
 			Actual:   value(string(entry.Operation)),
 		})
 	}
@@ -195,17 +202,7 @@ func checkSnapshotIdentity(entry parser.Entry, installed parser.InstalledVersion
 		{side: metadatadiff.SideAfter, snapshot: after, version: entry.Target.Version, repository: *entry.Target.Repository},
 	}
 	for _, current := range sides {
-		source := current.snapshot.Source
-		if source.Category != entry.Package.Category || source.Name != entry.Package.Name {
-			diagnostics = append(diagnostics, mismatch(CodePackageMismatch, current.side, BindingFieldPackage,
-				packageName(entry.Package), packageName(parser.Package{Category: source.Category, Name: source.Name})))
-		}
-		if source.Version != current.version {
-			diagnostics = append(diagnostics, mismatch(CodeVersionMismatch, current.side, BindingFieldVersion, current.version, source.Version))
-		}
-		if source.Repository != current.repository {
-			diagnostics = append(diagnostics, mismatch(CodeRepositoryMismatch, current.side, BindingFieldRepository, current.repository, source.Repository))
-		}
+		diagnostics = append(diagnostics, checkSideIdentity(entry.Package, current.version, current.repository, current.snapshot, current.side)...)
 	}
 	return diagnostics
 }
@@ -223,16 +220,7 @@ func checkSlots(entry parser.Entry, installed parser.InstalledVersion, before, a
 		{side: metadatadiff.SideAfter, planSlot: entry.Target.Slot, planSubslot: entry.Target.Subslot, snapshot: after},
 	}
 	for _, current := range sides {
-		if current.snapshot.Slot.State != metadatadiff.StateValid {
-			continue
-		}
-		slot := current.snapshot.Slot
-		if current.planSlot != nil && *current.planSlot != slot.Name {
-			diagnostics = append(diagnostics, mismatch(CodeSlotMismatch, current.side, BindingFieldSlot, *current.planSlot, slot.Name))
-		}
-		if current.planSubslot != nil && *current.planSubslot != slot.Subslot {
-			diagnostics = append(diagnostics, mismatch(CodeSubslotMismatch, current.side, BindingFieldSubslot, *current.planSubslot, slot.Subslot))
-		}
+		diagnostics = append(diagnostics, checkSideSlots(current.planSlot, current.planSubslot, current.snapshot, current.side)...)
 	}
 	return diagnostics
 }
@@ -263,4 +251,49 @@ func cloneParserDiagnostics(diagnostics []parser.Diagnostic) []parser.Diagnostic
 		cloned[index].SourceLines = append([]int(nil), diagnostic.SourceLines...)
 	}
 	return cloned
+}
+
+func checkTarget(entry parser.Entry, after *metadatadiff.Snapshot) []BindingDiagnostic {
+	diagnostics := make([]BindingDiagnostic, 0)
+	if after == nil {
+		diagnostics = append(diagnostics, BindingDiagnostic{Code: CodeSnapshotMissing, Side: side(metadatadiff.SideAfter), Field: field(BindingFieldSnapshot)})
+	}
+	if entry.Target.Repository == nil || *entry.Target.Repository == "" {
+		diagnostics = append(diagnostics, BindingDiagnostic{Code: CodeRepositoryUnknown, Side: side(metadatadiff.SideAfter), Field: field(BindingFieldRepository)})
+	}
+	if len(diagnostics) != 0 {
+		return diagnostics
+	}
+	diagnostics = append(diagnostics, checkSideIdentity(entry.Package, entry.Target.Version, *entry.Target.Repository, after, metadatadiff.SideAfter)...)
+	diagnostics = append(diagnostics, checkSideSlots(entry.Target.Slot, entry.Target.Subslot, after, metadatadiff.SideAfter)...)
+	return diagnostics
+}
+
+func checkSideIdentity(pkg parser.Package, version, repository string, snapshot *metadatadiff.Snapshot, snapshotSide metadatadiff.Side) []BindingDiagnostic {
+	diagnostics := make([]BindingDiagnostic, 0, 3)
+	source := snapshot.Source
+	if source.Category != pkg.Category || source.Name != pkg.Name {
+		diagnostics = append(diagnostics, mismatch(CodePackageMismatch, snapshotSide, BindingFieldPackage, packageName(pkg), packageName(parser.Package{Category: source.Category, Name: source.Name})))
+	}
+	if source.Version != version {
+		diagnostics = append(diagnostics, mismatch(CodeVersionMismatch, snapshotSide, BindingFieldVersion, version, source.Version))
+	}
+	if source.Repository != repository {
+		diagnostics = append(diagnostics, mismatch(CodeRepositoryMismatch, snapshotSide, BindingFieldRepository, repository, source.Repository))
+	}
+	return diagnostics
+}
+
+func checkSideSlots(planSlot, planSubslot *string, snapshot *metadatadiff.Snapshot, snapshotSide metadatadiff.Side) []BindingDiagnostic {
+	diagnostics := make([]BindingDiagnostic, 0, 2)
+	if snapshot.Slot.State != metadatadiff.StateValid {
+		return diagnostics
+	}
+	if planSlot != nil && *planSlot != snapshot.Slot.Name {
+		diagnostics = append(diagnostics, mismatch(CodeSlotMismatch, snapshotSide, BindingFieldSlot, *planSlot, snapshot.Slot.Name))
+	}
+	if planSubslot != nil && *planSubslot != snapshot.Slot.Subslot {
+		diagnostics = append(diagnostics, mismatch(CodeSubslotMismatch, snapshotSide, BindingFieldSubslot, *planSubslot, snapshot.Slot.Subslot))
+	}
+	return diagnostics
 }

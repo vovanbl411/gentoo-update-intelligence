@@ -26,7 +26,7 @@ Analyzer может обрабатывать извлечённые записи
 
 `DowngradePlannedEvidence` ссылается на запись плана, её операцию, целевую версию и все показанные установленные версии в исходном порядке. Несколько установленных версий сохраняются как неоднозначный контекст.
 
-**Не срабатывает** для upgrade и `NS` / install.
+**Не срабатывает** для upgrade, `R` / reinstall и `NS` / install.
 
 ### `LOCAL_PATCHED_PACKAGE`
 
@@ -120,3 +120,7 @@ Evidence содержит запись с обоими показанными SL
 ## Реализация и проверки
 
 Реализация находится в `backend/internal/analyzer`; тесты вызывают `Analyze` на реальном Parser fixture и типизированных синтетических фактах Parser. Реальных downgrade fixtures пока нет. Проверки проекта выполняются из `backend/`: `gofmt` для изменённых Go-файлов, `go test -count=1 ./...`, `go vet ./...` и `git diff --check`.
+
+## Пересборки
+
+Для `R` / `reinstall` применяются `LOCAL_PATCHED_PACKAGE` и `USE_CHANGED` по тем же явным основаниям. Маркеры в других группах (`LLVM_SLOT`, `PYTHON_TARGETS` и других) сохраняются Parser, но не расширяют правило `USE_CHANGED`. Сам факт пересборки не создаёт `REVIEW` или `BLOCKER`, причина пересборки не определяется. `SLOT_CHANGED` по-прежнему ограничен upgrade и downgrade.

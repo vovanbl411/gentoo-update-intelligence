@@ -395,3 +395,106 @@ func TestPreparationLimitFromEnv(t *testing.T) {
 		}
 	}
 }
+
+func TestWorkerGeneratedCacheUsesSharedRuntimeAcrossRestart(t *testing.T) {
+	root := t.TempDir()
+	repo := filepath.Join(root, "repo")
+	write := func(path, content string, mode os.FileMode) {
+		t.Helper()
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), mode); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write(filepath.Join(repo, "profiles/test/make.defaults"), "ARCH=amd64\n", 0o644)
+	write(filepath.Join(repo, "dev-libs/widget/widget-1.ebuild"), "EAPI=8\n", 0o644)
+	workerGit(t, repo, "init", "--quiet", "--initial-branch=main")
+	workerGit(t, repo, "add", ".")
+	workerGit(t, repo, "commit", "-qm", "fixture")
+	commit := workerGit(t, repo, "rev-parse", "HEAD")
+	bin := filepath.Join(root, "bin")
+	versions := filepath.Join(root, "versions")
+	generations := filepath.Join(root, "generations")
+	runtimeFile := filepath.Join(root, "runtime")
+	quote := func(value string) string { return "'" + strings.ReplaceAll(value, "'", "'\\''") + "'" }
+	write(runtimeFile, "3.0.1\n", 0o644)
+	write(filepath.Join(bin, "emerge"), "#!/bin/sh\nread version < "+quote(runtimeFile)+"\nprintf x >> "+quote(versions)+"\nprintf 'Portage %s\\n' \"$version\"\n", 0o755)
+	write(filepath.Join(bin, "egencache"), "#!/bin/sh\nprintf x >> "+quote(generations)+"\nmkdir -p metadata/md5-cache/dev-libs\nprintf 'EAPI=8\\nSLOT=0\\n' > metadata/md5-cache/dev-libs/widget-1\n", 0o755)
+	oldPath := os.Getenv("PATH")
+	t.Setenv("PATH", bin+string(os.PathListSeparator)+oldPath)
+	t.Setenv("EMERGE_PATH", filepath.Join(bin, "emerge"))
+	t.Setenv("METADATA_WORKER_CACHE_PATH", filepath.Join(root, "cache"))
+	t.Setenv("METADATA_WORKER_TEMP_PATH", root)
+	input := request{Repository: repository{Name: "gentoo", URL: "https://example.invalid/repo", Path: repo, Commit: commit}, Category: "dev-libs", Name: "widget", Version: "1", Profile: "profiles/test"}
+	newWorker := func() *metadataWorker {
+		t.Helper()
+		w, err := newMetadataWorkerWithPreparationLimit(1, 1)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return w
+	}
+	check := func(w *metadataWorker, version string, cached bool) {
+		t.Helper()
+		got := w.do(context.Background(), input)
+		if got.err != nil || got.cached != cached || got.result.Provenance.PortageVersion != version {
+			t.Fatalf("worker: cached=%v version=%q err=%v", got.cached, got.result.Provenance.PortageVersion, got.err)
+		}
+		inputs := metadatacache.Inputs{Repository: "gentoo", SourceURL: input.Repository.URL, Category: input.Category, Name: input.Name, Version: input.Version, ReferenceCommit: commit, SourceCommit: commit, EbuildBlob: got.result.Provenance.EbuildBlobID, Profile: input.Profile, GeneratorVersion: "metadata-worker-v1", PortageVersion: version}
+		key, err := metadatacache.Key(inputs)
+		if err != nil {
+			t.Fatal(err)
+		}
+		data, err := os.ReadFile(filepath.Join(root, "cache", key+".json"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		var saved struct {
+			Inputs metadatacache.Inputs
+			Result metadatagenerator.Result
+		}
+		if err := json.Unmarshal(data, &saved); err != nil {
+			t.Fatal(err)
+		}
+		if saved.Inputs.PortageVersion != version || saved.Result.Provenance.PortageVersion != version {
+			t.Fatalf("cache key inputs and provenance disagree: %+v", saved)
+		}
+	}
+	worker := newWorker()
+	check(worker, "3.0.1", false)
+	check(worker, "3.0.1", true)
+	write(runtimeFile, "3.0.2\n", 0o644)
+	check(worker, "3.0.1", true)
+	// A new worker must still read the existing cache when egencache is absent.
+	gitPath, err := exec.LookPath("git")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tools := filepath.Join(root, "cache-only-tools")
+	if err := os.Mkdir(tools, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(gitPath, filepath.Join(tools, "git")); err != nil {
+		t.Fatal(err)
+	}
+	write(runtimeFile, "3.0.1\n", 0o644)
+	t.Setenv("PATH", tools)
+	check(newWorker(), "3.0.1", true)
+	t.Setenv("PATH", bin+string(os.PathListSeparator)+oldPath)
+	write(runtimeFile, "3.0.2\n", 0o644)
+	restarted := newWorker()
+	check(restarted, "3.0.2", false)
+	check(restarted, "3.0.2", true)
+	entries, err := os.ReadDir(filepath.Join(root, "cache"))
+	if err != nil || len(entries) != 2 {
+		t.Fatalf("cache entries=%d err=%v", len(entries), err)
+	}
+	for path, want := range map[string]int{versions: 3, generations: 2} {
+		data, err := os.ReadFile(path)
+		if err != nil || len(data) != want {
+			t.Fatalf("command count %s=%d, want %d, err=%v", path, len(data), want, err)
+		}
+	}
+}

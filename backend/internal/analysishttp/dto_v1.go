@@ -99,6 +99,7 @@ type parserConflictSummaryDTO struct {
 type parserSummaryDTO struct {
 	Packages   int           `json:"packages"`
 	Upgrades   int           `json:"upgrades"`
+	Reinstalls int           `json:"reinstalls"`
 	Downgrades int           `json:"downgrades"`
 	Uninstalls int           `json:"uninstalls"`
 	NewSlots   int           `json:"new_slots"`

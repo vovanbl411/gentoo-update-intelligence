@@ -1,0 +1,6284 @@
+[
+  {
+    "elapsed_seconds": 0.009,
+    "status": "running",
+    "progress": {
+      "stage": "preparing",
+      "completed": 0,
+      "total": 0
+    }
+  },
+  {
+    "elapsed_seconds": 2.012,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 0,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 4.015,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 0,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 6.017,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 0,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 8.019,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 0,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 10.024,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 0,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 12.026,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 0,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 14.028,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 1,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 16.032,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 1,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 18.036,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 1,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 20.038,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 1,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 22.041,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 1,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 24.045,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 1,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 26.047,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 1,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 28.05,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 2,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 30.053,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 2,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 32.055,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 2,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 34.057,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 2,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 36.061,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 2,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 38.063,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 2,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 40.067,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 2,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 42.07,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 3,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 44.073,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 3,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 46.075,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 3,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 48.077,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 3,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 50.08,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 3,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 52.082,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 3,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 54.085,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 3,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 56.087,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 4,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 58.089,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 4,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 60.09,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 4,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 62.093,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 4,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 64.095,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 4,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 66.097,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 4,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 68.102,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 4,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 70.108,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 4,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 72.11,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 4,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 74.112,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 5,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 76.114,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 5,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 78.117,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 5,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 80.119,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 5,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 82.121,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 5,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 84.124,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 5,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 86.127,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 5,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 88.131,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 5,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 90.134,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 5,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 92.136,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 5,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 94.138,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 6,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 96.14,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 6,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 98.142,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 6,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 100.144,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 6,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 102.146,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 6,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 104.148,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 6,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 106.151,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 6,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 108.153,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 6,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 110.156,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 6,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 112.158,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 7,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 114.16,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 7,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 116.162,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 7,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 118.165,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 7,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 120.167,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 7,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 122.169,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 7,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 124.172,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 7,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 126.175,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 7,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 128.179,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 8,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 130.181,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 8,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 132.184,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 8,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 134.186,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 8,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 136.188,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 8,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 138.191,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 8,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 140.193,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 8,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 142.195,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 8,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 144.2,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 8,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 146.202,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 9,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 148.205,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 9,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 150.208,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 9,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 152.211,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 9,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 154.213,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 9,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 156.215,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 9,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 158.218,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 9,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 160.22,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 9,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 162.221,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 9,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 164.224,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 10,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 166.226,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 10,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 168.229,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 10,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 170.234,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 10,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 172.238,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 10,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 174.24,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 10,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 176.243,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 10,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 178.246,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 10,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 180.248,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 11,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 182.25,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 11,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 184.252,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 11,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 186.255,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 11,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 188.257,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 11,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 190.259,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 11,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 192.261,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 11,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 194.264,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 11,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 196.265,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 12,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 198.267,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 12,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 200.269,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 12,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 202.27,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 12,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 204.272,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 12,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 206.276,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 12,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 208.279,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 12,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 210.283,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 12,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 212.285,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 12,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 214.288,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 13,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 216.29,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 13,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 218.292,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 13,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 220.294,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 13,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 222.296,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 13,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 224.298,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 13,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 226.302,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 13,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 228.305,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 13,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 230.307,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 13,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 232.31,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 14,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 234.312,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 14,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 236.314,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 14,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 238.316,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 14,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 240.318,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 14,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 242.321,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 14,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 244.325,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 14,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 246.33,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 14,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 248.334,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 14,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 250.337,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 15,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 252.34,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 15,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 254.342,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 15,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 256.344,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 15,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 258.346,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 15,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 260.349,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 15,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 262.351,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 15,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 264.353,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 15,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 266.356,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 16,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 268.358,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 16,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 270.36,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 16,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 272.362,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 16,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 274.365,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 16,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 276.367,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 16,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 278.369,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 16,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 280.372,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 16,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 282.373,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 16,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 284.375,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 17,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 286.378,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 17,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 288.38,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 17,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 290.382,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 17,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 292.384,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 17,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 294.387,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 17,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 296.388,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 17,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 298.391,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 17,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 300.392,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 18,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 302.394,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 18,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 304.397,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 18,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 306.399,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 18,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 308.404,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 18,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 310.406,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 18,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 312.412,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 18,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 314.415,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 18,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 316.417,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 18,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 318.419,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 19,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 320.421,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 19,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 322.424,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 19,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 324.427,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 19,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 326.428,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 19,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 328.431,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 19,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 330.434,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 19,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 332.438,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 19,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 334.441,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 19,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 336.445,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 19,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 338.447,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 20,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 340.449,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 20,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 342.451,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 20,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 344.453,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 20,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 346.455,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 20,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 348.457,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 20,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 350.459,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 20,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 352.464,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 20,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 354.468,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 20,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 356.47,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 21,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 358.472,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 21,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 360.474,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 21,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 362.478,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 21,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 364.48,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 21,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 366.482,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 21,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 368.484,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 21,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 370.487,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 21,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 372.489,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 22,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 374.492,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 22,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 376.495,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 22,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 378.498,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 22,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 380.5,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 22,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 382.502,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 22,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 384.504,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 22,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 386.506,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 22,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 388.508,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 22,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 390.51,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 23,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 392.512,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 23,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 394.514,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 23,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 396.517,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 23,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 398.521,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 23,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 400.523,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 23,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 402.525,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 23,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 404.527,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 23,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 406.528,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 24,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 408.531,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 24,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 410.533,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 24,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 412.538,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 24,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 414.54,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 24,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 416.542,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 24,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 418.544,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 24,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 420.546,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 24,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 422.548,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 25,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 424.55,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 25,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 426.553,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 25,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 428.555,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 25,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 430.557,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 25,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 432.56,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 25,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 434.563,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 25,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 436.565,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 25,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 438.567,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 25,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 440.569,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 26,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 442.572,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 26,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 444.574,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 26,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 446.576,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 26,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 448.578,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 26,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 450.58,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 26,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 452.583,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 26,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 454.588,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 26,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 456.591,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 26,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 458.596,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 26,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 460.598,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 27,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 462.6,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 27,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 464.603,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 27,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 466.606,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 27,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 468.608,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 27,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 470.61,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 27,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 472.612,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 27,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 474.615,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 27,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 476.617,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 27,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 478.62,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 27,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 480.622,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 28,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 482.624,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 28,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 484.627,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 28,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 486.629,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 28,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 488.631,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 28,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 490.633,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 28,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 492.636,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 28,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 494.638,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 28,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 496.64,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 29,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 498.642,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 29,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 500.644,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 29,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 502.646,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 29,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 504.648,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 29,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 506.65,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 29,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 508.652,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 29,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 510.655,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 29,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 512.657,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 30,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 514.659,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 30,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 516.661,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 30,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 518.664,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 30,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 520.666,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 30,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 522.669,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 30,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 524.671,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 30,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 526.673,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 30,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 528.675,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 31,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 530.677,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 31,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 532.679,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 31,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 534.681,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 31,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 536.683,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 31,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 538.686,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 31,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 540.688,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 31,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 542.691,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 32,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 544.693,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 32,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 546.695,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 32,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 548.697,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 32,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 550.7,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 32,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 552.702,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 32,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 554.705,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 32,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 556.709,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 32,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 558.712,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 32,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 560.714,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 32,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 562.716,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 33,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 564.718,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 33,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 566.72,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 33,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 568.723,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 33,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 570.725,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 33,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 572.727,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 33,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 574.729,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 33,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 576.732,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 33,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 578.737,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 33,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 580.744,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 33,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 582.746,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 34,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 584.748,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 34,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 586.751,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 34,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 588.753,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 34,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 590.755,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 34,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 592.757,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 34,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 594.76,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 34,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 596.762,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 34,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 598.764,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 34,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 600.767,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 34,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 602.769,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 35,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 604.772,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 35,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 606.775,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 35,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 608.777,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 35,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 610.779,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 35,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 612.781,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 35,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 614.784,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 35,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 616.79,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 35,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 618.792,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 35,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 620.795,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 36,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 622.798,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 36,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 624.801,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 36,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 626.803,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 36,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 628.805,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 36,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 630.807,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 36,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 632.809,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 36,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 634.811,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 36,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 636.814,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 37,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 638.816,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 37,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 640.819,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 37,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 642.821,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 37,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 644.823,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 37,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 646.825,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 37,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 648.827,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 37,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 650.829,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 37,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 652.831,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 37,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 654.833,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 38,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 656.836,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 38,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 658.841,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 38,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 660.844,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 38,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 662.846,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 38,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 664.849,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 38,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 666.852,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 38,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 668.854,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 38,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 670.856,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 39,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 672.859,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 39,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 674.861,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 39,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 676.863,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 39,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 678.866,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 39,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 680.868,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 39,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 682.871,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 39,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 684.873,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 39,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 686.877,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 39,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 688.879,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 40,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 690.881,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 40,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 692.883,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 40,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 694.885,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 40,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 696.887,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 40,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 698.889,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 40,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 700.891,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 40,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 702.895,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 40,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 704.897,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 40,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 706.9,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 41,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 708.902,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 41,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 710.904,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 41,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 712.906,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 41,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 714.908,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 41,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 716.91,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 41,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 718.912,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 41,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 720.914,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 41,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 722.916,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 42,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 724.919,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 42,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 726.921,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 42,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 728.923,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 42,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 730.924,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 42,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 732.927,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 42,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 734.928,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 42,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 736.93,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 42,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 738.933,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 42,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 740.935,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 43,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 742.937,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 43,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 744.939,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 43,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 746.941,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 43,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 748.944,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 43,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 750.946,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 43,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 752.948,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 43,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 754.95,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 43,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 756.951,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 44,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 758.954,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 44,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 760.956,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 44,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 762.958,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 44,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 764.96,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 44,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 766.963,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 44,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 768.967,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 44,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 770.97,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 44,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 772.972,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 44,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 774.974,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 45,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 776.976,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 45,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 778.979,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 45,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 780.981,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 45,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 782.983,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 45,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 784.986,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 45,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 786.991,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 45,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 788.998,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 45,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 791.004,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 45,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 793.006,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 45,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 795.01,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 45,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 797.012,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 46,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 799.014,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 46,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 801.016,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 46,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 803.019,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 46,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 805.021,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 46,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 807.025,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 46,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 809.031,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 46,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 811.033,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 47,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 813.035,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 47,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 815.039,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 47,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 817.041,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 47,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 819.044,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 47,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 821.046,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 47,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 823.048,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 48,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 825.05,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 48,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 827.052,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 48,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 829.054,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 48,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 831.057,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 48,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 833.061,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 48,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 835.063,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 48,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 837.068,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 49,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 839.07,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 49,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 841.073,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 49,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 843.076,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 49,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 845.08,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 49,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 847.083,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 49,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 849.085,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 50,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 851.087,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 50,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 853.089,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 50,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 855.091,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 50,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 857.094,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 50,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 859.097,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 50,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 861.099,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 50,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 863.101,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 51,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 865.104,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 51,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 867.106,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 51,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 869.108,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 51,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 871.11,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 51,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 873.113,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 51,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 875.115,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 52,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 877.117,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 52,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 879.119,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 52,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 881.124,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 52,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 883.126,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 52,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 885.128,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 52,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 887.131,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 52,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 889.136,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 53,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 891.14,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 53,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 893.141,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 53,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 895.144,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 53,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 897.146,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 53,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 899.148,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 53,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 901.152,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 53,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 903.155,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 54,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 905.158,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 54,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 907.16,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 54,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 909.163,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 54,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 911.167,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 54,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 913.169,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 54,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 915.171,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 54,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 917.174,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 55,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 919.178,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 55,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 921.18,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 55,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 923.185,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 55,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 925.188,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 55,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 927.19,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 55,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 929.193,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 55,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 931.197,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 933.203,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 935.208,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 937.211,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 939.217,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 941.22,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 943.224,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 945.228,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 947.232,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 949.237,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 951.241,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 953.243,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 955.246,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 957.248,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 959.25,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 961.252,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 963.254,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 56,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 965.257,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 57,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 967.259,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 57,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 969.261,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 57,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 971.264,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 57,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 973.266,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 57,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 975.268,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 57,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 977.271,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 58,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 979.275,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 58,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 981.28,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 58,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 983.282,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 58,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 985.284,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 58,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 987.286,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 58,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 989.289,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 58,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 991.291,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 58,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 993.293,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 58,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 995.295,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 58,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 997.298,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 58,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 999.3,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 58,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1001.303,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 58,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1003.306,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 59,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1005.308,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 59,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1007.31,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 59,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1009.312,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 59,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1011.314,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 59,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1013.316,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 59,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1015.318,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 60,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1017.321,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 60,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1019.322,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 60,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1021.324,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 60,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1023.328,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 60,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1025.334,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 60,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1027.336,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 61,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1029.338,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 61,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1031.34,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 61,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1033.342,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 61,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1035.344,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 61,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1037.348,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 61,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1039.353,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1041.357,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1043.362,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1045.368,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1047.37,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1049.374,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1051.377,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1053.383,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1055.387,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1057.39,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1059.392,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1061.394,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1063.396,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1065.4,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1067.403,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1069.405,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 62,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1071.407,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 63,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1073.409,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 63,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1075.411,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 63,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1077.414,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 63,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1079.416,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 63,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1081.418,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 63,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1083.421,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 63,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1085.426,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 63,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1087.428,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 63,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1089.43,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 63,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1091.432,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 64,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1093.434,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 64,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1095.436,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 64,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1097.438,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 64,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1099.44,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 64,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1101.442,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 64,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1103.445,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 64,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1105.447,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 64,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1107.449,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 64,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1109.452,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 64,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1111.454,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 64,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1113.456,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 65,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1115.458,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 65,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1117.46,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 65,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1119.462,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 65,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1121.464,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 65,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1123.467,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 65,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1125.469,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 65,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1127.471,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 65,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1129.473,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 65,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1131.475,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 66,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1133.477,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 66,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1135.479,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 66,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1137.481,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 66,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1139.483,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 66,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1141.485,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 66,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1143.488,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 66,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1145.49,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 66,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1147.492,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 67,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1149.494,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 67,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1151.496,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 67,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1153.498,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 67,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1155.501,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 67,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1157.504,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 67,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1159.506,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 67,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1161.512,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 67,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1163.518,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 67,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1165.523,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 67,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1167.527,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 68,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1169.532,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 68,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1171.534,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 68,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1173.536,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 68,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1175.538,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 68,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1177.54,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 68,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1179.542,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 68,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1181.544,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 68,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1183.546,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 68,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1185.549,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 68,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1187.551,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 68,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1189.553,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 68,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1191.555,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 68,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1193.557,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 69,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1195.558,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 69,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1197.562,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 69,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1199.563,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 69,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1201.565,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 69,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1203.57,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 69,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1205.575,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 69,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1207.577,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 69,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1209.579,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 70,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1211.581,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 70,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1213.583,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 70,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1215.585,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 70,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1217.587,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 70,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1219.589,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 70,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1221.591,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 70,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1223.594,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 70,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1225.596,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 70,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1227.599,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 70,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1229.601,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 71,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1231.603,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 71,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1233.605,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 71,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1235.607,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 71,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1237.609,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 71,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1239.611,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 71,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1241.616,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 71,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1243.618,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 71,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1245.62,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 71,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1247.622,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1249.63,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1251.634,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1253.637,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1255.639,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1257.641,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1259.643,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1261.644,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1263.646,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1265.648,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1267.651,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1269.653,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1271.655,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1273.659,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1275.661,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 72,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1277.664,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 73,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1279.666,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 73,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1281.668,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 73,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1283.67,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 73,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1285.672,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 73,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1287.674,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 73,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1289.678,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 73,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1291.68,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 73,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1293.684,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 73,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1295.687,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 73,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1297.689,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 74,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1299.691,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 74,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1301.693,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 74,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1303.695,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 74,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1305.697,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 74,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1307.699,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 74,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1309.701,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 74,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1311.703,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 74,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1313.705,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 74,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1315.707,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 74,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1317.71,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 74,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1319.712,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 74,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1321.713,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 74,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1323.715,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 75,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1325.717,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 75,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1327.72,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 75,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1329.722,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 75,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1331.725,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 75,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1333.727,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 75,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1335.73,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 75,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1337.732,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 75,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1339.734,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 76,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1341.735,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 76,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1343.737,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 76,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1345.739,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 76,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1347.742,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 76,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1349.744,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 76,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1351.746,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 76,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1353.748,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 77,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1355.75,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 77,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1357.751,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 77,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1359.753,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 77,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1361.755,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 77,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1363.759,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 77,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1365.761,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 77,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1367.763,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 77,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1369.765,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 78,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1371.767,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 78,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1373.769,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 78,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1375.77,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 78,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1377.772,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 78,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1379.775,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 78,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1381.777,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 78,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1383.779,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 79,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1385.781,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 79,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1387.783,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 79,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1389.785,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 79,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1391.787,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 79,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1393.789,
+    "status": "running",
+    "progress": {
+      "stage": "analyzing",
+      "completed": 79,
+      "total": 80
+    }
+  },
+  {
+    "elapsed_seconds": 1395.833,
+    "status": "completed",
+    "progress": {
+      "stage": "completed",
+      "completed": 80,
+      "total": 80
+    }
+  }
+]

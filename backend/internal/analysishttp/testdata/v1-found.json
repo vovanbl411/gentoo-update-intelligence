@@ -1659,6 +1659,7 @@
       "summary": {
         "packages": 6,
         "upgrades": 5,
+        "reinstalls": 0,
         "downgrades": 0,
         "uninstalls": 0,
         "new_slots": 1,

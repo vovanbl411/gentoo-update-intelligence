@@ -211,7 +211,7 @@ func TestParseSyntheticDowngradeSummaries(t *testing.T) {
 			}
 		})
 	}
-	unknown := Parse(row + "Total: 1 package (1 reinstalls), Size of downloads: 2 MiB")
+	unknown := Parse(row + "Total: 1 package (1 unknown-operation), Size of downloads: 2 MiB")
 	if unknown.Status != StatusPartial || !hasDiagnostic(unknown.Diagnostics, "MALFORMED_SUMMARY") || unknown.Summary != nil {
 		t.Fatalf("unknown summary operation was ignored: %+v", unknown)
 	}
@@ -232,7 +232,7 @@ func TestParseNegativeInputs(t *testing.T) {
 		{"service-only synthetic input", "These are the packages that would be merged, in order:\nCalculating dependencies ... done!", StatusUnsupported, ""},
 		{"fixture summary without its rows", "Total: 6 packages (5 upgrades, 1 in new slot), Size of downloads: 481212 KiB", StatusUnsupported, "SUMMARY_MISMATCH"},
 		{"fixture plus unknown synthetic line", first + "\nunknown noteworthy output", StatusPartial, "UNRECOGNIZED_LINE"},
-		{"fixture row with unsupported operation", strings.Replace(base, "[ebuild     U  ]", "[ebuild     R  ]", 1), StatusPartial, "UNSUPPORTED_OPERATION"},
+		{"fixture row with unsupported operation", strings.Replace(base, "[ebuild     U  ]", "[ebuild     X  ]", 1), StatusPartial, "UNSUPPORTED_OPERATION"},
 		{"synthetic binary row", "[binary     U  ] dev-libs/libei-1.6.0::gentoo 0 KiB", StatusUnsupported, "UNSUPPORTED_OPERATION"},
 		{"fixture row with unclosed group quote", strings.Replace(base, `USE="(systemd) (-elogind) -test"`, `USE="(systemd) (-elogind) -test`, 1), StatusPartial, "MALFORMED_ENTRY"},
 		{"synthetic malformed row", "[ebuild     U  ] this-is-not-a-package 1 KiB", StatusUnsupported, "MALFORMED_ENTRY"},

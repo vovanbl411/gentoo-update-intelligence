@@ -53,7 +53,13 @@ export function renderReport(data: Obj, root: HTMLElement, id: string, pendingEn
   const { plan, analysis } = data; const entries = array(plan.entries); const findings = array(analysis.findings); const reports = array(data.reports);
   add(root, 'h1', 'Сохранённый анализ'); const home = node('a', 'Новый анализ'); home.href = '/'; root.append(home);
   add(root, 'p', `Статус Parser: ${plan.status}`); for (const d of array(plan.diagnostics)) add(root, 'p', `${d.code}: ${d.message} ${array(d.source_lines).join(', ')}`);
-  add(root, 'p', `Пакетов: ${entries.length}; замечаний REVIEW: ${findings.filter(f => f.category === 'REVIEW').length}; блокировок BLOCKER: ${findings.filter(f => f.category === 'BLOCKER').length}; сравнений metadata: ${reports.filter(r => r.report?.gentoo?.comparison).length} из ${entries.length}.`);
+  if (['partial', 'unsupported'].includes(plan.status)) {
+    const warning = add(root, 'p', 'Неполный разбор: анализ охватывает только распознанные записи. Отсутствие замечаний не характеризует весь вход. Для повторного разбора сохранённого плана запустите новый анализ.');
+    warning.setAttribute('role', 'alert'); warning.className = 'parse-warning';
+  }
+  if (plan.summary) add(root, 'p', `Всего пакетов по сводке Portage: ${plan.summary.packages}; пересборок: ${plan.summary.reinstalls ?? 0}.`);
+  add(root, 'p', `Распознано пакетов: ${entries.length}; замечаний REVIEW: ${findings.filter(f => f.category === 'REVIEW').length}; блокировок BLOCKER: ${findings.filter(f => f.category === 'BLOCKER').length}; сравнений metadata: ${reports.filter(r => r.report?.gentoo?.comparison).length} из ${entries.length}.`);
+  if (reports.some(r => r.report?.gentoo?.status !== 'available')) add(root, 'p', 'Сравнение metadata ограничено или недоступно для части пакетов. Подробности указаны в карточках; полнота разбора показана отдельно статусом Parser.');
   if (findings.length) { add(root, 'h2', 'Замечания'); for (const f of findings) { const article = node('article'); finding(article, plan, f); if (Number.isInteger(f.entry_index) && entries[f.entry_index]) { const a = node('a', 'К пакету'); a.href = `#package-${f.entry_index}`; a.onclick = () => { search.value = ''; filter.value = 'all'; limit = Math.max(limit, f.entry_index + 1); draw(); const details = document.getElementById(`package-${f.entry_index}`) as HTMLDetailsElement | null; if (details) details.open = true; }; article.append(a); } root.append(article); } }
   add(root, 'h2', 'Пакеты'); const label = node('label', 'Поиск пакета'); const search = node('input'); search.type = 'search'; label.append(search); root.append(label);
   const flabel = node('label', 'Фильтр'); const filter = node('select'); for (const [value, title] of [['all','Все'],['review','Требуют проверки'],['changes','Изменения metadata'],['missing','Неполные или недоступные metadata']]) { const option = node('option', title); option.value = value; filter.append(option); } flabel.append(filter); root.append(flabel);
@@ -72,8 +78,8 @@ export function renderReport(data: Obj, root: HTMLElement, id: string, pendingEn
     count.textContent = `Найдено пакетов: ${matching.length}`; more.hidden = matching.length <= limit;
     for (const {entry,index} of matching.slice(0, limit)) {
       const d = node('details'); d.id = `package-${index}`; const rs = byEntry.get(index) || []; const fs = findings.filter(f => f.entry_index === index);
-      d.append(node('summary', `${entry.package?.category}/${entry.package?.name} — ${entry.operation}: ${array(entry.installed?.versions).map(v => v.version).join(', ') || 'версия не указана'} → ${entry.target?.version || 'не указана'}; замечаний: ${fs.length}; metadata: ${pending.has(index) ? (failed ? 'подготовка остановлена' : 'подготавливаются') : rs.map(r => r.report?.gentoo?.status).join(', ') || 'недоступны'}`));
-      d.addEventListener('toggle', () => { if (!d.open || d.dataset.loaded) return; d.dataset.loaded = '1'; add(d, 'p', `Строки: ${array(entry.source_lines).join(', ') || 'не указаны'}`); fs.forEach(f => finding(d, plan, f)); rs.forEach(r => metadata(d, r)); }); list.append(d);
+      d.append(node('summary', `${entry.package?.category}/${entry.package?.name} — ${entry.operation === 'reinstall' ? 'Пересборка' : entry.operation}: ${array(entry.installed?.versions).map(v => v.version).join(', ') || 'версия не указана'} → ${entry.target?.version || 'не указана'}; замечаний: ${fs.length}; metadata: ${pending.has(index) ? (failed ? 'подготовка остановлена' : 'подготавливаются') : rs.map(r => r.report?.gentoo?.status).join(', ') || 'недоступны'}`));
+      d.addEventListener('toggle', () => { if (!d.open || d.dataset.loaded) return; d.dataset.loaded = '1'; if (entry.operation === 'reinstall' && !array(entry.installed?.versions).length) add(d, 'p', 'Установленная версия не указана в плане; сравнение до/после недоступно.'); add(d, 'p', `Строки: ${array(entry.source_lines).join(', ') || 'не указаны'}`); fs.forEach(f => finding(d, plan, f)); rs.forEach(r => metadata(d, r)); }); list.append(d);
     }
   }
   search.oninput = filter.onchange = () => { limit = 50; draw(); }; more.onclick = () => { limit += 50; draw(); }; draw();

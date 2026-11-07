@@ -100,6 +100,7 @@ type storedParserConflictSummary struct {
 type storedParserSummary struct {
 	Packages   int              `json:"Packages"`
 	Upgrades   int              `json:"Upgrades"`
+	Reinstalls int              `json:"Reinstalls"`
 	Downgrades int              `json:"Downgrades"`
 	Uninstalls int              `json:"Uninstalls"`
 	NewSlots   int              `json:"NewSlots"`

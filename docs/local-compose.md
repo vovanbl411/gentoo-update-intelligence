@@ -183,6 +183,7 @@ docker compose up -d metadata-worker
 | `FRONTEND_PORT` | Необязательный host port frontend; по умолчанию `8081`. Привязка остаётся к `127.0.0.1`. |
 | `GENTOO_REPOSITORY_URL` | URL Gentoo Git repository для синхронизации и provenance; по умолчанию `https://anongit.gentoo.org/git/repo/gentoo.git`. |
 | `METADATA_WORKER_GENERATION_LIMIT` | Общий предел одновременных запусков `egencache`; по умолчанию `2`. Задайте положительное целое число. |
+| `METADATA_WORKER_CHECKOUT_CACHE_MAX_BYTES` | Бюджет свободных checkout в байтах; по умолчанию `4294967296` (4 GiB), `0` отключает reuse. Отрицательные и некорректные значения запрещают запуск. |
 | `METADATA_WORKER_PREPARATION_LIMIT` | Общий предел одновременных подготовок metadata; по умолчанию `2`. Задайте положительное целое число. |
 | `GENTOO_UPDATE_INTELLIGENCE_ANALYSIS_CONCURRENCY_LIMIT` | Непустой override для `analysis.concurrency_limit` из YAML; `0` отключает предел. Смена env применяется через recreate. |
 | `GENTOO_BASE_IMAGE` | Ссылка на подготовленную Gentoo-базу, только для сборки runtime. По умолчанию — `gentoo-update-intelligence/gentoo-base:local`. Если переменная задана в окружении shell, скрипт пропускает сборку базы. |

@@ -74,8 +74,12 @@ func Build(plan parser.Result, entryIndex int, provider MetadataLookup) (Result,
 		return Result{Report: preliminary, BeforeLookup: before, AfterLookup: after}, nil
 	}
 
-	beforeOutcome, before := lookup(provider, queries[0])
-	afterOutcome, after := lookup(provider, queries[1])
+	beforeOutcome := LookupOutcome{SkipReason: SkipBindingRejected}
+	var before *metadatadiff.Snapshot
+	if len(queries) == 2 {
+		beforeOutcome, before = lookup(provider, queries[0])
+	}
+	afterOutcome, after := lookup(provider, queries[len(queries)-1])
 
 	report, err := changereport.Build(plan, entryIndex, before, after)
 	if err != nil {
@@ -85,7 +89,8 @@ func Build(plan parser.Result, entryIndex int, provider MetadataLookup) (Result,
 }
 
 // LookupQueries returns the metadata lookup candidates Build may request for
-// one entry, in before/after order. Invalid bindings return no queries.
+// one entry, in before/after order (after only for a rebuild without installed
+// context). Invalid bindings return no queries.
 func LookupQueries(plan parser.Result, entryIndex int) ([]metadataprovider.Query, error) {
 	preliminary, err := changereport.Build(plan, entryIndex, nil, nil)
 	if err != nil {
@@ -95,10 +100,14 @@ func LookupQueries(plan parser.Result, entryIndex int) ([]metadataprovider.Query
 }
 
 func queriesForEntry(plan parser.Result, entryIndex int, preliminary changereport.Report) ([]metadataprovider.Query, error) {
-	if !lookupAllowed(preliminary.Gentoo.Diagnostics) {
+	entry := plan.Entries[entryIndex]
+	targetOnly := entry.Operation == parser.OperationReinstall && len(entry.Installed.Versions) == 0
+	if !lookupAllowed(preliminary.Gentoo.Diagnostics, targetOnly) {
 		return nil, nil
 	}
-	entry := plan.Entries[entryIndex]
+	if targetOnly {
+		return []metadataprovider.Query{{Repository: *entry.Target.Repository, Category: entry.Package.Category, Name: entry.Package.Name, Version: entry.Target.Version}}, nil
+	}
 	if len(entry.Installed.Versions) == 0 || entry.Installed.Versions[0].Repository == nil || entry.Target.Repository == nil {
 		return nil, errors.New("metadata lookup bindings are incomplete")
 	}
@@ -122,12 +131,12 @@ func isNilProvider(provider MetadataLookup) bool {
 	}
 }
 
-func lookupAllowed(diagnostics []changereport.BindingDiagnostic) bool {
+func lookupAllowed(diagnostics []changereport.BindingDiagnostic, targetOnly bool) bool {
 	if len(diagnostics) == 0 {
 		return false
 	}
 	for _, diagnostic := range diagnostics {
-		if diagnostic.Code != changereport.CodeSnapshotMissing {
+		if diagnostic.Code != changereport.CodeSnapshotMissing && !(targetOnly && diagnostic.Code == changereport.CodeInstalledContextMissing) {
 			return false
 		}
 	}

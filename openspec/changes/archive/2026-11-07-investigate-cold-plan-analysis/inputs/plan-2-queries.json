@@ -1,0 +1,487 @@
+{
+  "Status": "parsed",
+  "Entries": 41,
+  "AfterOnly": 0,
+  "Queries": [
+    {
+      "Repository": "gentoo",
+      "Category": "x11-terms",
+      "Name": "kitty-shell-integration",
+      "Version": "0.49.2"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "x11-terms",
+      "Name": "kitty-shell-integration",
+      "Version": "0.50.0"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "x11-terms",
+      "Name": "kitty-terminfo",
+      "Version": "0.49.2"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "x11-terms",
+      "Name": "kitty-terminfo",
+      "Version": "0.50.0"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "app-containers",
+      "Name": "docker-compose",
+      "Version": "5.5.1"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "app-containers",
+      "Name": "docker-compose",
+      "Version": "5.6.0"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "www-client",
+      "Name": "firefox-l10n",
+      "Version": "159.0"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "www-client",
+      "Name": "firefox-l10n",
+      "Version": "159.0.1"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "dev-libs",
+      "Name": "expat",
+      "Version": "2.9.0"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "dev-libs",
+      "Name": "expat",
+      "Version": "2.10.0"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-emersion",
+      "Version": "20260503"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-emersion",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-libidn",
+      "Version": "20260617"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-libidn",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-acl",
+      "Version": "20260702"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-acl",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-libvirt",
+      "Version": "20260831"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-libvirt",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-kamilaszewczyk",
+      "Version": "20260920"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-kamilaszewczyk",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-gnutls",
+      "Version": "20260210"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-gnutls",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-p11-kit",
+      "Version": "20260210"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-p11-kit",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-mpc",
+      "Version": "20260210"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-mpc",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-bison",
+      "Version": "20260703"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-bison",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-libseccomp",
+      "Version": "20260210"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-libseccomp",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-libtasn1",
+      "Version": "20260210-r1"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-libtasn1",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-eschwartz",
+      "Version": "20250723-r1"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-eschwartz",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-tytso",
+      "Version": "20260115"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-tytso",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-coreutils",
+      "Version": "20260210"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-coreutils",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-patch",
+      "Version": "20250206"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-patch",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-findutils",
+      "Version": "20260703"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-findutils",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo-zh",
+      "Category": "app-admin",
+      "Name": "chezmoi",
+      "Version": "2.73.3"
+    },
+    {
+      "Repository": "gentoo-zh",
+      "Category": "app-admin",
+      "Name": "chezmoi",
+      "Version": "2.74.0"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-mathieudesnoyers",
+      "Version": "20250909"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-mathieudesnoyers",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-aacid",
+      "Version": "20260210"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-aacid",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-craigsmall",
+      "Version": "20260203"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sec-keys",
+      "Name": "openpgp-keys-craigsmall",
+      "Version": "20261103"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "net-misc",
+      "Name": "rclone",
+      "Version": "1.75.1"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "net-misc",
+      "Name": "rclone",
+      "Version": "1.75.2"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "dev-util",
+      "Name": "shader-slang",
+      "Version": "2026.18.3"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "dev-util",
+      "Name": "shader-slang",
+      "Version": "2026.21"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "dev-libs",
+      "Name": "md4c",
+      "Version": "0.5.3"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "dev-libs",
+      "Name": "md4c",
+      "Version": "0.6.0"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "dev-libs",
+      "Name": "libei",
+      "Version": "1.6.0"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "dev-libs",
+      "Name": "libei",
+      "Version": "1.6.0-r1"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sys-apps",
+      "Name": "pkgcore",
+      "Version": "0.12.47"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sys-apps",
+      "Name": "pkgcore",
+      "Version": "0.12.48"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sys-kernel",
+      "Name": "installkernel",
+      "Version": "68-r1"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "sys-kernel",
+      "Name": "installkernel",
+      "Version": "70-r1"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "dev-util",
+      "Name": "pkgcheck",
+      "Version": "0.10.48"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "dev-util",
+      "Name": "pkgcheck",
+      "Version": "0.10.49"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "dev-util",
+      "Name": "pkgdev",
+      "Version": "0.2.18"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "dev-util",
+      "Name": "pkgdev",
+      "Version": "0.2.19"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "x11-terms",
+      "Name": "kitty",
+      "Version": "0.49.2"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "x11-terms",
+      "Name": "kitty",
+      "Version": "0.50.0"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "app-emulation",
+      "Name": "qemu",
+      "Version": "10.2.3-r3"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "app-emulation",
+      "Name": "qemu",
+      "Version": "10.2.3-r4"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "www-client",
+      "Name": "firefox",
+      "Version": "159.0"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "www-client",
+      "Name": "firefox",
+      "Version": "159.0.1"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "app-editors",
+      "Name": "vscode",
+      "Version": "1.144.0"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "app-editors",
+      "Name": "vscode",
+      "Version": "1.144.0-r1"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "virtual",
+      "Name": "dist-kernel",
+      "Version": "6.18.57"
+    },
+    {
+      "Repository": "gentoo",
+      "Category": "virtual",
+      "Name": "dist-kernel",
+      "Version": "6.18.60"
+    },
+    {
+      "Repository": "umbriel-overlay",
+      "Category": "gui-libs",
+      "Name": "xdg-desktop-portal-umbriel",
+      "Version": "0.1.0_p20261030114808"
+    },
+    {
+      "Repository": "umbriel-overlay",
+      "Category": "gui-libs",
+      "Name": "xdg-desktop-portal-umbriel",
+      "Version": "0.1.0_p20261101154307"
+    },
+    {
+      "Repository": "umbriel-overlay",
+      "Category": "gui-wm",
+      "Name": "umbriel",
+      "Version": "0.1.0_pre20261031040829"
+    },
+    {
+      "Repository": "umbriel-overlay",
+      "Category": "gui-wm",
+      "Name": "umbriel",
+      "Version": "0.1.0_pre20261103013457"
+    }
+  ]
+}

@@ -25,6 +25,12 @@ overlays:
   # Дополнения к встроенному guru: записи name, url и masters.
   catalog: []
 
+# Этот раздел настраивает обращения backend к worker.
+# Сам worker не читает backend.yaml; его настройки задаются через env в Compose.
+# METADATA_WORKER_CHECKOUT_CACHE_MAX_BYTES: бюджет свободных checkout в байтах.
+# По умолчанию 4294967296 (4 GiB); 0 отключает reuse.
+# Отрицательные и некорректные значения запрещают запуск worker.
+# После изменения env пересоздайте worker: docker compose up -d --no-deps metadata-worker
 metadata:
   # Пустая строка отключает обращения к worker.
   worker_url: "http://metadata-worker:8090"

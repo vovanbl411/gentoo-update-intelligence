@@ -59,7 +59,7 @@ func TestLookupAllowed(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			if got := lookupAllowed(test.diagnostics); got != test.want {
+			if got := lookupAllowed(test.diagnostics, false); got != test.want {
 				t.Fatalf("lookupAllowed() = %t, want %t", got, test.want)
 			}
 		})

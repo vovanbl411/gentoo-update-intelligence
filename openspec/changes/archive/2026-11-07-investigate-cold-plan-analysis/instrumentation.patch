@@ -1,0 +1,363 @@
+--- a/backend/cmd/gentoo-update-intelligence-server/repositories.go
++++ b/backend/cmd/gentoo-update-intelligence-server/repositories.go
+@@ -6,6 +6,7 @@
+ 	"encoding/json"
+ 	"errors"
+ 	"fmt"
++	"github.com/vovanbl411/gentoo-update-intelligence/internal/coldtrace"
+ 	"net/http"
+ 	"strings"
+ 
+@@ -52,6 +53,7 @@
+ }
+ 
+ func (p *pinnedRepositories) Lookup(query metadataprovider.Query) (metadataprovider.LookupResult, error) {
++	defer coldtrace.Start("backend.lookup", query.Repository+"/"+query.Category+"/"+query.Name+"/"+query.Version)()
+ 	if err := p.RepositoryFailure(query.Repository); err != nil {
+ 		return metadataprovider.LookupResult{}, err
+ 	}
+--- a/backend/cmd/metadata-worker/main.go
++++ b/backend/cmd/metadata-worker/main.go
+@@ -5,6 +5,7 @@
+ 	"encoding/json"
+ 	"errors"
+ 	"fmt"
++	"github.com/vovanbl411/gentoo-update-intelligence/internal/coldtrace"
+ 	"log"
+ 	"net/http"
+ 	"os"
+@@ -81,7 +82,9 @@
+ func limitPreparation(limit int, prepare func(request) preparationOutcome) func(request) preparationOutcome {
+ 	slots := make(chan struct{}, limit)
+ 	return func(input request) preparationOutcome {
++		endWait := coldtrace.Start("worker.preparation_slot_wait", "")
+ 		slots <- struct{}{}
++		endWait()
+ 		defer func() { <-slots }()
+ 		return prepare(input)
+ 	}
+@@ -147,7 +150,9 @@
+ }
+ 
+ func generateWithLimit(slots chan struct{}, generate func() (metadatagenerator.Result, error)) (metadatagenerator.Result, error) {
++	endWait := coldtrace.Start("worker.generation_slot_wait", "")
+ 	slots <- struct{}{}
++	endWait()
+ 	defer func() { <-slots }()
+ 	return generate()
+ }
+@@ -236,6 +241,7 @@
+ }
+ 
+ func prepareMetadata(input request, generationSlots chan struct{}) (metadatagenerator.Result, bool, string, error) {
++	defer coldtrace.Start("worker.prepare", input.Repository.Name+"/"+input.Category+"/"+input.Name+"/"+input.Version)()
+ 	if input.Repository.Name == "" || input.Repository.Path == "" || input.Repository.Commit == "" || input.Profile == "" {
+ 		return metadatagenerator.Result{}, false, "", errors.New("repository, pinned commit and profile are required")
+ 	}
+@@ -313,7 +319,7 @@
+ 	if err != nil {
+ 		return metadatagenerator.Result{}, false, "", err
+ 	}
+-	defer os.RemoveAll(tempRoot)
++	defer func() { defer coldtrace.Start("worker.cleanup", tempRoot)(); os.RemoveAll(tempRoot) }()
+ 	mainCheckout := filepath.Join(tempRoot, input.Repository.Name)
+ 	if err := checkout(input.Repository.Path, resolution.SelectedCommit, mainCheckout); err != nil {
+ 		return metadatagenerator.Result{}, false, "", err
+@@ -419,6 +425,7 @@
+ }
+ 
+ func canonicalProfile(profile, mainCheckout string, masterPaths map[string]string, masters []repository) (string, error) {
++	defer coldtrace.Start("worker.profile", mainCheckout)()
+ 	resolved, err := filepath.EvalSymlinks(profile)
+ 	if err != nil {
+ 		return "", fmt.Errorf("resolve profile %s: %w", profile, err)
+@@ -445,6 +452,7 @@
+ }
+ 
+ func checkout(mirror, commit, destination string) error {
++	defer coldtrace.Start("worker.checkout", destination)()
+ 	cmd := exec.Command("git", "--no-replace-objects", "--no-lazy-fetch", "clone", "--shared", "--no-checkout", "--", mirror, destination)
+ 	if output, err := cmd.CombinedOutput(); err != nil {
+ 		return fmt.Errorf("clone pinned checkout: %w: %s", err, strings.TrimSpace(string(output)))
+@@ -457,6 +465,7 @@
+ }
+ 
+ func readPortageVersion() (string, error) {
++	defer coldtrace.Start("worker.portage_version", "")()
+ 	emerge := os.Getenv("EMERGE_PATH")
+ 	if emerge == "" {
+ 		emerge = "emerge"
+--- a/backend/internal/analysishttp/handler.go
++++ b/backend/internal/analysishttp/handler.go
+@@ -5,6 +5,7 @@
+ 	"context"
+ 	"encoding/json"
+ 	"errors"
++	"github.com/vovanbl411/gentoo-update-intelligence/internal/coldtrace"
+ 	"io"
+ 	"log"
+ 	"mime"
+@@ -271,6 +272,7 @@
+ }
+ 
+ func (h *Handler) execute(id string, request createRequest, pinnedJSON, previousPartial []byte) {
++	defer coldtrace.Start("backend.execute", id)()
+ 	update := func(status, stage string, completed, total int, result, revisions []byte, message string) {
+ 		h.updateEventually(analysisstore.JobUpdate{
+ 			ID: id, Status: status, Stage: stage, Completed: completed, Total: total, Result: result, Revisions: revisions, Error: message,
+@@ -283,9 +285,11 @@
+ 			return
+ 		}
+ 	}
++	endParse := coldtrace.Start("backend.parse_analyze_initial", id)
+ 	parsed := parser.Parse(request.Plan)
+ 	initial := presentResult(planservice.Result{Plan: parsed, Analysis: analyzer.Analyze(parsed, analyzer.Context{LocallyPatchedPackages: request.LocallyPatchedPackages})})
+ 	partial, marshalErr := json.Marshal(initial)
++	endParse()
+ 	if marshalErr != nil {
+ 		update("failed", "failed", 0, 0, nil, nil, "analysis serialization failed")
+ 		return
+@@ -303,7 +307,9 @@
+ 		update("failed", "failed", 0, total, nil, nil, "metadata provider is unavailable")
+ 		return
+ 	}
++	endRepos := coldtrace.Start("backend.repositories", id)
+ 	provider, err := h.providerFactory(context.Background(), parsed, pinned)
++	endRepos()
+ 	if err != nil || isNilProvider(provider) {
+ 		if len(pinned) > 0 {
+ 			log.Printf("analysis job %s could not restore pinned repositories: %v", id, err)
+@@ -342,6 +348,7 @@
+ 	result, err := planservice.AnalyzeParsedProgressive(request.Plan, parsed, analyzer.Context{LocallyPatchedPackages: request.LocallyPatchedPackages}, provider, concurrency, func(completed, total int, partialResult *planservice.Result) {
+ 		lastCompleted, lastTotal = completed, total
+ 		var serializedPartial []byte
++		endPartial := coldtrace.Start("backend.partial_build", id)
+ 		if partialResult != nil {
+ 			view := presentResult(*partialResult)
+ 			for _, report := range view.Reports {
+@@ -364,12 +371,14 @@
+ 				log.Printf("analysis job %s partial report serialization failed: %v", id, marshalErr)
+ 			}
+ 		}
++		endPartial()
+ 		h.updateEventually(analysisstore.JobUpdate{ID: id, Status: "running", Stage: "analyzing", Completed: completed, Total: total, PartialReport: serializedPartial})
+ 	})
+ 	if err != nil {
+ 		update("failed", "failed", lastCompleted, lastTotal, nil, nil, "analysis failed")
+ 		return
+ 	}
++	endFinal := coldtrace.Start("backend.final_build", id)
+ 	view := presentResult(result)
+ 	if source, ok := provider.(interface {
+ 		RepositoryRevisions() map[string]repositorymanager.Revision
+@@ -377,6 +386,7 @@
+ 		view.Repositories = source.RepositoryRevisions()
+ 	}
+ 	serialized, err := json.Marshal(view)
++	endFinal()
+ 	if err != nil {
+ 		update("failed", "failed", lastCompleted, lastTotal, nil, nil, "analysis serialization failed")
+ 		return
+--- a/backend/internal/analysisstore/postgres.go
++++ b/backend/internal/analysisstore/postgres.go
+@@ -8,6 +8,7 @@
+ 	_ "embed"
+ 	"encoding/hex"
+ 	"fmt"
++	"github.com/vovanbl411/gentoo-update-intelligence/internal/coldtrace"
+ 	"strings"
+ 
+ 	_ "github.com/jackc/pgx/v5/stdlib"
+@@ -116,6 +117,7 @@
+ }
+ 
+ func (p *Postgres) UpdateJob(ctx context.Context, update JobUpdate) error {
++	defer coldtrace.Start("backend.persist."+update.Stage, update.ID)()
+ 	result, err := p.db.ExecContext(ctx, `
+ 		UPDATE analysis_jobs
+ 		SET status = $2, stage = $3, completed = $4, total = $5,
+--- a/backend/internal/analyzer/analyzer.go
++++ b/backend/internal/analyzer/analyzer.go
+@@ -2,6 +2,7 @@
+ package analyzer
+ 
+ import (
++	"github.com/vovanbl411/gentoo-update-intelligence/internal/coldtrace"
+ 	"strings"
+ 
+ 	"github.com/vovanbl411/gentoo-update-intelligence/internal/parser"
+@@ -97,6 +98,7 @@
+ 
+ // Analyze applies Analyzer v0.1 rules without changing the Parser result.
+ func Analyze(plan parser.Result, context Context) Result {
++	defer coldtrace.Start("backend.analyzer", "")()
+ 	result := Result{
+ 		Status:      plan.Status,
+ 		Diagnostics: cloneDiagnostics(plan.Diagnostics),
+--- /dev/null
++++ b/backend/internal/coldtrace/trace.go
+@@ -0,0 +1,36 @@
++// Package coldtrace is used only by the isolated measurement build.
++package coldtrace
++
++import (
++	"encoding/json"
++	"os"
++	"sync"
++	"sync/atomic"
++	"time"
++)
++
++var epoch = time.Now()
++var sequence atomic.Uint64
++var mu sync.Mutex
++
++func emit(id uint64, stage, key, event string, elapsed int64) {
++	b, _ := json.Marshal(struct {
++		ID       uint64 `json:"id"`
++		Stage    string `json:"stage"`
++		Key      string `json:"key"`
++		Event    string `json:"event"`
++		Mono     int64  `json:"mono_ns"`
++		Wall     int64  `json:"wall_ns"`
++		Duration int64  `json:"duration_ns"`
++	}{id, stage, key, event, time.Since(epoch).Nanoseconds(), time.Now().UnixNano(), elapsed})
++	mu.Lock()
++	defer mu.Unlock()
++	os.Stderr.Write(append(append([]byte("COLDTRACE "), b...), '\n'))
++}
++func Start(stage, key string) func() {
++	id := sequence.Add(1)
++	start := time.Now()
++	emit(id, stage, key, "start", 0)
++	var once sync.Once
++	return func() { once.Do(func() { emit(id, stage, key, "end", time.Since(start).Nanoseconds()) }) }
++}
+--- a/backend/internal/ebuildresolver/resolver.go
++++ b/backend/internal/ebuildresolver/resolver.go
+@@ -5,6 +5,7 @@
+ 	"bytes"
+ 	"errors"
+ 	"fmt"
++	"github.com/vovanbl411/gentoo-update-intelligence/internal/coldtrace"
+ 	"os"
+ 	"os/exec"
+ 	"path/filepath"
+@@ -80,6 +81,7 @@
+ }
+ 
+ func (r *Resolver) Resolve(input Input) (Result, error) {
++	defer coldtrace.Start("worker.resolver", input.Repository+"/"+input.Category+"/"+input.Name+"/"+input.Version)()
+ 	return r.resolve(input, true)
+ }
+ 
+--- a/backend/internal/metadatacache/store.go
++++ b/backend/internal/metadatacache/store.go
+@@ -6,6 +6,7 @@
+ 	"encoding/json"
+ 	"errors"
+ 	"fmt"
++	"github.com/vovanbl411/gentoo-update-intelligence/internal/coldtrace"
+ 	"os"
+ 	"path/filepath"
+ 
+@@ -29,6 +30,7 @@
+ 
+ // Load validates both the stored inputs and the generated bytes before reuse.
+ func (s *Store) Load(input Inputs) (metadatagenerator.Result, bool, error) {
++	defer coldtrace.Start("worker.generated_cache.load", input.Repository+"/"+input.Category+"/"+input.Name+"/"+input.Version)()
+ 	key, err := Key(input)
+ 	if err != nil {
+ 		return metadatagenerator.Result{}, false, err
+@@ -56,6 +58,7 @@
+ 
+ // Save atomically publishes a complete result; incomplete writes are not reused.
+ func (s *Store) Save(input Inputs, result metadatagenerator.Result) error {
++	defer coldtrace.Start("worker.generated_cache.save", input.Repository+"/"+input.Category+"/"+input.Name+"/"+input.Version)()
+ 	key, err := Key(input)
+ 	if err != nil {
+ 		return err
+--- a/backend/internal/metadatagenerator/generator.go
++++ b/backend/internal/metadatagenerator/generator.go
+@@ -8,6 +8,7 @@
+ 	"encoding/hex"
+ 	"errors"
+ 	"fmt"
++	"github.com/vovanbl411/gentoo-update-intelligence/internal/coldtrace"
+ 	"os"
+ 	"os/exec"
+ 	"path/filepath"
+@@ -111,6 +112,8 @@
+ }
+ 
+ func (g *Generator) Generate(request Request) (Result, error) {
++	endSetup := coldtrace.Start("worker.generator_setup", request.Repository+"/"+request.Category+"/"+request.Name+"/"+request.Version)
++	defer endSetup()
+ 	if request.Repository == "" {
+ 		request.Repository = "gentoo"
+ 	}
+@@ -254,7 +257,10 @@
+ 	var stdout, stderr bytes.Buffer
+ 	command.Stdout = &stdout
+ 	command.Stderr = &stderr
++	endSetup()
++	endRun := coldtrace.Start("worker.egencache", request.Repository+"/"+request.Category+"/"+request.Name+"/"+request.Version)
+ 	err = command.Run()
++	endRun()
+ 	if err != nil {
+ 		return Result{}, fmt.Errorf("%w: %q %s: %v: %s %s", ErrEgencache, g.egencachePath, strings.Join(args, " "), err, strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()))
+ 	}
+--- a/backend/internal/metadataprovider/provider.go
++++ b/backend/internal/metadataprovider/provider.go
+@@ -6,6 +6,7 @@
+ 	"bytes"
+ 	"errors"
+ 	"fmt"
++	"github.com/vovanbl411/gentoo-update-intelligence/internal/coldtrace"
+ 	"os/exec"
+ 	"regexp"
+ 	"strings"
+@@ -131,6 +132,7 @@
+ }
+ 
+ func (p *Provider) Lookup(query Query) (LookupResult, error) {
++	defer coldtrace.Start("provider.repository_cache", query.Repository+"/"+query.Category+"/"+query.Name+"/"+query.Version)()
+ 	if p == nil {
+ 		return LookupResult{}, fmt.Errorf("%w: nil Provider", ErrRepositoryAccess)
+ 	}
+--- a/backend/internal/parser/parser.go
++++ b/backend/internal/parser/parser.go
+@@ -4,6 +4,7 @@
+ 
+ import (
+ 	"bufio"
++	"github.com/vovanbl411/gentoo-update-intelligence/internal/coldtrace"
+ 	"regexp"
+ 	"sort"
+ 	"strconv"
+@@ -141,6 +142,7 @@
+ // Parse reads the supported subset of a plain-text Portage plan. It never
+ // performs I/O and reports malformed or unsupported input in the result.
+ func Parse(input string) Result {
++	defer coldtrace.Start("backend.parser", "")()
+ 	result := Result{Status: StatusUnsupported}
+ 	if strings.TrimSpace(input) == "" {
+ 		result.Diagnostics = []Diagnostic{{Code: "EMPTY_INPUT", Message: "вход пуст или содержит только пробельные символы"}}
+--- a/backend/internal/reportservice/reportservice.go
++++ b/backend/internal/reportservice/reportservice.go
+@@ -5,6 +5,7 @@
+ import (
+ 	"errors"
+ 	"fmt"
++	"github.com/vovanbl411/gentoo-update-intelligence/internal/coldtrace"
+ 	"reflect"
+ 
+ 	"github.com/vovanbl411/gentoo-update-intelligence/internal/changereport"
+@@ -46,6 +47,7 @@
+ // Build coordinates metadata lookups for one plan entry and builds its report.
+ // It performs no I/O except through provider.Lookup.
+ func Build(plan parser.Result, entryIndex int, provider MetadataLookup) (Result, error) {
++	defer coldtrace.Start("backend.report_build", fmt.Sprint(entryIndex))()
+ 	preliminary, err := changereport.Build(plan, entryIndex, nil, nil)
+ 	if err != nil {
+ 		return Result{}, err

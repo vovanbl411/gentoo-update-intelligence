@@ -1,0 +1,13 @@
+#cloud-config
+ssh_genkeytypes: []
+ssh_deletekeys: false
+package_update: true
+packages:
+  - qemu-guest-agent
+  - docker.io
+  - python3
+runcmd:
+  - [swapoff, -a]
+  - [systemctl, enable, --now, qemu-guest-agent]
+  - [systemctl, enable, --now, docker]
+  - [sh, -c, "mkdir -p /opt/guit/results; touch /opt/guit/ready"]

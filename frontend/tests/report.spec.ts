@@ -118,3 +118,69 @@ test('таблица metadata и все виды изменений IUSE', async
   for (const text of ['IUSE добавлен: new', 'IUSE удалён: old', 'IUSE changed: по умолчанию disabled → enabled']) await expect(card.getByText(text, { exact: false })).toBeVisible();
   await expect(card.getByText('В сравнённых полях различий нет.')).toHaveCount(0);
 });
+
+test('43 записи нового плана и семь пересборок без выдуманной установленной стороны', async ({ page }) => {
+  const text = readFileSync(new URL('../../testdata/parser/ebuild-updates-3.txt', import.meta.url), 'utf8');
+  const job = structuredClone(fixture) as any;
+  // Browser transport fixture uses only displayed identities. Parser facts and
+  // actual Provider queries are independently covered by Go integration tests.
+  job.result.plan.entries = text.trim().split('\n').map((line, index) => {
+    const match = line.match(/^\[ebuild\s+(U|R)\s*(~)?\s*\]\s+(\S+)\s*(?:\[([^\]]+)\])?/)!;
+    const atom = match[3].match(/^(.+)\/([^/]+)-([0-9][^:]*)(?::([^:]+))?::(.+)$/)!;
+    return {
+      package: {category:atom[1],name:atom[2]}, operation:match[1] === 'R' ? 'reinstall' : 'upgrade',
+      target: {version:atom[3],repository:atom[5]}, installed: {versions:match[4] ? [{version:match[4].split(':')[0]}] : []},
+      flag_groups: [], source_lines:[index + 1],
+    };
+  });
+  job.result.plan.status = 'parsed'; job.result.plan.diagnostics = []; job.result.plan.summary = null;
+  job.result.analysis.findings = []; job.result.analysis.diagnostics = []; job.result.analysis.status = 'parsed';
+  const report = structuredClone(job.result.reports[0]);
+  report.report.gentoo = {status:'unavailable', comparison:null, diagnostics:[{code:'INSTALLED_CONTEXT_MISSING'}]};
+  report.before_lookup = {query:null,result:null,skip_reason:'BINDING_REJECTED',error:null};
+  report.after_lookup = {result:{status:'not_found'}};
+  job.result.reports = job.result.plan.entries.map((_: unknown, index: number) => ({...structuredClone(report),report:{...structuredClone(report.report),entry_index:index}}));
+  await page.route('**/api/v1/analyses/**', route => route.fulfill({json:job}));
+  await page.goto('/analyses/' + job.id);
+  await expect(page.getByText('Распознано пакетов: 43;', {exact:false})).toBeVisible();
+  await expect(page.locator('details[id^="package-"]')).toHaveCount(43);
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  await expect(page.getByText('Всего пакетов по сводке Portage:', {exact:false})).toHaveCount(0);
+  const rebuilds = job.result.plan.entries.filter((entry: any) => entry.operation === 'reinstall');
+  expect(rebuilds).toHaveLength(7);
+  for (const [index, entry] of job.result.plan.entries.entries()) {
+    const card = page.locator('#package-' + index);
+    await expect(card.locator('summary')).toContainText(entry.package.category + '/' + entry.package.name);
+    await expect(card.locator('summary')).toContainText(entry.target.version);
+    if (entry.operation === 'reinstall') {
+      await expect(card.locator('summary')).toContainText('Пересборка');
+      await card.locator('summary').click();
+      await expect(card.getByText('Установленная версия не указана в плане; сравнение до/после недоступно.')).toBeVisible();
+    }
+  }
+  await expect(page.getByText('Сравнение metadata ограничено или недоступно', {exact:false})).toBeVisible();
+});
+
+for (const parserStatus of ['partial', 'unsupported']) {
+  test('сохранённый ' + parserStatus + ': предупреждение отдельно от metadata', async ({ page }) => {
+    const job = structuredClone(fixture) as any;
+    job.result.plan.status = parserStatus; job.result.analysis.findings = [];
+    job.result.plan.diagnostics = [{code:'UNSUPPORTED_OPERATION',message:'Не поддержано',source_lines:[11]}];
+    job.result.plan.summary = {packages:43,upgrades:36}; // Older saved result.
+    let posts = 0;
+    await page.route('**/api/v1/analyses/**', route => {
+      if (route.request().method() === 'POST') posts++;
+      return route.fulfill({json:job});
+    });
+    await page.goto('/analyses/' + job.id);
+    await expect(page.getByRole('alert')).toContainText('анализ охватывает только распознанные записи');
+    await expect(page.getByRole('alert')).toContainText('Отсутствие замечаний не характеризует весь вход');
+    await expect(page.getByText('Распознано пакетов:', {exact:false})).toContainText(String(job.result.plan.entries.length));
+    await expect(page.getByText('Всего пакетов по сводке Portage:', {exact:false})).toContainText('43');
+    job.result.plan.summary = null;
+    await page.reload();
+    await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page.getByText('Всего пакетов по сводке Portage:', {exact:false})).toHaveCount(0);
+    expect(posts).toBe(0);
+  });
+}

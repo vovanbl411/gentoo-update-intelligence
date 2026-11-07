@@ -1,0 +1,134 @@
+{
+  "created_utc": "2026-11-06T23:06:09.055258+00:00",
+  "raw_root": "/var/tmp/guit-cold-plan-analysis",
+  "head": "d726d635d779910c147e796c4a9a4d3d5eac5275",
+  "artifacts": {
+    "source.tar": {
+      "sha256": "3b91eae6b13d1518c6bc946f1fde55968df6524fcb9aaa1b6023291d6bfbe80a",
+      "bytes": 1003520
+    },
+    "export/control-backend": {
+      "sha256": "069a0a7ecd28975a1c03eae73aa7749feca7fd06d5c2cc9b08288b14119ae659",
+      "bytes": 12484768
+    },
+    "export/instrumented-backend": {
+      "sha256": "bc655b813b44f0b23a2db72615219fecaa3179026c7a90c5e7597873e6cdd6b9",
+      "bytes": 12497056
+    },
+    "export/control-worker": {
+      "sha256": "716e1a022686180578f203890ec9fcf0f9296f97d4f7a1c96dbe9915075c7166",
+      "bytes": 7200928
+    },
+    "export/instrumented-worker": {
+      "sha256": "dca0137f553eba1b78dd85b11423a0739821a8845e2cbe7d47bcceb4d34debc5",
+      "bytes": 7213216
+    },
+    "export/images.tar": {
+      "sha256": "99b7a3dfd1a3213659198a2125edbf47795c9350cbbe97e69973d949ed1f2e6b",
+      "bytes": 623781376
+    },
+    "export/mirrors.tar": {
+      "sha256": "c6c9eb58c0ab1b773937f64450e09e1f95e116bfc7c9e3cd5384cea662fa032c",
+      "bytes": 2209013760
+    }
+  },
+  "source_manifest": "inputs/source-manifest.json",
+  "source_patch": "inputs/source.patch",
+  "image_checksum": "d25999de0770d4cde1be72c299ba3ad94eac7ea8fd4d18f8cc86c69df69337e2e8a91d64465a9bfd8f2a78c566fcbcb0842eacc91c09efdef72d719d9f13b535  debian-13-genericcloud-amd64.qcow2\nverified against official SHA512SUMS\n",
+  "versions": "Linux gentoo 7.3.1-bdsm #1 SMP PREEMPT_DYNAMIC Sun Nov  1 23:40:45 UTC 2026 x86_64 12th Gen Intel(R) Core(TM) i7-1260P GenuineIntel GNU/Linux\nQEMU emulator version 10.2.3\nCopyright (c) 2003-2025 Fabrice Bellard and the QEMU Project developers\ngo version go1.27.2-X:nodwarf5 linux/amd64\n",
+  "images": "\"sha256:cbb4fddcb917df7d3c4fd41dbc5d5fa040e4d6a341e144692939053edf31316b\" []\n\"sha256:b21546ceaaef8218b974ffca367e6475c3f0df6c2b6c8577ae98edd67d904fee\" []\n\"sha256:ab20e934b27ba3ff927c1b4c9ff8cf6c32f315f743efe68dd3441182a87fb085\" [\"postgres@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b\"]\n",
+  "qemu": "qemu-system-x86_64 -enable-kvm -cpu host -smp 1 -m 2048 -display none -no-reboot -drive file=/var/tmp/guit-cold-plan-analysis/guest.qcow2,if=virtio,format=qcow2,cache=none -drive file=/var/tmp/guit-cold-plan-analysis/seed.iso,media=cdrom,readonly=on -device virtio-net-pci,netdev=net0 -netdev user,id=net0,hostfwd=tcp:127.0.0.1:18961-:8080 -device virtio-serial-pci -chardev socket,path=/var/tmp/guit-cold-plan-analysis/agent.sock,server=on,wait=off,id=agent -device virtserialport,chardev=agent,name=org.qemu.guest_agent.0 -serial file:/var/tmp/guit-cold-plan-analysis/serial.log -pidfile /var/tmp/guit-cold-plan-analysis/qemu.pid -monitor none \n",
+  "guest_versions": "Linux guit-cold-plan-analysis 6.12.115+deb13.1-cloud-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.12.115-2 (2026-11-01) x86_64 GNU/Linux\n13.7\n1\nMemTotal:        2021828 kB\nMemFree:          537292 kB\nMemAvailable:    1511664 kB\nFilename\t\t\t\tType\t\tSize\t\tUsed\t\tPriority\nNAME    MAJ:MIN RM        SIZE RO TYPE MOUNTPOINTS\nsr0      11:0    1      374784  1 rom  \nsr1      11:1    1  1073741312  1 rom  \nvda     254:0    0 42949672960  0 disk \n├─vda1  254:1    0 42815438336  0 part /\n├─vda14 254:14   0     3145728  0 part \n└─vda15 254:15   0   130023424  0 part /boot/efi\nsha256:cbb4fddcb917df7d3c4fd41dbc5d5fa040e4d6a341e144692939053edf31316b\nsha256:b21546ceaaef8218b974ffca367e6475c3f0df6c2b6c8577ae98edd67d904fee\nsha256:ab20e934b27ba3ff927c1b4c9ff8cf6c32f315f743efe68dd3441182a87fb085\n",
+  "guest_user_hz": 100,
+  "guest_page_size": 4096,
+  "guest_ntp_synchronized": true,
+  "evidence": {
+    "root": "/var/tmp/guit-cold-plan-analysis/evidence",
+    "raw_root": "/var/tmp/guit-cold-plan-analysis/evidence/raw",
+    "files_manifest": "evidence/SHA256SUMS",
+    "raw_files_manifest": "evidence/raw/SHA256SUMS",
+    "files_manifest_sha256": "7669f06ff61f08f5297cb2c509564df79c38a616ff8f711053460a1e1cad76e5",
+    "raw_files_manifest_sha256": "334d4ee55e22bce13ec98278baded3be19d2129fde3d6573af81e41bfde039b7",
+    "guest_archive": {
+      "path": "evidence/raw/guest-evidence.tar.gz",
+      "sha256": "7ad7cc9b08dea567cda94d79480c8729b77df43696a67925a9d58490628505db",
+      "bytes": 289138662
+    },
+    "host_observations": {
+      "path": "evidence/host.jsonl",
+      "sha256": "9134f7970cbf5ef9cb78e26566df7dfe97a1a0eb69fac314b64272c80f6ae3e7",
+      "bytes": 161283664
+    },
+    "derived_summary": {
+      "path": "evidence/summary.json",
+      "sha256": "22b3b425b7ff1efd3af345d7b9d3d2dfb4ff56bbbf9eb8141e620ddaacc3b73d",
+      "bytes": 92113
+    },
+    "measurement_tables": {
+      "path": "openspec/changes/archive/2026-11-07-investigate-cold-plan-analysis/measurement-tables.md",
+      "sha256": "7bb8b618c15499290e8175f7ca0ac9584a41c4f63aaac933cdf728fde707b0db",
+      "bytes": 9451
+    },
+    "successful_runs": 14,
+    "excluded_runs": [
+      {
+        "label": "plan3-pair2-instrumented-cold",
+        "failure": "TimeoutError('7200 second analysis deadline')",
+        "measurement_quality_failure": "observation gap exceeds 10s (guest wall=34897.8s, guest monotonic=34897.8s, host wall=34897.4s)"
+      }
+    ],
+    "successful_sampling_max_gap_s": {
+      "guest": 1.014299673,
+      "host": 1.001806439
+    },
+    "normalized_result_sha256_by_plan": {
+      "2": "65be48f545dfbc1a48152c358dbe0e092160e5e745a649aec7f6fe8e085ccd57",
+      "3": "04d36bd301cc908dbd166fa1c9515781eda5a87f107df3da815acaceb3b7ced3"
+    },
+    "normalized_equal_by_plan": {
+      "2": true,
+      "3": true
+    },
+    "plan_counts": {
+      "2": {
+        "entries": 41,
+        "lookups": 80,
+        "after_only_rebuilds": 0
+      },
+      "3": {
+        "entries": 43,
+        "lookups": 79,
+        "after_only_rebuilds": 7
+      }
+    },
+    "unique_checkout_identities": {
+      "plan2_repository_commit_masters_profile_portage": 13,
+      "plan3_repository_commit_masters_profile_portage": 10
+    },
+    "go_verification_logs": {
+      "instrumented_tests": "evidence/instrumented-tests-final.log",
+      "instrumented_vet": "evidence/instrumented-vet-final.log",
+      "instrumented_race_targeted": "evidence/instrumented-race-final.log",
+      "instrumented_race_all": "evidence/instrumented-race-all.log",
+      "control_tests": "evidence/control-tests.log",
+      "control_vet": "evidence/control-vet.log"
+    }
+  },
+  "research_script_sha256": {
+    "matrix.py": "613b1e59c559ea29e58cf34b6cd052fd82e5e10e7d719de0d64df4b2bb991fa5",
+    "status.py": "2e5db6a3d9a0c28f04db376b78dd5e9246f49a1aa111fc8f26de65a94e8746e2",
+    "summarize.py": "35e5d9cac9ceac1c65b2eb5ec8c4cc55e0e80ff9c09edc98ac351c4520f31b21",
+    "render_tables.py": "58d004126f574d7ccf25b22d86e5774efc0cfb8c6f911624627bde79594ee99a",
+    "observe.py": "e972acded38ad2680b96958501646d140ce0488f7c97234d29057c8fc22b0278",
+    "test_measurements.py": "69e7455127f5bc518485c4d02269cc569a8269ee026926e816db8b7c778ef9ef"
+  },
+  "artifact_sha256": {
+    "instrumentation.patch": "2374c14ea5ab2cc8fea7a44f11a37e9cfa581c24bdad0f01f68f136037ea69b4",
+    "inputs/source-manifest.json": "71e0789e4149264465c6886d9b5f040347150e0816cec593ede8815d7b7e2776",
+    "inputs/source.patch": "07d6f06d8316f21d5f2e1929f046c1a89f2d58ba5ad6da41330be951741a431e",
+    "inputs/plan-2-queries.json": "28c78d5de3cbabba08efba7e98638e33560bd8df4dae4649fa97343af7014f98",
+    "inputs/plan-3-queries.json": "72d3545fa1ed9269c4d5f3729dc952a1928701b1c0da3c81e31725a88a04c7f6",
+    "report.md": "c38161b40cce3e8b986984fa9755de3e6d3e50c95b3d730a1ace422d2a8e9e10"
+  },
+  "updated_utc": "2026-11-07T12:22:48.040234+00:00"
+}

@@ -1,0 +1,389 @@
+{
+  "head": "d726d635d779910c147e796c4a9a4d3d5eac5275",
+  "files": [
+    {
+      "path": "backend/Dockerfile",
+      "sha256": "9e5b7e605c6ed2b96286c2ffea09c30f8999b6e4ed655db23ef4c48bfcc96114"
+    },
+    {
+      "path": "backend/cmd/gentoo-update-intelligence-server/concurrency_test.go",
+      "sha256": "dabe1ed900bdee9f10a4a40f20b833d1213e7777fb228a79729321d5f2a68e78"
+    },
+    {
+      "path": "backend/cmd/gentoo-update-intelligence-server/configuration_test.go",
+      "sha256": "bdca9b1fef1ffb1adc666f5ff2733677031488faa61bbef887095749c1f73e0c"
+    },
+    {
+      "path": "backend/cmd/gentoo-update-intelligence-server/main.go",
+      "sha256": "b047d5dc6ce62f1f62716d3625bd016a65bfdf98125178ca42b2c404d095f28c"
+    },
+    {
+      "path": "backend/cmd/gentoo-update-intelligence-server/overlay_http_test.go",
+      "sha256": "9a3b89edd88c04d2875d9e1b10841015b9f8e1337d4cb56e4910aa4ee7cce63e"
+    },
+    {
+      "path": "backend/cmd/gentoo-update-intelligence-server/repositories.go",
+      "sha256": "24c27e5707ac4602a95c828b90f0d4caf83408e937530f5319079db8ad421202"
+    },
+    {
+      "path": "backend/cmd/gentoo-update-intelligence-server/repositories_test.go",
+      "sha256": "fd90e8b21a373c0743dde68f6868c7fa1a57b83fc05a7ad580b474355766f49a"
+    },
+    {
+      "path": "backend/cmd/gentoo-update-intelligence/main.go",
+      "sha256": "30e8c22c13bccd264c35a5702d2472460297a6a036812a73ebdb3f79d00eb9fb"
+    },
+    {
+      "path": "backend/cmd/gentoo-update-intelligence/run.go",
+      "sha256": "6a9257ca2344641d752a28a23f2b5feb83cafb82a0767ef3b79c93676f28ffb0"
+    },
+    {
+      "path": "backend/cmd/gentoo-update-intelligence/run_test.go",
+      "sha256": "3dd3c054855a9962b3e89a99f6b3471da7a2d394ba48354908b7a64fcaa7211a"
+    },
+    {
+      "path": "backend/cmd/metadata-worker/main.go",
+      "sha256": "34a64ec0a9d28099172dc093d60a4f38b09343ea1a8b314f49a0b1ececef7559"
+    },
+    {
+      "path": "backend/cmd/metadata-worker/main_test.go",
+      "sha256": "36b147f07c39da536dde9017a84ba18743c516b16338511ab110179b8d9b7c20"
+    },
+    {
+      "path": "backend/go.mod",
+      "sha256": "fc75fa8b8b783b7f8cf9a238e21acf42994f129dafc6345cb7fc96516be41392"
+    },
+    {
+      "path": "backend/go.sum",
+      "sha256": "1632742509acdcf7ade94bbf08f09c4eeba88bd0dc6b64f391d420b2d2878bf3"
+    },
+    {
+      "path": "backend/internal/analysishttp/concurrency_test.go",
+      "sha256": "75ff5830f747745b06d4e517874166064a2c0962d4926d5fa47f1b751f89568b"
+    },
+    {
+      "path": "backend/internal/analysishttp/dto_adapter.go",
+      "sha256": "bc4237b100a9ef5055c1b88f3d851f0b80f52264df43fe2cf56387aafde08ab3"
+    },
+    {
+      "path": "backend/internal/analysishttp/dto_compact.go",
+      "sha256": "d752a3fccdd717a008d8b0bc7830068bef04a382bcef7baf67a9fffd04ed8d82"
+    },
+    {
+      "path": "backend/internal/analysishttp/dto_compact_test.go",
+      "sha256": "0c421a6df193540c572dfce6b55e1e5808cb648d9f0253f32a5496089a106f08"
+    },
+    {
+      "path": "backend/internal/analysishttp/dto_convert.go",
+      "sha256": "032908e3699c8d95170a78abf3fd58509241890b95e47c02d08bb1b84d35106b"
+    },
+    {
+      "path": "backend/internal/analysishttp/dto_stored.go",
+      "sha256": "cb41c80a7f3a5dc79fbbb80ddc455934aa2695c43dc032d5eb50841316fa04a7"
+    },
+    {
+      "path": "backend/internal/analysishttp/dto_test.go",
+      "sha256": "5019405698a86b15f8d6d62e170e256218b86c82db2f53bfe0833cdaff640881"
+    },
+    {
+      "path": "backend/internal/analysishttp/dto_v1.go",
+      "sha256": "2801e738e1ce2aa191d5eff4a7e2ea5f3b9733e12cd4ac29c1a5bea47f76ce65"
+    },
+    {
+      "path": "backend/internal/analysishttp/handler.go",
+      "sha256": "134417be13c8fae96b213133f79e66235cbe6e131749636b3d7ca5f29938b0fb"
+    },
+    {
+      "path": "backend/internal/analysishttp/handler_test.go",
+      "sha256": "022750a4d2435986e07f55b837b0db15aed1ded8985bb5086cfe877d32f7430e"
+    },
+    {
+      "path": "backend/internal/analysishttp/reinstall_test.go",
+      "sha256": "848cf0fd5d694b2f8fe83d4327348ff1e108d9c1aeceb3e8c57f7a2af27f5da9"
+    },
+    {
+      "path": "backend/internal/analysishttp/testdata/legacy-found.json",
+      "sha256": "83dee47171241fb0d2dc7b6543566097da7a22454a345555d494b160a2e4a140"
+    },
+    {
+      "path": "backend/internal/analysishttp/testdata/v1-found.json",
+      "sha256": "fc31c9df2faafcd746c423e5e2f4d687c08074373360f1ee12f75bd9413411b5"
+    },
+    {
+      "path": "backend/internal/analysisstore/migrations/001_create_analyses.sql",
+      "sha256": "541bdbf2df8e6a97b845a37d7a003b58666945b85402500d4961a2184f9c1f64"
+    },
+    {
+      "path": "backend/internal/analysisstore/migrations/002_create_analysis_jobs.sql",
+      "sha256": "c3fa73c5f0a270001259673a70b01cd0fee6e31c3b1e8d90e62e738077417e29"
+    },
+    {
+      "path": "backend/internal/analysisstore/migrations/003_add_analysis_job_revisions.sql",
+      "sha256": "098e5b1daf5e4aac4c569431494f48038fc63edb787c716f67805a015a090410"
+    },
+    {
+      "path": "backend/internal/analysisstore/migrations/004_add_partial_report.sql",
+      "sha256": "43c5f448592641f19d1c966bb011240b2f52af51c011d8afb3e819b9b310b2f8"
+    },
+    {
+      "path": "backend/internal/analysisstore/postgres.go",
+      "sha256": "5c25c414974a65f1ace83c114c8927597cdc20cc278b3839f1cc716e156d9c74"
+    },
+    {
+      "path": "backend/internal/analysisstore/postgres_test.go",
+      "sha256": "b345870b8dc1663349e0e7a8f3e9fd48e47519cdcc88bfd42547c233e063d4bb"
+    },
+    {
+      "path": "backend/internal/analyzer/analyzer.go",
+      "sha256": "5ccec4b1d7dcd1a1423f507df3bbcac27f715ff005f30c4ffd7838a1048ad71e"
+    },
+    {
+      "path": "backend/internal/analyzer/analyzer_test.go",
+      "sha256": "295ddab1111aa0566b7ba551f6dd3a234fba2771c3057d32067dc90c93ba6958"
+    },
+    {
+      "path": "backend/internal/analyzer/blockers_test.go",
+      "sha256": "42e1758ed4cd01cb79dbf962143fe990dd2eb1d959a01f06da0da9947b87b1ff"
+    },
+    {
+      "path": "backend/internal/analyzer/reinstall_test.go",
+      "sha256": "7aec6bd20ab67ec76fd0075c3eb04666a5656b1ca0ff0bdd0f1e8545bccb8d02"
+    },
+    {
+      "path": "backend/internal/backendconfig/config.go",
+      "sha256": "c8e05f13003945bc50edac71820abe3423fd03866349fa055fe36bccc0b9e12a"
+    },
+    {
+      "path": "backend/internal/backendconfig/config_test.go",
+      "sha256": "c4acd8d3bbecef86bc1029c7b5bcf7ed39836f0b85c2968111a0b01b9aaedeb2"
+    },
+    {
+      "path": "backend/internal/changereport/changereport.go",
+      "sha256": "e47dee763fe9173b197a3edf28da7e9703021bbf86b268ab83e6424f58a229bd"
+    },
+    {
+      "path": "backend/internal/changereport/changereport_test.go",
+      "sha256": "92201d549698349d2772ca8f3922496c0ec0e94884da025c08aac8c5fda00b69"
+    },
+    {
+      "path": "backend/internal/ebuildresolver/resolver.go",
+      "sha256": "55335b08d4e062152356795059102e91b6c3e955664e974d8147e4d05951a7cb"
+    },
+    {
+      "path": "backend/internal/ebuildresolver/resolver_test.go",
+      "sha256": "67259fec3325928054030645bb7124d9392fabe8933927ae264ed86b36b28e69"
+    },
+    {
+      "path": "backend/internal/metadatacache/key.go",
+      "sha256": "c36d9312c1069875b9d085903912955b3bc819000583fa64c88c3397186ba996"
+    },
+    {
+      "path": "backend/internal/metadatacache/key_test.go",
+      "sha256": "bab837f0ebfff8f7df8acbc5af71bac39f7682b3fdebac9f4ecdb81f3bbdfa4b"
+    },
+    {
+      "path": "backend/internal/metadatacache/store.go",
+      "sha256": "b7a7e9cbe627c5b907e9a60321f3688090adbc922db75cee8b5d5c4c32128dae"
+    },
+    {
+      "path": "backend/internal/metadatacache/store_test.go",
+      "sha256": "2abe3c910f19279ea6ab952c7979bb307ec9ac4cd3b7812e9a3b086eb51df285"
+    },
+    {
+      "path": "backend/internal/metadatadiff/compare.go",
+      "sha256": "652210f2d45ddb9cbdbfcf44e4143a79edf3592981fd6a53b05484dabd455f4e"
+    },
+    {
+      "path": "backend/internal/metadatadiff/metadatadiff.go",
+      "sha256": "7ce036ad465141133eb73b90fc0cdd66e5095b0e3fcfcdb5304e86b5e052c03d"
+    },
+    {
+      "path": "backend/internal/metadatadiff/metadatadiff_test.go",
+      "sha256": "3573464b5d0950e74749e5164c470586f623ded869f9207514155ee75b26c852"
+    },
+    {
+      "path": "backend/internal/metadatagenerator/generator.go",
+      "sha256": "d90b04566cf954a9f213d96c8fb33396c82a3bdb7424f1b70a2a33be07673bde"
+    },
+    {
+      "path": "backend/internal/metadatagenerator/generator_test.go",
+      "sha256": "eadc3a55e5637ce4a52426d47a2711164a10209bbc3d51ba279066518425d8ca"
+    },
+    {
+      "path": "backend/internal/metadataprovider/provider.go",
+      "sha256": "6a4ae2bd40f993a7899e13a3e64d78342bf4f8f7a316cbcde45e338330b65c9b"
+    },
+    {
+      "path": "backend/internal/metadataprovider/provider_test.go",
+      "sha256": "e5bac04ab147bdd4b803d68c09667b6ad977712846f443984131678218e22681"
+    },
+    {
+      "path": "backend/internal/parser/blockers.go",
+      "sha256": "94f36639d29e41806c25ff3f03c0ed8b1d58094be1705815d18a9799a7d0e054"
+    },
+    {
+      "path": "backend/internal/parser/blockers_test.go",
+      "sha256": "204247d3d6d3d41227a238cf9964f2ae78cabc49098f1e4b70d42854d5e80c93"
+    },
+    {
+      "path": "backend/internal/parser/parser.go",
+      "sha256": "825dc73222a82ead56780952303e902b8a4737d456f775398150d3353fa0cfc8"
+    },
+    {
+      "path": "backend/internal/parser/parser_test.go",
+      "sha256": "5aadcb6073726ef43a08ff11b4bf45b8c0d7a9c73100d8d2eff1762282e216b8"
+    },
+    {
+      "path": "backend/internal/parser/reinstall_test.go",
+      "sha256": "e0aba976d1d6cfb2285038b8199c056fea9c7b17b20baa38332f379f594d4931"
+    },
+    {
+      "path": "backend/internal/planservice/performance_test.go",
+      "sha256": "de9d9d9f3db2ff12e2b97eba7169ce7b4f022b604a62acb581012fb9db6996d6"
+    },
+    {
+      "path": "backend/internal/planservice/planservice.go",
+      "sha256": "657bafd001ce5bfa4535da62b4e9c3cff09a2d7ae6fb292c0395cb2103c5dd1c"
+    },
+    {
+      "path": "backend/internal/planservice/planservice_test.go",
+      "sha256": "fadb594f257531dc8a2a49550557e00fba46e7539bf1c7e3f360f3132963eb7d"
+    },
+    {
+      "path": "backend/internal/planservice/reinstall_test.go",
+      "sha256": "13d2a0af24734600e533e84423eb1600c3e7aa3c94c5f5972539e72169396f57"
+    },
+    {
+      "path": "backend/internal/reportservice/reinstall_test.go",
+      "sha256": "e4c9e6c3f234f784e73841c174df26cf1d69cbc2de18f7cfbcc61c59da2b1a28"
+    },
+    {
+      "path": "backend/internal/reportservice/reportservice.go",
+      "sha256": "58a0faa8eef89f06d9a3dbfb31d54b4c878c224574182768253ab1abc1871cc1"
+    },
+    {
+      "path": "backend/internal/reportservice/reportservice_test.go",
+      "sha256": "f48b886d4c5c4ad901c6db1a769dd12c3fb1ba8f82f2a5baaa3fbeb6e861a87d"
+    },
+    {
+      "path": "backend/internal/repositorymanager/manager.go",
+      "sha256": "1d075bcc57929b64e52c2ebc24df7d63ddcdff3dce7faeb76d36e0bbdc107f31"
+    },
+    {
+      "path": "backend/internal/repositorymanager/manager_test.go",
+      "sha256": "5c4711ff7c992f9226f37693f1c30c4e3ff3e4c39ece31f345daceee9e53acb5"
+    },
+    {
+      "path": "config/backend.yaml",
+      "sha256": "d2e301f042db2a159017b1916d6673e53a6fdaf2329fa88fbc201fb02cbad597"
+    },
+    {
+      "path": "gentoo/Dockerfile",
+      "sha256": "0ed42c2c2a25b46a56812a564e98359af678fb0b8ae65a01c40aca915d5d8c79"
+    },
+    {
+      "path": "gentoo/Dockerfile.base",
+      "sha256": "00d99ca80d512654fe63d1793b4c11a28326f73b2a46bd915dd42ae04c813ff8"
+    },
+    {
+      "path": "gentoo/README.md",
+      "sha256": "c3ff17e02b83a2a3781de3fecc3c8adfe5bfede4f9ba33f382cf6bd2cc31d135"
+    },
+    {
+      "path": "gentoo/acceptance.md",
+      "sha256": "15f67fd12fc1c3683e022d5e035072d15c3d2b08cac2bc581e8bfdb0a065e33f"
+    },
+    {
+      "path": "gentoo/build.md",
+      "sha256": "4db91962625ba91d1fbf1723ab1142e4324939245818779308fa62454065ff67"
+    },
+    {
+      "path": "gentoo/check-hardening.py",
+      "sha256": "d328eeaabf7ba1aa58d4bf7ae4bb9c56301f9aee517d73ecaf3b831d00579a20"
+    },
+    {
+      "path": "gentoo/export-runtime.py",
+      "sha256": "b37acc784afe8985edfb5b8f041dedc64a7cd2142a5f9e6389dc68e2f12c912c"
+    },
+    {
+      "path": "gentoo/portage/package.use/git",
+      "sha256": "9e3ac83444aa9cb622dc1d809a34603c191ee3024732abb01f5f4c8a8ad935fe"
+    },
+    {
+      "path": "gentoo/runtime-packages",
+      "sha256": "c867cd567d372e9f013203b5a9b01c8d8a993638c7998e37f9c3a913e2d6d1ed"
+    },
+    {
+      "path": "gentoo/test-runtime.py",
+      "sha256": "de1295ada4ae132a50eebc96ac9c656cbff53a30e943307be8d763de453c57a5"
+    },
+    {
+      "path": "gentoo/test_export_runtime.py",
+      "sha256": "5bfdf9167d719bfb99756a7e489dfc3c93f65cdd4b4949c85585bcc52d5172a2"
+    },
+    {
+      "path": "gentoo/test_hardening.py",
+      "sha256": "af3f3e8a7360ac63b1c11189dc285ff2c3076c02905e53c5eb82bd3659b0ddcf"
+    },
+    {
+      "path": "scripts/build-gentoo-images.sh",
+      "sha256": "a81ae5d99708e5179edc892eb8b1d07f3f6e88681f9e3bdab4845ceb679b0a31"
+    },
+    {
+      "path": "scripts/codegraph.sh",
+      "sha256": "4b2b9104b98875a440d6a4e1c84e7cec95a91f88ad212142f99bea3e1c725e1c"
+    },
+    {
+      "path": "scripts/openspec.sh",
+      "sha256": "d6944ec0d0653e2ed0fad98e1e0ef86cac322cdcf118bbfa52fcf00f678f5a7d"
+    },
+    {
+      "path": "scripts/run-gentoo-sync.sh",
+      "sha256": "6bb6180271be0422b66671b16a17a098f4a3934da059b30ede6054e99022ab2b"
+    },
+    {
+      "path": "scripts/sync-gentoo-repository.sh",
+      "sha256": "912b1b995684319629f4d20650cfa8717d62b83aca6507cc94547b1353f37d9d"
+    },
+    {
+      "path": "scripts/test-sync-gentoo-repository.sh",
+      "sha256": "f0d6920a905678b57e083fa20e5238e1de0db4ff5a8444ea6497eec9e9cfeae1"
+    },
+    {
+      "path": "testdata/metadata/libxml2-2.13.9.md5-cache",
+      "sha256": "2e252a5dd5117202ed45b9ccdda024a61a9c7556eb224bde3321a8fedea3e2f3"
+    },
+    {
+      "path": "testdata/metadata/libxml2-2.14.6.md5-cache",
+      "sha256": "5345c9d0a4c0e7414a3a5bc41b34f77149dd5da3730f3a736d2189d8619da0b6"
+    },
+    {
+      "path": "testdata/metadata/libxml2.expected.md",
+      "sha256": "9e81205db34483be43b1bf87ad670c083c75b1092e3659159e54fcdb477bd9ec"
+    },
+    {
+      "path": "testdata/metadata/provenance.md",
+      "sha256": "90fd7cba38fcbb9c5c29ba3c0d16de6bdad7a1f767d7afa17ae6f56790b16c58"
+    },
+    {
+      "path": "testdata/parser/ebuild-updates-2.txt",
+      "sha256": "feaabaeb443165d9ccf2d3da31c920f016d9e71972ad79243cc0c5f274c60dae"
+    },
+    {
+      "path": "testdata/parser/ebuild-updates-3.expected.md",
+      "sha256": "d94ecaf9fe28d2c96019ed60aed5b81ecdb0165d7d5001668b3659b5d343b523"
+    },
+    {
+      "path": "testdata/parser/ebuild-updates-3.txt",
+      "sha256": "45a17bd538e2688536b09d644735b5f36c65b17551c3eb664839d4d6fa6738eb"
+    },
+    {
+      "path": "testdata/parser/ebuild-updates.expected.md",
+      "sha256": "cbbc511aaa814988dc07307cbf671ef4db576072f950799a9d6ae79f67532505"
+    },
+    {
+      "path": "testdata/parser/ebuild-updates.txt",
+      "sha256": "0b8d5f7113539f8335fb513bdf7003ffd40ed0cf16b36e6927dfd23751e27012"
+    }
+  ]
+}
