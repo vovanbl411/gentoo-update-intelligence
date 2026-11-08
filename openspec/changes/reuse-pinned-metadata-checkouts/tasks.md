@@ -15,7 +15,7 @@
 
 - [x] 3.1 Add compact pool lifecycle logs and update Compose, configuration, metadata preparation, backlog, and VPS records; verify the documented defaults and runtime behavior.
 - [x] 3.2 Run Go tests, vet, backend and worker builds, race tests, and sequential real `egencache` generations for distinct packages in one reused set.
-- [ ] 3.3 Run the phase-two cold/warm and control matrix, verify reports and metrics, and save the report, reproduction steps, and artifact hashes.
+- [x] 3.3 Run the phase-two cold/warm and control matrix, verify reports and metrics, and save the report, reproduction steps, and artifact hashes.
 
 ## Workflow follow-up
 

@@ -312,6 +312,23 @@ func TestCheckoutCorruptionIsDiscarded(t *testing.T) {
 	}
 	releaseSet(t, p, next)
 }
+func TestRestoreCheckoutVerificationIgnoresStderrWarning(t *testing.T) {
+	r := poolFixture(t)
+	gitPath, err := exec.LookPath("git")
+	if err != nil {
+		t.Fatal(err)
+	}
+	bin := t.TempDir()
+	wrapper := filepath.Join(bin, "git")
+	script := "#!/bin/sh\nprintf '%s\\n' 'warning: unable to access /root/.config/git/ignore: Permission denied' >&2\nexec " + gitPath + " \"$@\"\n"
+	if err := os.WriteFile(wrapper, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+	if err := restoreCheckout(r.Repository.Path, r.Repository.Commit); err != nil {
+		t.Fatalf("successful git verification rejected stderr warning: %v", err)
+	}
+}
 func TestCheckoutCrashRestart(t *testing.T) {
 	if root := os.Getenv("CHECKOUT_POOL_TEST_CHILD"); root != "" {
 		p, err := openCheckoutPool(root, 100)

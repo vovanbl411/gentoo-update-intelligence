@@ -1,6 +1,6 @@
 # Проверка корректности checkout pool
 
-Дата: 2026-11-07. Приёмка производительности не выполнена; change остаётся активным.
+Дата: 2026-11-08. Приёмка checkout pool завершена; change остаётся активным до отдельного review.
 
 ## Реализация
 
@@ -53,3 +53,27 @@ METADATA_WORKER_TEST_REAL_EGENCACHE=1 go test -count=1 -v ./cmd/metadata-worker 
 - `sh scripts/openspec.sh validate --all --strict`: 6 passed; `sh scripts/openspec.sh validate --archived --strict`: 16 passed.
 
 Whitespace проверяется также для новых файлов. В двух архивных `.patch` сохраняются строки контекста из одного пробела — обязательный маркер unified diff; они проверяются отдельно без удаления этого маркера. Результаты измерений и исходные fixtures не переписываются.
+
+## Phase-two performance acceptance — 2026-11-08
+
+Evidence проверены из `/var/tmp/guit-checkout-pool-phase2/evidence/`. SHA-256 отчёта, summary и reproduction совпали с записями manifest; записи manifest для исходных гостевых артефактов сохранены в manifest. Summary содержит 8 пар и 16 успешных запусков от `cab93148963f952ecf9454f47d41a5c23ad78679`. Для всех запусков нормализованный hash совпал с hash соответствующего плана; отчёты Pool ON/OFF равны внутри плана. Медианы и guest device writes пересчитаны из JSON:
+
+| План | Pool OFF cold | Pool ON cold, медиана (n=3) | Снижение cold | Pool OFF device writes | Pool ON device writes, медиана |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 2 | 1063.03 s (n=1) | 603.06 s | 43.3% | 62.55 GiB | 11.30 GiB |
+| 3 | 1081.03 s (n=1) | 492.06 s | 54.5% | 59.47 GiB | 8.80 GiB |
+
+Измерения проведены в Debian 13 KVM с 1 vCPU, 2 GiB RAM и без swap; использовались одинаковые backend/worker, pinned revisions и два плана. Pool OFF задан значением `METADATA_WORKER_CHECKOUT_CACHE_MAX_BYTES=0`, Pool ON — `4294967296`. Полные normalized JSON отчёты совпали после нормализации UUID и временных путей. Device writes измерялись для гостевой системы целиком. Pool ON имеет по три cold/warm пары на план, Pool OFF — по одной; host contention не измерялся. Поэтому результаты описывают эту среду и не доказывают статистически ускорение на другом оборудовании. Первый неудачный pilot исключён из статистики. Рабочий Compose не использовался, полная матрица повторно не запускалась.
+
+Воспроизведение: `phase2-reproduce.md`. Исходный отчёт: `phase2-report.md`; машинные данные: `phase2-summary.json`; полный список artifact hashes: `phase2-manifest.sha256` в локальном каталоге evidence. SHA-256 доступных локальных итоговых файлов:
+
+- `phase2-report.md`: `aac750ebf91a57fc2d5f054bebd5309655170c06f5bec2342d53ba1b9d39f626`
+- `phase2-summary.json`: `b44795392de00aa9816be4658d6225a39af30400e0c3905186405d3a12a0b5fd`
+- `phase2-reproduce.md`: `234d2ccbf5ac5ed5842d800366128384790c0e50f609777ba8219dcd34e33ea2`
+- `phase2-manifest.sha256`: `348e10f5728a9aeb5c3b62f74d2577803ceeed08d43c82b7b635ac4f6643c245`
+
+## Исправление проверки Git checkout — 2026-11-08
+
+Проверки `git rev-parse HEAD` и `git status` теперь оценивают exit code и stdout отдельно от stderr. Предупреждение в stderr при успешной Git-команде и ожидаемом stdout не считается повреждением checkout; ненулевой exit code и несовпадение pinned HEAD или чистого статуса по-прежнему приводят к ошибке и fail-closed удалению комплекта. Добавлен регрессионный тест с Git wrapper, который выдаёт указанное предупреждение и выполняет настоящую команду Git. `TestCheckoutCorruptionIsDiscarded` сохраняет проверку повреждённого checkout.
+
+Проверены `TestRestoreCheckoutVerificationIgnoresStderrWarning`, `TestCheckoutCorruptionIsDiscarded` и остальные тесты пакета `cmd/metadata-worker`. Команда `METADATA_WORKER_TEST_REAL_EGENCACHE=1 go test -count=1 ./cmd/metadata-worker -run TestPooledGeneration -v` успешно выполнила stub- и real-egencache сценарии.

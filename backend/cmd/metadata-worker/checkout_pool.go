@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -180,9 +181,12 @@ func restoreCheckout(path, commit string) error {
 		args []string
 		want string
 	}{{[]string{"rev-parse", "HEAD"}, commit}, {[]string{"status", "--porcelain", "--untracked-files=all", "--ignored"}, ""}} {
-		output, err := exec.Command("git", append([]string{"--no-replace-objects", "--no-lazy-fetch", "-C", path}, check.args...)...).CombinedOutput()
+		cmd := exec.Command("git", append([]string{"--no-replace-objects", "--no-lazy-fetch", "-C", path}, check.args...)...)
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+		output, err := cmd.Output()
 		if err != nil || strings.TrimSpace(string(output)) != check.want {
-			return fmt.Errorf("restored checkout verification failed: %s: %v", output, err)
+			return fmt.Errorf("restored checkout verification failed: stdout %q, stderr %q: %v", output, stderr.String(), err)
 		}
 	}
 	return nil
